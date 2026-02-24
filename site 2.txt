@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Programs | S+ English Academy</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="js/main.js" defer></script>
+</head>
+<body>
+
+<header>
+  <div class="logo">S+ English Academy</div>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="programs.html">Programs</a>
+    <a href="blog.html">Blog</a>
+    <a href="apply.html" class="btn">Apply Now</a>
+  </nav>
+</header>
+
+<section class="page-title">
+  <h1>Our Premium Programs</h1>
+</section>
+
+<section class="program-grid">
+
+<div class="card" onclick="goToApply('Business English')">
+  <h3>Business English</h3>
+  <p>MAD 800</p>
+</div>
+
+<div class="card" onclick="goToApply('Exam Preparation')">
+  <h3>Exam Preparation</h3>
+  <p>MAD 500</p>
+</div>
+
+<div class="card" onclick="goToApply('Day-to-Day English')">
+  <h3>Day-to-Day English</h3>
+  <p>MAD 600</p>
+</div>
+
+<div class="card" onclick="goToApply('Private Tutoring')">
+  <h3>Private Tutoring</h3>
+  <p>MAD 350</p>
+</div>
+
+</section>
+
+<footer>
+  <p>Email: contact.englishcourse94@gmail.com</p>
+</footer>
+
+</body>
+</html>

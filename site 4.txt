@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog | S+ English Academy</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <div class="logo">S+ English Academy</div>
+</header>
+
+<section class="blog">
+<h1>Insights & English Mastery</h1>
+
+<div class="blog-card">
+  <h3>IELTS vs TOEFL: Which Exam is Right?</h3>
+  <p>Strategic comparison for academic success.</p>
+</div>
+
+<div class="blog-card">
+  <h3>Professional Vocabulary Guide</h3>
+  <p>Upgrade your business communication.</p>
+</div>
+
+</section>
+
+</body>
+</html>

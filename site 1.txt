@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S+ English Academy</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <div class="logo">S+ English Academy</div>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="programs.html">Programs</a>
+    <a href="about.html">About</a>
+    <a href="blog.html">Blog</a>
+    <a href="apply.html" class="btn">Apply Now</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <h1>Master English with Authority & Confidence</h1>
+  <p>All programs are delivered live via Zoom. Premium, structured, and results-driven.</p>
+  <a href="apply.html" class="btn">Secure Your Seat</a>
+</section>
+
+<section class="features">
+  <div class="feature">
+    <h3>Executive-Level Training</h3>
+    <p>Professional English for ambitious individuals.</p>
+  </div>
+  <div class="feature">
+    <h3>Live Interactive Zoom Classes</h3>
+    <p>Structured sessions with real engagement.</p>
+  </div>
+  <div class="feature">
+    <h3>Certificate Upon Completion</h3>
+    <p>Recognized training documentation.</p>
+  </div>
+</section>
+
+<footer>
+  <p>Email: contact.englishcourse94@gmail.com</p>
+  <p>Phone: 00212718613036</p>
+</footer>
+
+</body>
+</html>

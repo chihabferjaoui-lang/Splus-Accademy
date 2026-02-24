@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apply | S+ English Academy</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="js/main.js" defer></script>
+</head>
+<body>
+
+<header>
+  <div class="logo">S+ English Academy</div>
+</header>
+
+<section class="apply-section">
+<h1>Application Form</h1>
+
+<form action="https://formsubmit.co/contact.englishcourse94@gmail.com" method="POST">
+<input type="hidden" name="_captcha" value="false">
+
+<input type="text" name="Full Name" placeholder="Full Name" required>
+<input type="email" name="Email" placeholder="Email Address" required>
+
+<select name="Program" id="programSelect">
+  <option value="">Select Program</option>
+  <option>Business English</option>
+  <option>Exam Preparation</option>
+  <option>Day-to-Day English</option>
+  <option>Private Tutoring</option>
+</select>
+
+<textarea name="Message" placeholder="Preferred Schedule"></textarea>
+
+<button type="submit" class="btn">Submit Application</button>
+</form>
+
+</section>
+
+</body>
+</html>
