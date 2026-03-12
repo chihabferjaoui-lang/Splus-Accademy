@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test Your English Level | S+ Academy</title>
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --card: #ffffff;
+      --text: #0f1230;
+      --muted: #6a6f85;
+      --line: #dfe3ea;
+      --primary: #3124a8;
+      --primary-2: #4a3cc9;
+      --accent: #11a3a5;
+      --shadow: 0 12px 30px rgba(10, 16, 40, 0.08);
+      --radius: 22px;
+      --max: 1100px;
+      --serif: Georgia, "Times New Roman", serif;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      background: linear-gradient(135deg, #eef0fb 0%, #f7f7fb 35%, #f6f6f8 100%);
+      color: var(--text);
+    }
+
+    .container {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(12px);
+      background: rgba(248, 248, 250, 0.92);
+      border-bottom: 1px solid rgba(49, 36, 168, 0.08);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 82px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+      border-radius: 10px;
+    }
+
+    .brand-name {
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 24px;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-weight: 700;
+      text-decoration: none;
+      transition: 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(49, 36, 168, 0.18);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-2), var(--primary));
+      color: white;
+    }
+
+    .btn-outline {
+      border-color: var(--primary-2);
+      color: var(--primary-2);
+      background: transparent;
+    }
+
+    .hero {
+      padding: 56px 0 30px;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-family: var(--serif);
+      font-size: clamp(40px, 6vw, 64px);
+      margin: 0 0 14px;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 18px;
+      margin: 0 auto;
+      max-width: 760px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.92);
+      border: 1px solid #d9deea;
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+    }
+
+    .main-box {
+      max-width: 920px;
+      margin: 40px auto 28px;
+    }
+
+    .box-head {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: rgba(74, 60, 201, 0.1);
+      color: var(--primary-2);
+      font-weight: 800;
+      font-size: 20px;
+    }
+
+    .box-head h2 {
+      margin: 0;
+      font-size: 36px;
+      font-family: var(--serif);
+    }
+
+    .box-head p {
+      margin: 6px 0 0;
+      color: var(--muted);
+    }
+
+    .details-box {
+      border: 1px solid #cfd5f0;
+      background: #f7f7fd;
+      border-radius: 16px;
+      padding: 18px;
+      color: #4f566d;
+      margin-bottom: 20px;
+    }
+
+    .details-box strong {
+      display: block;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    .details-box ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .details-box li {
+      margin-bottom: 8px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 24px;
+      grid-template-columns: 1fr 1fr;
+      margin-top: 30px;
+    }
+
+    .tips {
+      margin-top: 24px;
+      background: #eaf6f7;
+      border-color: #bcdde0;
+    }
+
+    .small-title {
+      font-family: var(--serif);
+      font-size: 28px;
+      margin: 0 0 18px;
+    }
+
+    .quiz-wrap {
+      padding: 50px 0 70px;
+      display: none;
+    }
+
+    .quiz-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background: #e5e8f4;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(135deg, var(--primary-2), var(--primary));
+      transition: width 0.3s ease;
+    }
+
+    .question-card h3 {
+      margin-top: 0;
+      margin-bottom: 22px;
+      font-size: 28px;
+      font-family: var(--serif);
+    }
+
+    .answers {
+      display: grid;
+      gap: 14px;
+    }
+
+    .answer-btn {
+      width: 100%;
+      text-align: left;
+      padding: 16px 18px;
+      border: 1px solid #d9deea;
+      border-radius: 16px;
+      background: white;
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.2s ease;
+    }
+
+    .answer-btn:hover {
+      border-color: var(--primary-2);
+      background: #f8f8fe;
+    }
+
+    .answer-btn.selected {
+      border-color: var(--primary);
+      background: #f1efff;
+      box-shadow: inset 0 0 0 1px var(--primary);
+    }
+
+    .quiz-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .result-wrap {
+      display: none;
+      padding: 50px 0 80px;
+    }
+
+    .result-card {
+      max-width: 760px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .result-level {
+      font-family: var(--serif);
+      font-size: 48px;
+      margin: 12px 0;
+      color: var(--primary);
+    }
+
+    .result-score {
+      color: var(--muted);
+      font-size: 18px;
+      margin-bottom: 28px;
+    }
+
+    @media (max-width: 760px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .quiz-top,
+      .quiz-actions,
+      .nav {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .box-head h2 {
+        font-size: 28px;
+      }
+
+      .hero h1 {
+        font-size: 38px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container nav">
+      <a class="brand" href="index.html">
+        <img src="logo.png" alt="S+ Academy logo" onerror="this.src='S+ Eng Academy.png'" />
+        <span class="brand-name">S+ Academy</span>
+      </a>
+      <a class="btn btn-outline" href="index.html">Back to Home</a>
+    </div>
+  </header>
+
+  <section class="hero" id="landingSection">
+    <div class="container">
+      <h1>Test Your English Level</h1>
+      <p>Discover your proficiency level with our comprehensive 25-question assessment.</p>
+
+      <div class="card main-box">
+        <div class="box-head">
+          <div class="icon-box">✦</div>
+          <div>
+            <h2>Test Your English Level</h2>
+            <p>Discover your English proficiency level with our comprehensive assessment.</p>
+          </div>
+        </div>
+
+        <div class="details-box">
+          <strong>Test Details:</strong>
+          <ul>
+            <li>25 questions covering grammar, vocabulary, reading, and advanced structures</li>
+            <li>5 parts with varied difficulty levels</li>
+            <li>Instant results with your proficiency level from A1 to C2</li>
+            <li>Approximately 15–25 minutes to complete the test</li>
+          </ul>
+        </div>
+
+        <button class="btn btn-primary" style="width:100%;" onclick="startTest()">Start Test Now</button>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <h3 class="small-title">Test Format</h3>
+          <ul>
+            <li>25 questions total</li>
+            <li>Multiple choice format</li>
+            <li>Four categories: Grammar, Vocabulary, Reading, Advanced</li>
+            <li>Approximately 15 to 20 minutes</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3 class="small-title">Proficiency Levels</h3>
+          <ul>
+            <li>A1 · Beginner</li>
+            <li>A2 · Elementary</li>
+            <li>B1 · Intermediate</li>
+            <li>B2 · Upper Intermediate</li>
+            <li>C1 · Advanced</li>
+            <li>C2 · Mastery</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card tips">
+        <h3 class="small-title">Tips for Success</h3>
+        <ul>
+          <li>Take your time to read each question carefully</li>
+          <li>Select your best answer before moving to the next question</li>
+          <li>You cannot go back to previous questions, so think before answering</li>
+          <li>Your results are instant and confidential</li>
+          <li>You can retake the test anytime to track your progress</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="quiz-wrap" id="quizSection">
+    <div class="container">
+      <div class="quiz-top">
+        <a class="btn btn-outline" href="index.html">Exit Test</a>
+        <div id="questionCounter">Question 1 of 25</div>
+      </div>
+
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+
+      <div class="card question-card">
+        <h3 id="questionText"></h3>
+        <div class="answers" id="answersBox"></div>
+        <div class="quiz-actions">
+          <div></div>
+          <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()" disabled>Next Question</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="result-wrap" id="resultSection">
+    <div class="container">
+      <div class="card result-card">
+        <div style="font-size:52px;">✓</div>
+        <p style="text-transform:uppercase; letter-spacing:0.18em; color:#6a6f85; font-size:13px; font-weight:700;">Your Result</p>
+        <div class="result-level" id="resultLevel"></div>
+        <div class="result-score" id="resultScore"></div>
+        <p id="resultMessage"></p>
+        <div style="margin-top:26px; display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="restartTest()">Retake Test</button>
+          <a class="btn btn-outline" href="index.html">Back to Home</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const questions = [
+      { q: "Choose the correct sentence.", a: ["She go to school every day.", "She goes to school every day.", "She going to school every day.", "She gone to school every day."], c: 1 },
+      { q: "Select the word closest in meaning to 'rapid'.", a: ["Slow", "Fast", "Heavy", "Late"], c: 1 },
+      { q: "Choose the correct article: ___ apple a day keeps the doctor away.", a: ["A", "An", "The", "No article"], c: 1 },
+      { q: "What is the past tense of 'teach'?", a: ["Teached", "Taught", "Teach", "Teaching"], c: 1 },
+      { q: "Choose the correct sentence.", a: ["I have lived here since 2020.", "I am living here since 2020.", "I live here since 2020.", "I lived here since 2020."], c: 0 },
+      { q: "Which word is a synonym of 'begin'?", a: ["End", "Close", "Start", "Stop"], c: 2 },
+      { q: "Complete the sentence: He is afraid ___ spiders.", a: ["from", "at", "of", "with"], c: 2 },
+      { q: "Choose the best answer: If I ___ rich, I would travel the world.", a: ["am", "was", "were", "be"], c: 2 },
+      { q: "What does 'borrow' mean?", a: ["Give something", "Take something temporarily", "Buy something", "Lose something"], c: 1 },
+      { q: "Choose the correct question form.", a: ["Where you are going?", "Where are you going?", "Where going you are?", "Where do going you?"], c: 1 },
+      { q: "Complete the sentence: She has ___ her homework already.", a: ["finish", "finished", "finishing", "finishes"], c: 1 },
+      { q: "Which sentence is correct?", a: ["There is many people here.", "There are many people here.", "There many people are here.", "There be many people here."], c: 1 },
+      { q: "Choose the opposite of 'expensive'.", a: ["Cheap", "Costly", "Valuable", "Luxury"], c: 0 },
+      { q: "What is the plural of 'child'?", a: ["Childs", "Children", "Childes", "Childrens"], c: 1 },
+      { q: "Choose the correct sentence.", a: ["He can speaks English.", "He can speaking English.", "He can speak English.", "He cans speak English."], c: 2 },
+      { q: "Complete the sentence: I look forward to ___ from you.", a: ["hear", "heard", "hearing", "to hear"], c: 2 },
+      { q: "Which word best fits: The movie was very ___.", a: ["interest", "interested", "interesting", "interests"], c: 2 },
+      { q: "Choose the formal option.", a: ["I want more info.", "Send me info now.", "I would appreciate more information.", "Give me details."], c: 2 },
+      { q: "Complete the sentence: By this time next year, I ___ my degree.", a: ["will finish", "will have finished", "finish", "have finished"], c: 1 },
+      { q: "What does 'reliable' mean?", a: ["Easy to break", "Can be trusted", "Very expensive", "Difficult to use"], c: 1 },
+      { q: "Choose the best connector: He studied hard, ___ he passed the exam.", a: ["but", "so", "although", "because of"], c: 1 },
+      { q: "Which sentence is grammatically correct?", a: ["Neither of the answers are correct.", "Neither of the answers is correct.", "Neither of the answer are correct.", "Neither answer are correct."], c: 1 },
+      { q: "Complete the sentence: Had I known, I ___ earlier.", a: ["would come", "would have come", "came", "had come"], c: 1 },
+      { q: "Choose the best meaning of 'maintain'.", a: ["Destroy", "Keep in good condition", "Forget", "Hide"], c: 1 },
+      { q: "Choose the most advanced correct sentence.", a: ["Despite of the rain, we went out.", "Despite the rain, we went out.", "In spite the rain, we went out.", "Although of the rain, we went out."], c: 1 }
+    ];
+
+    let currentQuestion = 0;
+    let selectedAnswer = null;
+    let score = 0;
+
+    function startTest() {
+      document.getElementById("landingSection").style.display = "none";
+      document.getElementById("quizSection").style.display = "block";
+      showQuestion();
+    }
+
+    function showQuestion() {
+      selectedAnswer = null;
+      document.getElementById("nextBtn").disabled = true;
+
+      const question = questions[currentQuestion];
+      document.getElementById("questionCounter").textContent = `Question ${currentQuestion + 1} of ${questions.length}`;
+      document.getElementById("questionText").textContent = question.q;
+      document.getElementById("progressFill").style.width = `${((currentQuestion) / questions.length) * 100}%`;
+
+      const answersBox = document.getElementById("answersBox");
+      answersBox.innerHTML = "";
+
+      question.a.forEach((answer, index) => {
+        const btn = document.createElement("button");
+        btn.className = "answer-btn";
+        btn.textContent = `${String.fromCharCode(65 + index)}. ${answer}`;
+        btn.onclick = () => selectAnswer(index, btn);
+        answersBox.appendChild(btn);
+      });
+    }
+
+    function selectAnswer(index, btn) {
+      selectedAnswer = index;
+      document.querySelectorAll(".answer-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      document.getElementById("nextBtn").disabled = false;
+    }
+
+    function nextQuestion() {
+      if (selectedAnswer === questions[currentQuestion].c) {
+        score++;
+      }
+
+      currentQuestion++;
+
+      if (currentQuestion < questions.length) {
+        showQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      document.getElementById("quizSection").style.display = "none";
+      document.getElementById("resultSection").style.display = "block";
+
+      let level = "";
+      let message = "";
+
+      if (score <= 5) {
+        level = "A1 · Beginner";
+        message = "You are at a beginner level. A foundation course would be the best next step.";
+      } else if (score <= 10) {
+        level = "A2 · Elementary";
+        message = "You understand basic English well. You are ready to build more confidence and accuracy.";
+      } else if (score <= 15) {
+        level = "B1 · Intermediate";
+        message = "You can manage everyday English. The next step is improving fluency and range.";
+      } else if (score <= 20) {
+        level = "B2 · Upper Intermediate";
+        message = "You have strong English skills and can communicate effectively in many situations.";
+      } else if (score <= 23) {
+        level = "C1 · Advanced";
+        message = "You show advanced control of English and can use the language confidently in academic or professional contexts.";
+      } else {
+        level = "C2 · Mastery";
+        message = "Excellent result. You show near-master level control of English.";
+      }
+
+      document.getElementById("resultLevel").textContent = level;
+      document.getElementById("resultScore").textContent = `You answered ${score} out of ${questions.length} correctly.`;
+      document.getElementById("resultMessage").textContent = message;
+    }
+
+    function restartTest() {
+      currentQuestion = 0;
+      selectedAnswer = null;
+      score = 0;
+      document.getElementById("resultSection").style.display = "none";
+      document.getElementById("landingSection").style.display = "block";
+      document.getElementById("progressFill").style.width = "0%";
+    }
+  </script>
+</body>
+</html>
