@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>S+ English Academy | Teacher Application Assistant</title>
-  <meta name="description" content="Apply to join S+ English Academy through an interactive teacher application assistant and generate a PDF confirmation with a reference number." />
+  <title>Teacher Application | S+ English Academy</title>
+  <meta name="description" content="Apply to join S+ English Academy as an English teacher through our guided chat-style application form." />
   <style>
     :root {
       --bg: #f6f6fb;
-      --card: rgba(255,255,255,0.92);
-      --text: #11152f;
-      --muted: #6e748a;
+      --card: rgba(255,255,255,0.94);
+      --text: #0f1230;
+      --muted: #697086;
       --line: #d8dff0;
       --primary: #5e2ca5;
       --primary-2: #3d66e6;
@@ -19,27 +19,33 @@
       --radius: 24px;
       --serif: Georgia, "Times New Roman", serif;
       --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      --max: 1180px;
+      --max: 1100px;
     }
 
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
+
     body {
       margin: 0;
       font-family: var(--sans);
       color: var(--text);
-      background: linear-gradient(135deg, #f7f8fd 0%, #f2f5ff 35%, #f9fbff 100%);
+      background: linear-gradient(135deg, #f7f8fd 0%, #f3f5ff 30%, #f9fbff 100%);
       line-height: 1.6;
     }
 
     a { color: inherit; text-decoration: none; }
     img { display: block; max-width: 100%; }
-    button, input, textarea { font: inherit; }
+    button, input, textarea, select { font: inherit; }
 
-    .container { width: min(var(--max), calc(100% - 32px)); margin: 0 auto; }
+    .container {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+    }
 
     .topbar {
-      position: sticky; top: 0; z-index: 20;
+      position: sticky;
+      top: 0;
+      z-index: 30;
       background: rgba(248,249,255,0.9);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid rgba(61,102,230,0.08);
@@ -47,191 +53,436 @@
 
     .nav {
       min-height: 82px;
-      display: flex; align-items: center; justify-content: space-between; gap: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
     }
 
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .brand img { width: 46px; height: 46px; object-fit: contain; border-radius: 12px; }
-    .brand span { font-family: var(--serif); font-size: 1.45rem; font-weight: 700; color: var(--primary); }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
-    .nav-links { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
-    .nav-links a { color: var(--muted); font-size: .96rem; }
-    .nav-links a.active, .nav-links a:hover { color: var(--primary); font-weight: 700; }
+    .brand img {
+      width: 46px;
+      height: 46px;
+      object-fit: contain;
+      border-radius: 12px;
+    }
+
+    .brand span {
+      font-family: var(--serif);
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 22px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      font-size: 0.96rem;
+    }
+
+    .nav-links a.active,
+    .nav-links a:hover {
+      color: var(--primary);
+      font-weight: 700;
+    }
 
     .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-      padding: 14px 22px; border-radius: 14px; border: 1px solid transparent;
-      font-weight: 700; cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 22px;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      font-weight: 700;
+      cursor: pointer;
       transition: transform .22s ease, box-shadow .22s ease;
     }
 
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(61,102,230,0.16); }
-    .btn-primary { color: #fff; background: linear-gradient(135deg, var(--primary), var(--primary-2)); }
-    .btn-outline { color: var(--primary); border-color: var(--primary); background: rgba(255,255,255,0.8); }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(61,102,230,0.16);
+    }
+
+    .btn-primary {
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+    }
+
+    .btn-outline {
+      color: var(--primary);
+      border-color: var(--primary);
+      background: rgba(255,255,255,0.74);
+    }
 
     .hero {
-      padding: 60px 0 42px;
-      position: relative; overflow: hidden;
+      padding: 58px 0 38px;
     }
-
-    .hero::before,
-    .hero::after {
-      content: ""; position: absolute; border-radius: 50%; filter: blur(70px); opacity: .18; pointer-events: none;
-    }
-
-    .hero::before { width: 420px; height: 420px; background: var(--primary); top: -100px; left: -120px; }
-    .hero::after { width: 360px; height: 360px; background: var(--accent); right: -70px; bottom: -80px; }
 
     .hero-grid {
-      display: grid; grid-template-columns: 1.08fr .92fr; gap: 48px; align-items: center;
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      align-items: center;
+      gap: 42px;
     }
 
     .eyebrow {
-      color: var(--primary-2); text-transform: uppercase; letter-spacing: .12em;
-      font-size: .82rem; font-weight: 800; margin-bottom: 12px;
+      color: var(--primary-2);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-size: .82rem;
+      font-weight: 800;
+      margin-bottom: 12px;
     }
 
-    h1, h2, h3 { font-family: var(--serif); color: #0b102c; margin: 0; line-height: 1.05; }
-    h1 { font-size: clamp(2.8rem, 6vw, 5rem); margin-bottom: 18px; }
-    .hero p.lead { color: #5d647c; font-size: 1.15rem; margin: 0 0 14px; max-width: 760px; }
-    .hero p.sub { color: #7a8095; margin: 0 0 28px; max-width: 720px; }
-    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+    h1, h2, h3 {
+      font-family: var(--serif);
+      color: #0b102c;
+      margin: 0;
+      line-height: 1.05;
+    }
+
+    h1 {
+      font-size: clamp(2.7rem, 6vw, 4.8rem);
+      margin-bottom: 18px;
+    }
+
+    .hero p.lead {
+      color: #5d647c;
+      font-size: 1.14rem;
+      margin: 0 0 14px;
+      max-width: 720px;
+    }
+
+    .hero p.sub {
+      color: #7a8095;
+      margin: 0 0 28px;
+      max-width: 700px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
 
     .hero-media,
-    .card,
     .assistant-shell,
-    .result-box,
-    .teacher-panel {
+    .info-card,
+    .success-card {
       border: 1px solid var(--line);
       background: var(--card);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
     }
 
-    .hero-media { padding: 12px; }
-    .hero-media img { border-radius: 18px; width: 100%; object-fit: cover; min-height: 420px; }
-
-    section { padding: 78px 0; }
-    .section-head { text-align: center; max-width: 860px; margin: 0 auto 34px; }
-    .section-head h2 { font-size: clamp(2.2rem, 4.4vw, 4rem); margin-bottom: 12px; }
-    .section-head p { margin: 0; color: var(--muted); font-size: 1.12rem; }
-
-    .teacher-grid {
-      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px;
+    .hero-media {
+      padding: 12px;
     }
 
-    .teacher-panel { padding: 24px; }
-    .teacher-panel h3 { font-size: 1.55rem; margin-bottom: 10px; }
-    .teacher-panel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; color: var(--muted); }
-
-    .steps {
-      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; margin-top: 28px;
+    .hero-media img {
+      width: 100%;
+      min-height: 390px;
+      object-fit: cover;
+      border-radius: 18px;
     }
 
-    .step { text-align: center; padding: 12px 10px; }
-    .num {
-      width: 54px; height: 54px; margin: 0 auto 14px; display: grid; place-items: center;
-      border-radius: 999px; color: #fff; font-weight: 800;
-      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+    section {
+      padding: 74px 0;
     }
 
-    .step strong { display: block; font-size: 1.1rem; margin-bottom: 6px; }
-    .step span { color: var(--muted); font-size: .95rem; }
+    .section-head {
+      text-align: center;
+      max-width: 860px;
+      margin: 0 auto 34px;
+    }
+
+    .section-head h2 {
+      font-size: clamp(2.2rem, 4.4vw, 4rem);
+      margin-bottom: 12px;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+    }
+
+    .info-card {
+      padding: 24px;
+    }
+
+    .info-card h3 {
+      font-size: 1.45rem;
+      margin-bottom: 10px;
+    }
+
+    .info-card p {
+      margin: 0;
+      color: var(--muted);
+    }
 
     .assistant-shell {
-      max-width: 980px; margin: 0 auto; overflow: hidden;
+      max-width: 980px;
+      margin: 0 auto;
+      overflow: hidden;
     }
 
     .assistant-top {
-      padding: 22px 24px; color: #fff;
+      padding: 22px 24px;
+      color: #fff;
       background: linear-gradient(135deg, var(--primary), var(--primary-2), var(--accent));
     }
 
     .assistant-top h3 {
-      font-family: var(--sans); font-size: 1.35rem; margin: 0 0 4px; color: #fff;
+      font-family: var(--sans);
+      font-size: 1.35rem;
+      margin: 0 0 4px;
+      color: #fff;
     }
 
-    .assistant-top p { margin: 0; opacity: .92; }
+    .assistant-top p {
+      margin: 0;
+      opacity: .94;
+    }
 
     .assistant-body {
-      padding: 22px; min-height: 560px;
+      padding: 22px;
       background: linear-gradient(180deg, rgba(244,246,255,0.96), rgba(255,255,255,0.96));
-      display: flex; flex-direction: column; gap: 16px;
+      min-height: 560px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
 
-    .messages { display: flex; flex-direction: column; gap: 14px; }
+    .messages {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
 
     .bubble {
-      max-width: 760px; padding: 16px 18px; border-radius: 18px; font-size: 1rem; line-height: 1.6; white-space: pre-line;
+      max-width: 780px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      font-size: 1rem;
+      line-height: 1.6;
+      white-space: pre-line;
     }
 
-    .bubble.bot { align-self: flex-start; background: #eef1fb; color: #28304f; border-top-left-radius: 6px; }
-    .bubble.user { align-self: flex-end; background: linear-gradient(135deg, var(--accent), var(--primary-2)); color: #fff; border-top-right-radius: 6px; }
+    .bubble.bot {
+      align-self: flex-start;
+      background: #eef1fb;
+      color: #28304f;
+      border-top-left-radius: 6px;
+    }
 
-    .option-grid,
-    .action-row { display: grid; gap: 12px; }
-    .option-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .action-row { grid-template-columns: repeat(2, minmax(0, max-content)); justify-content: start; }
+    .bubble.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, var(--accent), var(--primary-2));
+      color: #fff;
+      border-top-right-radius: 6px;
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
 
     .choice-btn {
-      width: 100%; text-align: left; border: 1px solid var(--line); background: #fff; color: var(--text);
-      padding: 14px 16px; border-radius: 16px; cursor: pointer; font-weight: 700;
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      padding: 14px 16px;
+      border-radius: 16px;
+      cursor: pointer;
+      font-weight: 700;
       transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
     }
 
-    .choice-btn:hover { border-color: var(--primary-2); transform: translateY(-1px); box-shadow: 0 10px 20px rgba(61,102,230,0.1); }
-    .choice-btn small { display: block; color: var(--muted); font-weight: 500; margin-top: 4px; }
-
-    .inline-input {
-      width: 100%; border: 1px solid var(--line); background: #fff; padding: 14px 16px; border-radius: 14px; margin-top: 10px;
+    .choice-btn:hover {
+      border-color: var(--primary-2);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(61,102,230,0.1);
     }
 
-    .label { font-size: .9rem; color: var(--muted); font-weight: 700; margin-top: 6px; }
+    .choice-btn small {
+      display: block;
+      color: var(--muted);
+      font-weight: 500;
+      margin-top: 4px;
+    }
+
+    .inline-input,
+    .inline-textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 14px 16px;
+      border-radius: 14px;
+      margin-top: 10px;
+      color: var(--text);
+    }
+
+    .inline-textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .label {
+      font-size: .9rem;
+      color: var(--muted);
+      font-weight: 700;
+      margin-top: 6px;
+    }
 
     .summary {
-      background: rgba(238,241,251,0.86); padding: 16px; border-radius: 16px; border: 1px solid var(--line); color: #2b3558;
+      background: rgba(238,241,251,0.86);
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      color: #2b3558;
     }
 
-    .summary strong { color: var(--primary); }
-
-    .result-box {
-      margin-top: 14px; padding: 20px; background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(245,248,255,.98));
+    .summary strong {
+      color: var(--primary);
     }
 
-    .result-box h4 { margin: 0 0 10px; font-size: 1.4rem; color: var(--primary); }
-    .result-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
-    .note { color: var(--muted); font-size: .95rem; margin-top: 10px; }
+    .action-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .success-card {
+      margin-top: 14px;
+      padding: 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(245,248,255,.98));
+    }
+
+    .success-card h4 {
+      margin: 0 0 10px;
+      font-size: 1.35rem;
+      color: var(--primary);
+    }
+
+    .success-card p {
+      margin: 0 0 10px;
+      color: var(--muted);
+    }
 
     .footer {
-      padding: 54px 0 28px; border-top: 1px solid rgba(61,102,230,0.08); background: rgba(255,255,255,0.55);
+      padding: 54px 0 28px;
+      border-top: 1px solid rgba(61,102,230,0.08);
+      background: rgba(255,255,255,0.55);
     }
 
-    .footer-grid { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 28px; margin-bottom: 22px; }
-    .footer h4 { margin: 0 0 12px; font-size: 1.2rem; }
-    .footer p, .footer li, .footer a { color: var(--muted); }
-    .footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-    .bottom { border-top: 1px solid rgba(61,102,230,0.08); padding-top: 20px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; color: var(--muted); }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr 1fr;
+      gap: 28px;
+      margin-bottom: 22px;
+    }
+
+    .footer h4 {
+      margin: 0 0 12px;
+      font-size: 1.2rem;
+    }
+
+    .footer p, .footer li, .footer a {
+      color: var(--muted);
+    }
+
+    .footer ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .bottom {
+      border-top: 1px solid rgba(61,102,230,0.08);
+      padding-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+      color: var(--muted);
+    }
+
+    .hidden {
+      display: none !important;
+    }
 
     @media (max-width: 980px) {
-      .hero-grid, .teacher-grid, .steps, .footer-grid, .option-grid { grid-template-columns: 1fr 1fr; }
-      .nav-links { display: none; }
+      .hero-grid,
+      .info-grid,
+      .footer-grid,
+      .choice-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .nav-links {
+        display: none;
+      }
     }
 
     @media (max-width: 720px) {
-      .hero-grid, .teacher-grid, .steps, .footer-grid, .option-grid, .action-row { grid-template-columns: 1fr; }
-      .hero-media img { min-height: 280px; }
-      .hero-actions, .result-actions, .bottom { flex-direction: column; align-items: stretch; }
-      .btn { width: 100%; }
+      .hero-grid,
+      .info-grid,
+      .footer-grid,
+      .choice-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-media img {
+        min-height: 280px;
+      }
+
+      .hero-actions,
+      .action-row,
+      .bottom {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .btn {
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
+
   <header class="topbar">
     <div class="container nav">
       <a class="brand" href="index.html">
         <img src="logo.png" alt="S+ English Academy logo" onerror="this.src='S+ Eng Academy.png'" />
         <span>S+ Academy</span>
       </a>
+
       <nav class="nav-links">
         <a href="index.html">Home</a>
         <a href="index.html#about">About</a>
@@ -240,24 +491,26 @@
         <a href="teacher-apply.html" class="active">Apply</a>
         <a href="test.html">Test Your Level</a>
       </nav>
-      <a class="btn btn-primary" href="booking.html">Book a Class</a>
+
+      <a class="btn btn-primary" href="test.html">Test Your Level</a>
     </div>
   </header>
 
   <section class="hero">
     <div class="container hero-grid">
       <div>
-        <div class="eyebrow">Career Opportunity</div>
-        <h1>Join our teaching team through a guided premium application assistant.</h1>
-        <p class="lead">This page markets the opportunity first, then lets qualified teachers apply through a structured assistant instead of a cold, static form. The experience feels polished, clear, and aligned with the S+ Academy brand.</p>
-        <p class="sub">After each completed application, the system generates a PDF with a unique reference number and asks the candidate to send it to <strong>contact.englishcourse94@gmail.com</strong> together with their CV for final review.</p>
+        <div class="eyebrow">Teaching Opportunity</div>
+        <h1>Join the S+ Academy teaching team.</h1>
+        <p class="lead">We are looking for strong, professional English teachers who can deliver high-quality live Zoom lessons to ambitious students and professionals.</p>
+        <p class="sub">Instead of filling in a cold form, applicants can complete a guided chat-style application. The assistant asks one question at a time, keeps the process simple, and submits everything directly by email.</p>
         <div class="hero-actions">
-          <a href="#assistant" class="btn btn-primary">Start Teacher Application</a>
-          <a href="index.html#teachers" class="btn btn-outline">Back to Main Website</a>
+          <a href="#teacherAssistant" class="btn btn-primary">Start Application</a>
+          <a href="index.html#teachers" class="btn btn-outline">View Teacher Section</a>
         </div>
       </div>
+
       <div class="hero-media">
-        <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80" alt="Teacher team collaboration" />
+        <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80" alt="English teachers in discussion" />
       </div>
     </div>
   </section>
@@ -265,68 +518,62 @@
   <section>
     <div class="container">
       <div class="section-head">
-        <div class="eyebrow">Why Apply</div>
-        <h2>An elegant process designed for serious teaching candidates</h2>
-        <p>We removed plain forms from the public page and replaced them with a guided conversation flow that reflects the premium positioning of S+ English Academy.</p>
+        <div class="eyebrow">What We Need</div>
+        <h2>A guided teacher application</h2>
+        <p>The assistant asks clear questions step by step, then sends the final application to your academy email.</p>
       </div>
-      <div class="teacher-grid">
-        <div class="teacher-panel">
-          <h3>We’re Looking For</h3>
-          <ul>
-            <li>✓ Certified English teachers</li>
-            <li>✓ Professional online teaching experience</li>
-            <li>✓ Passion for student success</li>
-            <li>✓ Flexibility and reliability</li>
-          </ul>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <h3>Easy to complete</h3>
+          <p>Applicants answer one question at a time instead of dealing with a long form all at once.</p>
         </div>
-        <div class="teacher-panel">
-          <h3>We Offer</h3>
-          <ul>
-            <li>✓ Competitive compensation</li>
-            <li>✓ Flexible scheduling</li>
-            <li>✓ Professional development</li>
-            <li>✓ Access to a global student base</li>
-          </ul>
+        <div class="info-card">
+          <h3>Professional screening</h3>
+          <p>The questions cover teaching background, certification, experience, availability, and motivation.</p>
+        </div>
+        <div class="info-card">
+          <h3>Direct submission</h3>
+          <p>Once the chat is complete, the application is submitted to your email automatically.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <section>
+  <section id="teacherAssistant">
     <div class="container">
       <div class="section-head">
-        <div class="eyebrow">Application Journey</div>
-        <h2>A structured path from first message to application PDF</h2>
-        <p>The assistant collects the key information needed for review, confirms it clearly, and generates a professional PDF reference document.</p>
-      </div>
-      <div class="steps">
-        <div class="step"><div class="num">1</div><strong>Experience & credentials</strong><span>Years of experience and certifications are collected first.</span></div>
-        <div class="step"><div class="num">2</div><strong>Specialization & availability</strong><span>We learn where the teacher adds the most value and when they can teach.</span></div>
-        <div class="step"><div class="num">3</div><strong>Contact details</strong><span>Name, email, and phone are gathered for follow-up.</span></div>
-        <div class="step"><div class="num">4</div><strong>PDF confirmation</strong><span>A branded PDF with a reference number is generated for email submission.</span></div>
-      </div>
-    </div>
-  </section>
-
-  <section id="assistant">
-    <div class="container">
-      <div class="section-head">
-        <div class="eyebrow">Teacher Application Assistant</div>
-        <h2>Interactive application experience</h2>
-        <p>This assistant handles teaching applications step by step, then generates a PDF confirmation and asks the candidate to send it to contact.englishcourse94@gmail.com.</p>
+        <div class="eyebrow">Interactive Application</div>
+        <h2>Teacher application assistant</h2>
+        <p>This assistant asks the candidate the right questions, shows a final summary, and then sends the completed application.</p>
       </div>
 
       <div class="assistant-shell">
         <div class="assistant-top">
-          <h3>S+ Teacher Application</h3>
-          <p>Experience • Certification • Specialization • Availability • Contact • PDF confirmation</p>
+          <h3>S+ Teacher Application Assistant</h3>
+          <p>Answer the questions • Review your application • Submit to S+ Academy</p>
         </div>
+
         <div class="assistant-body">
           <div class="messages" id="messages"></div>
           <div id="interactiveArea"></div>
           <div id="resultArea"></div>
         </div>
       </div>
+
+      <form id="teacherForm" class="hidden" action="https://formsubmit.co/contact.englishcourse94@gmail.com" method="POST">
+        <input type="hidden" name="_captcha" value="false">
+        <input type="hidden" name="_subject" value="New Teacher Application - S+ Academy">
+        <input type="hidden" name="Full Name" id="formFullName">
+        <input type="hidden" name="Email" id="formEmail">
+        <input type="hidden" name="Phone" id="formPhone">
+        <input type="hidden" name="Country" id="formCountry">
+        <input type="hidden" name="Teaching Experience" id="formExperience">
+        <input type="hidden" name="Certification" id="formCertification">
+        <input type="hidden" name="Specialization" id="formSpecialization">
+        <input type="hidden" name="Availability" id="formAvailability">
+        <input type="hidden" name="Why Join S+ Academy" id="formWhyJoin">
+      </form>
     </div>
   </section>
 
@@ -341,9 +588,9 @@
           <h4>Quick Links</h4>
           <ul>
             <li><a href="index.html">Home</a></li>
-            <li><a href="booking.html">Booking Assistant</a></li>
-            <li><a href="test.html">Placement Test</a></li>
             <li><a href="index.html#programs">Programs</a></li>
+            <li><a href="booking.html">Book a Class</a></li>
+            <li><a href="test.html">Test Your Level</a></li>
           </ul>
         </div>
         <div>
@@ -361,38 +608,28 @@
 
   <script>
     const state = {
-      experience: null,
-      certification: null,
-      specialization: null,
-      availability: null,
-      name: null,
-      email: null,
-      phone: null,
-      reference: null
+      fullName: '',
+      email: '',
+      phone: '',
+      country: '',
+      experience: '',
+      certification: '',
+      specialization: '',
+      availability: '',
+      whyJoin: ''
     };
-
-    const certificationOptions = [
-      'TEFL', 'TESOL', 'CELTA', 'DELTA', 'Trinity CertTESOL', 'Other certification'
-    ];
-
-    const specializationOptions = [
-      'Business English', 'Exam Preparation', 'Conversational English', 'IELTS / TOEFL', 'Speaking Skills', 'Young Learners'
-    ];
-
-    const availabilityOptions = [
-      'Full-time', 'Part-time', 'Weekends only', 'Flexible hours', 'Evenings', 'Mornings'
-    ];
 
     const messages = document.getElementById('messages');
     const interactiveArea = document.getElementById('interactiveArea');
     const resultArea = document.getElementById('resultArea');
+    const teacherForm = document.getElementById('teacherForm');
 
     function bot(text) {
       const div = document.createElement('div');
       div.className = 'bubble bot';
       div.textContent = text;
       messages.appendChild(div);
-      div.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      scrollBottom();
     }
 
     function user(text) {
@@ -400,204 +637,89 @@
       div.className = 'bubble user';
       div.textContent = text;
       messages.appendChild(div);
-      div.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      scrollBottom();
+    }
+
+    function scrollBottom() {
+      messages.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
 
     function setInteractive(html) {
       interactiveArea.innerHTML = html;
     }
 
-    function optionButtons(items) {
-      return `<div class="option-grid">${items.map((item, idx) => `<button class="choice-btn" data-choice="${idx}">${item}</button>`).join('')}</div>`;
+    function setFormValues() {
+      document.getElementById('formFullName').value = state.fullName;
+      document.getElementById('formEmail').value = state.email;
+      document.getElementById('formPhone').value = state.phone;
+      document.getElementById('formCountry').value = state.country;
+      document.getElementById('formExperience').value = state.experience;
+      document.getElementById('formCertification').value = state.certification;
+      document.getElementById('formSpecialization').value = state.specialization;
+      document.getElementById('formAvailability').value = state.availability;
+      document.getElementById('formWhyJoin').value = state.whyJoin;
     }
 
-    function actionButtons() {
-      return `<div class="action-row">
-        <button class="btn btn-primary" id="confirmBtn">Confirm</button>
-        <button class="btn btn-outline" id="restartBtn">Start Over</button>
+    function choiceButtons(items) {
+      return `<div class="choice-grid">
+        ${items.map((item, i) => `
+          <button class="choice-btn" data-choice="${i}">
+            <span>${item.label || item}</span>
+            ${item.small ? `<small>${item.small}</small>` : ''}
+          </button>
+        `).join('')}
       </div>`;
-    }
-
-    function generateReference(prefix = 'TCH') {
-      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      let a = '', b = '';
-      for (let i = 0; i < 8; i++) a += chars[Math.floor(Math.random() * chars.length)];
-      for (let i = 0; i < 5; i++) b += chars[Math.floor(Math.random() * chars.length)];
-      return `${prefix}-${a}-${b}`;
-    }
-
-    function escapeHTML(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    function createTeacherPDF() {
-      const dateText = new Date().toLocaleString();
-      const html = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Teacher Application Confirmation - ${escapeHTML(state.reference)}</title>
-<style>
-body{font-family:Arial,sans-serif;background:#f5f6fb;margin:0;padding:30px;color:#1f2748}
-.card{max-width:860px;margin:0 auto;background:#fff;border:1px solid #d9deea;border-radius:20px;padding:34px;box-shadow:0 12px 30px rgba(0,0,0,.06)}
-.head{text-align:center;border-bottom:1px solid #e2e7f2;padding-bottom:18px;margin-bottom:26px}
-.head h1{margin:0;color:#5e2ca5;font-size:34px}
-.head p{margin:8px 0 0;color:#66708b}
-.ref{padding:18px;border-radius:16px;background:#f0effb;text-align:center;margin-bottom:22px;border:1px solid #ddd7ff}
-.ref small{display:block;color:#6d77a0;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px}
-.ref strong{font-size:28px;color:#3d66e6}
-.section{border:1px solid #d9deea;border-radius:16px;padding:20px;margin-bottom:20px;background:#fbfcff}
-.section h2{font-size:18px;margin:0 0 12px;color:#5e2ca5}
-.row{margin:8px 0}
-.note{background:#eef8ff;border:1px solid #cfe6ff;padding:18px;border-radius:16px;color:#2b3558}
-.footer{margin-top:22px;color:#7a8299;font-size:14px}
-.watermark{position:fixed;top:44%;left:50%;transform:translate(-50%,-50%) rotate(-24deg);font-size:64px;color:rgba(53,208,200,.12);font-weight:800;pointer-events:none;white-space:nowrap}
-</style>
-</head>
-<body>
-<div class="watermark">WAITING REVIEW • S+ ENGLISH ACADEMY</div>
-<div class="card">
-  <div class="head">
-    <h1>Application Confirmation</h1>
-    <p>Teacher Position • S+ English Academy</p>
-  </div>
-  <div class="ref">
-    <small>Reference Number</small>
-    <strong>${escapeHTML(state.reference)}</strong>
-  </div>
-  <div class="section">
-    <h2>Your Application Details</h2>
-    <div class="row"><strong>Name:</strong> ${escapeHTML(state.name)}</div>
-    <div class="row"><strong>Email:</strong> ${escapeHTML(state.email)}</div>
-    <div class="row"><strong>Phone:</strong> ${escapeHTML(state.phone)}</div>
-    <div class="row"><strong>Years of Experience:</strong> ${escapeHTML(state.experience)}</div>
-    <div class="row"><strong>Certification:</strong> ${escapeHTML(state.certification)}</div>
-    <div class="row"><strong>Specialization:</strong> ${escapeHTML(state.specialization)}</div>
-    <div class="row"><strong>Availability:</strong> ${escapeHTML(state.availability)}</div>
-    <div class="row"><strong>Status:</strong> Waiting review</div>
-  </div>
-  <div class="note">
-    <strong>Next step:</strong> Please send this PDF with your reference number, along with your CV, to <strong>contact.englishcourse94@gmail.com</strong>. Our team will review your application and contact you within 24 hours.
-  </div>
-  <div class="footer">Document generated on ${escapeHTML(dateText)}</div>
-</div>
-</body>
-</html>`;
-
-      const win = window.open('', '_blank');
-      win.document.open();
-      win.document.write(html);
-      win.document.close();
-      return win;
-    }
-
-    function renderPDFActions() {
-      resultArea.innerHTML = `
-        <div class="result-box">
-          <h4>Application PDF Ready</h4>
-          <p>Your teacher application confirmation has been generated with reference number <strong>${state.reference}</strong>.</p>
-          <p>Please download or print the PDF and send it, together with your CV, to <strong>contact.englishcourse94@gmail.com</strong>.</p>
-          <div class="result-actions">
-            <button class="btn btn-primary" id="viewPdfBtn">View / Print PDF</button>
-            <a class="btn btn-outline" href="mailto:contact.englishcourse94@gmail.com?subject=Teacher%20Application%20${encodeURIComponent(state.reference)}">Email Application</a>
-          </div>
-          <div class="note">The PDF includes a unique reference number and a waiting review watermark for tracking.</div>
-        </div>`;
-      document.getElementById('viewPdfBtn').addEventListener('click', () => {
-        const pdfWindow = createTeacherPDF();
-        setTimeout(() => pdfWindow.print(), 500);
-      });
-      resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function startFlow() {
       messages.innerHTML = '';
       interactiveArea.innerHTML = '';
       resultArea.innerHTML = '';
-      Object.assign(state, { experience: null, certification: null, specialization: null, availability: null, name: null, email: null, phone: null, reference: null });
 
-      bot('Welcome to S+ Academy. Let’s begin your teacher application by understanding your background. How many years have you been teaching English?');
-      setInteractive(`
-        <div class="label">Years of teaching experience</div>
-        <input class="inline-input" id="expInput" placeholder="Example: 2 years" />
-        <div style="height:14px"></div>
-        <button class="btn btn-primary" id="expNext">Continue</button>
-      `);
-      document.getElementById('expNext').addEventListener('click', () => {
-        const value = document.getElementById('expInput').value.trim();
-        if (!value) return alert('Please enter your teaching experience.');
-        state.experience = value;
-        user(value);
-        askCertification();
-      });
-    }
+      state.fullName = '';
+      state.email = '';
+      state.phone = '';
+      state.country = '';
+      state.experience = '';
+      state.certification = '';
+      state.specialization = '';
+      state.availability = '';
+      state.whyJoin = '';
 
-    function askCertification() {
-      bot('Great. Which English teaching certification do you hold?');
-      setInteractive(optionButtons(certificationOptions));
-      interactiveArea.querySelectorAll('[data-choice]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.certification = certificationOptions[Number(btn.dataset.choice)];
-          user(state.certification);
-          askSpecialization();
-        });
-      });
-    }
-
-    function askSpecialization() {
-      bot('Excellent. What subjects or areas do you specialize in?');
-      setInteractive(optionButtons(specializationOptions));
-      interactiveArea.querySelectorAll('[data-choice]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.specialization = specializationOptions[Number(btn.dataset.choice)];
-          user(state.specialization);
-          askAvailability();
-        });
-      });
-    }
-
-    function askAvailability() {
-      bot('What is your availability like?');
-      setInteractive(optionButtons(availabilityOptions));
-      interactiveArea.querySelectorAll('[data-choice]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.availability = availabilityOptions[Number(btn.dataset.choice)];
-          user(state.availability);
-          askName();
-        });
-      });
+      bot('Welcome to S+ Academy. Thank you for your interest in joining our teaching team.');
+      bot('I will ask you a few short questions and then prepare your application for submission.');
+      askName();
     }
 
     function askName() {
-      bot('Now I need your contact details. Please enter your full name.');
+      bot('What is your full name?');
       setInteractive(`
         <div class="label">Full name</div>
-        <input class="inline-input" id="nameInput" placeholder="Your full name" />
-        <div style="height:14px"></div>
-        <button class="btn btn-primary" id="nameNext">Continue</button>
+        <input class="inline-input" id="nameInput" placeholder="Your full name">
+        <div class="action-row">
+          <button class="btn btn-primary" id="nameNext">Continue</button>
+        </div>
       `);
+
       document.getElementById('nameNext').addEventListener('click', () => {
         const value = document.getElementById('nameInput').value.trim();
         if (!value) return alert('Please enter your full name.');
-        state.name = value;
+        state.fullName = value;
         user(value);
         askEmail();
       });
     }
 
     function askEmail() {
-      bot('Please enter your email address.');
+      bot('What is your email address?');
       setInteractive(`
         <div class="label">Email address</div>
-        <input class="inline-input" id="emailInput" type="email" placeholder="name@example.com" />
-        <div style="height:14px"></div>
-        <button class="btn btn-primary" id="emailNext">Continue</button>
+        <input class="inline-input" id="emailInput" type="email" placeholder="name@example.com">
+        <div class="action-row">
+          <button class="btn btn-primary" id="emailNext">Continue</button>
+        </div>
       `);
+
       document.getElementById('emailNext').addEventListener('click', () => {
         const value = document.getElementById('emailInput').value.trim();
         if (!value || !value.includes('@')) return alert('Please enter a valid email address.');
@@ -608,52 +730,197 @@ body{font-family:Arial,sans-serif;background:#f5f6fb;margin:0;padding:30px;color
     }
 
     function askPhone() {
-      bot('Please enter your phone or WhatsApp number.');
+      bot('What is your phone or WhatsApp number?');
       setInteractive(`
         <div class="label">Phone / WhatsApp</div>
-        <input class="inline-input" id="phoneInput" placeholder="+212 ..." />
-        <div style="height:14px"></div>
-        <button class="btn btn-primary" id="phoneNext">Continue</button>
+        <input class="inline-input" id="phoneInput" placeholder="+212 ...">
+        <div class="action-row">
+          <button class="btn btn-primary" id="phoneNext">Continue</button>
+        </div>
       `);
+
       document.getElementById('phoneNext').addEventListener('click', () => {
         const value = document.getElementById('phoneInput').value.trim();
         if (!value) return alert('Please enter your phone number.');
         state.phone = value;
         user(value);
-        confirmSummary();
+        askCountry();
       });
     }
 
-    function confirmSummary() {
-      bot('Please review your application details. If everything is correct, confirm to generate your PDF confirmation.');
+    function askCountry() {
+      bot('Which country are you based in?');
+      setInteractive(`
+        <div class="label">Country</div>
+        <input class="inline-input" id="countryInput" placeholder="Your country">
+        <div class="action-row">
+          <button class="btn btn-primary" id="countryNext">Continue</button>
+        </div>
+      `);
+
+      document.getElementById('countryNext').addEventListener('click', () => {
+        const value = document.getElementById('countryInput').value.trim();
+        if (!value) return alert('Please enter your country.');
+        state.country = value;
+        user(value);
+        askExperience();
+      });
+    }
+
+    function askExperience() {
+      bot('How much English teaching experience do you have?');
+      const options = [
+        { label: 'Less than 1 year' },
+        { label: '1 to 2 years' },
+        { label: '3 to 5 years' },
+        { label: 'More than 5 years' }
+      ];
+
+      setInteractive(choiceButtons(options));
+
+      interactiveArea.querySelectorAll('[data-choice]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const selected = options[Number(btn.dataset.choice)].label;
+          state.experience = selected;
+          user(selected);
+          askCertification();
+        });
+      });
+    }
+
+    function askCertification() {
+      bot('Do you hold an English teaching certificate?');
+      const options = [
+        { label: 'Yes — TESOL / TEFL / CELTA / equivalent' },
+        { label: 'Yes — other teaching qualification' },
+        { label: 'No certificate yet' }
+      ];
+
+      setInteractive(choiceButtons(options));
+
+      interactiveArea.querySelectorAll('[data-choice]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const selected = options[Number(btn.dataset.choice)].label;
+          state.certification = selected;
+          user(selected);
+          askSpecialization();
+        });
+      });
+    }
+
+    function askSpecialization() {
+      bot('Which area do you feel most comfortable teaching?');
+      const options = [
+        { label: 'Business English' },
+        { label: 'Exam Preparation' },
+        { label: 'General English' },
+        { label: 'Conversation / Speaking' },
+        { label: 'Private Tutoring' }
+      ];
+
+      setInteractive(choiceButtons(options));
+
+      interactiveArea.querySelectorAll('[data-choice]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const selected = options[Number(btn.dataset.choice)].label;
+          state.specialization = selected;
+          user(selected);
+          askAvailability();
+        });
+      });
+    }
+
+    function askAvailability() {
+      bot('Please describe your general availability for teaching classes.');
+      setInteractive(`
+        <div class="label">Availability</div>
+        <textarea class="inline-textarea" id="availabilityInput" placeholder="Example: Monday to Friday evenings, weekends flexible..."></textarea>
+        <div class="action-row">
+          <button class="btn btn-primary" id="availabilityNext">Continue</button>
+        </div>
+      `);
+
+      document.getElementById('availabilityNext').addEventListener('click', () => {
+        const value = document.getElementById('availabilityInput').value.trim();
+        if (!value) return alert('Please enter your availability.');
+        state.availability = value;
+        user(value);
+        askWhyJoin();
+      });
+    }
+
+    function askWhyJoin() {
+      bot('Why would you like to join S+ Academy?');
+      setInteractive(`
+        <div class="label">Why do you want to join?</div>
+        <textarea class="inline-textarea" id="whyJoinInput" placeholder="Tell us briefly why you would like to teach with S+ Academy..."></textarea>
+        <div class="action-row">
+          <button class="btn btn-primary" id="whyJoinNext">Continue</button>
+        </div>
+      `);
+
+      document.getElementById('whyJoinNext').addEventListener('click', () => {
+        const value = document.getElementById('whyJoinInput').value.trim();
+        if (!value) return alert('Please enter your answer.');
+        state.whyJoin = value;
+        user(value);
+        showSummary();
+      });
+    }
+
+    function showSummary() {
+      bot('Thank you. Please review your application before submitting it.');
       setInteractive(`
         <div class="summary">
-          <div><strong>Experience:</strong> ${state.experience}</div>
+          <div><strong>Full Name:</strong> ${state.fullName}</div>
+          <div><strong>Email:</strong> ${state.email}</div>
+          <div><strong>Phone:</strong> ${state.phone}</div>
+          <div><strong>Country:</strong> ${state.country}</div>
+          <div><strong>Teaching Experience:</strong> ${state.experience}</div>
           <div><strong>Certification:</strong> ${state.certification}</div>
           <div><strong>Specialization:</strong> ${state.specialization}</div>
           <div><strong>Availability:</strong> ${state.availability}</div>
-          <div><strong>Name:</strong> ${state.name}</div>
-          <div><strong>Email:</strong> ${state.email}</div>
-          <div><strong>Phone:</strong> ${state.phone}</div>
+          <div><strong>Why Join S+ Academy:</strong> ${state.whyJoin}</div>
         </div>
-        <div style="height:14px"></div>
-        ${actionButtons()}
+        <div class="action-row">
+          <button class="btn btn-primary" id="submitApplicationBtn">Submit Application</button>
+          <button class="btn btn-outline" id="restartBtn">Start Over</button>
+        </div>
       `);
-      document.getElementById('confirmBtn').addEventListener('click', () => {
-        state.reference = generateReference('TCH');
-        user('Confirm');
-        bot(`Your application is ready. Reference number: ${state.reference}. Please use the PDF below and send it with your CV to contact.englishcourse94@gmail.com.`);
-        setInteractive(`<div class="summary"><strong>Status:</strong> Waiting review<br><strong>Reference:</strong> ${state.reference}</div><div style="height:14px"></div><button class="btn btn-outline" id="restartFlowBtn">Start New Application</button>`);
-        document.getElementById('restartFlowBtn').addEventListener('click', startFlow);
-        renderPDFActions();
-      });
+
+      document.getElementById('submitApplicationBtn').addEventListener('click', submitApplication);
       document.getElementById('restartBtn').addEventListener('click', () => {
         user('Start Over');
         startFlow();
       });
     }
 
+    function submitApplication() {
+      setFormValues();
+      user('Submit Application');
+      bot('Your application is ready and is being sent to S+ Academy.');
+
+      setInteractive(`
+        <div class="success-card">
+          <h4>Application ready</h4>
+          <p>Your teacher application has been prepared for submission.</p>
+          <p>After submission, S+ Academy will receive your details by email for review.</p>
+          <div class="action-row">
+            <button class="btn btn-primary" id="finalSubmitBtn">Send Application</button>
+            <button class="btn btn-outline" id="restartAfterBtn">Start New Application</button>
+          </div>
+        </div>
+      `);
+
+      document.getElementById('finalSubmitBtn').addEventListener('click', () => {
+        teacherForm.submit();
+      });
+
+      document.getElementById('restartAfterBtn').addEventListener('click', startFlow);
+    }
+
     startFlow();
   </script>
+
 </body>
 </html>
