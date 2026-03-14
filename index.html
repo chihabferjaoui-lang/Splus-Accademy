@@ -39,7 +39,9 @@
 
     a { color: inherit; text-decoration: none; }
     img { max-width: 100%; display: block; }
-    button, select, input { font: inherit; }
+    button, select, input {
+      font: inherit;
+    }
 
     .container {
       width: min(var(--max), calc(100% - 32px));
@@ -70,10 +72,9 @@
       min-width: 0;
     }
 
-    /* ✅ LOGO SIZE: 50x50 */
     .brand img {
-      width: 50px;
-      height: 50px;
+      width: 42px;
+      height: 42px;
       object-fit: contain;
       border-radius: 10px;
     }
@@ -646,6 +647,7 @@
       padding: 34px;
     }
 
+    
     .legal h1 {
       font-size: clamp(32px, 4vw, 54px);
       margin-bottom: 10px;
@@ -691,13 +693,21 @@
         grid-template-columns: 1fr;
       }
 
-      .nav { min-height: 72px; }
+      .nav {
+        min-height: 72px;
+      }
 
-      .brand-name { font-size: 18px; }
+      .brand-name {
+        font-size: 18px;
+      }
 
-      .nav-actions .btn-primary { display: none; }
+      .nav-actions .btn-primary {
+        display: none;
+      }
 
-      .hero { padding-top: 28px; }
+      .hero {
+        padding-top: 28px;
+      }
 
       .hero-actions,
       .newsletter-form,
@@ -719,7 +729,9 @@
         padding: 24px;
       }
 
-      .section-text { font-size: 18px; }
+      .section-text {
+        font-size: 18px;
+      }
     }
   </style>
 </head>
@@ -727,7 +739,7 @@
   <header class="topbar">
     <div class="container nav">
       <a class="brand" href="#home">
-        <img src="assets/logo-50.png" alt="S+ English Academy logo" onerror="this.src='S+ Eng Academy.png'" />
+        <img src="assets/logo.png" alt="S+ English Academy logo" />
         <span class="brand-name" data-i18n="brandName">S+ Academy</span>
       </a>
 
@@ -737,7 +749,7 @@
         <a href="#programs" data-i18n="nav.programs">Programs</a>
         <a href="#blog" data-i18n="nav.blog">Blog</a>
         <a href="booking.html" data-i18n="nav.book">Book a Class</a>
-        <a href="apply.html" data-i18n="nav.apply">Apply</a>
+        <a href="teacher-apply.html" data-i18n="nav.apply">Apply</a>
         <a href="#payments" data-i18n="nav.payments">Payments</a>
       </nav>
 
@@ -764,7 +776,7 @@
           <p class="lead" data-i18n="hero.text">An elite online English academy for ambitious students and professionals seeking fluency, confidence, and career advancement.</p>
           <p class="sublead" data-i18n="hero.subtext">All programs are delivered live via Zoom, ensuring structured, interactive, and professional learning from anywhere.</p>
           <div class="hero-actions">
-            <a class="btn btn-primary" href="apply.html" data-i18n="hero.ctaPrimary">Apply Now</a>
+            <a class="btn btn-primary" href="teacher-apply.html" data-i18n="hero.ctaPrimary">Apply Now</a>
             <a class="btn btn-outline" href="#programs" data-i18n="hero.ctaSecondary">Explore Programs</a>
           </div>
         </div>
@@ -914,7 +926,7 @@
         <div class="assistant-box">
           <h3 data-i18n="booking.chatTitle">Interactive Booking Chat</h3>
           <p data-i18n="booking.chatText">Click the chat button below to start booking with our interactive assistant. Get instant guidance on selecting the perfect program, date, and time.</p>
-          <a class="btn btn-primary" href="booking.html" data-i18n="booking.chatBtn">Start Booking Now</a>
+          <a class="btn btn-primary" href="https://wa.me/212718613036?text=Hello%20I%20want%20to%20book%20an%20English%20class" target="_blank" rel="noopener" data-i18n="booking.chatBtn">Start Booking Now</a>
         </div>
       </div>
     </section>
@@ -953,7 +965,7 @@
             <div class="benefit">✓ <div><strong data-i18n="apply.b2.title">24-Hour Response</strong><div data-i18n="apply.b2.text">Our team reviews and contacts you within 24 hours</div></div></div>
             <div class="benefit">✓ <div><strong data-i18n="apply.b3.title">Premium Support</strong><div data-i18n="apply.b3.text">Personal guidance through every step</div></div></div>
           </div>
-          <a class="btn btn-primary" href="apply.html" data-i18n="apply.button">Start Your Application</a>
+          <a class="btn btn-primary" href="booking.html" data-i18n="apply.button">Start Your Application</a>
         </div>
       </div>
     </section>
@@ -996,6 +1008,7 @@
     </section>
 
     <section id="test" class="hidden"></section>
+
     <section id="blog" class="hidden"></section>
     <section id="payments" class="hidden"></section>
   </main>
@@ -1024,7 +1037,7 @@
             <li><a href="#about" data-i18n="nav.about">About</a></li>
             <li><a href="#programs" data-i18n="nav.programs">Programs</a></li>
             <li><a href="#blog" data-i18n="nav.blog">Blog</a></li>
-            <li><a href="booking.html" data-i18n="nav.book">Book a Class</a></li>
+            <li><a href="#booking" data-i18n="nav.book">Book a Class</a></li>
           </ul>
         </div>
 
@@ -1115,20 +1128,434 @@
         footer: {
           about: 'An elite online English academy for ambitious students and professionals seeking fluency, confidence, and career advancement.',
           quick: 'Quick Links', contact: 'Contact', email: 'Email:', phone: 'Phone:', newsletter: 'Newsletter', newsText: 'Get weekly insights on English mastery and academy updates.', emailPlaceholder: 'Enter your email', subscribe: 'Subscribe', newsSub: 'Get weekly insights on English mastery, exclusive tips, and academy updates.', privacy: 'Privacy Policy', terms: 'Terms & Conditions', refund: 'Refund Policy', cookies: 'Cookie Policy', copy: '© 2026 S+ Academy. All rights reserved. Live via Zoom.'
+        },
+        test: {
+          eyebrow: 'Placement Test', title: 'Test Your English Level', text: 'Take one of our 10 quiz versions to estimate your level from A1 to C2. Each attempt selects a quiz randomly and shows your final level instantly.',
+          boxTitle: '10-Level Quiz Bank', boxText: 'Our placement system uses 10 randomized quiz sets covering grammar, vocabulary, reading, and usage. Choose the best answer for each question. At the end, you will receive a level estimate from A1 to C2.',
+          b1: { title: '10 randomized quiz versions', text: 'A different test can appear each time you start' },
+          b2: { title: 'Instant level estimate', text: 'Get a final result from A1 to C2 as soon as you finish' },
+          b3: { title: 'Professional screening', text: 'Useful for applicants, students, and placement decisions' },
+          start: 'Start Level Test', submit: 'Submit Test', new: 'Load Another Quiz'
         }
       },
-      fr: { brandName: 'S+ Academy', nav: { home: 'Accueil', about: 'À propos', programs: 'Programmes', blog: 'Blog', book: 'Réserver un cours', apply: 'Postuler', payments: 'Paiements', test: 'Tester votre niveau' } },
-      es: { brandName: 'S+ Academy', nav: { home: 'Inicio', about: 'Sobre nosotros', programs: 'Programas', blog: 'Blog', book: 'Reservar clase', apply: 'Aplicar', payments: 'Pagos', test: 'Prueba tu nivel' } },
-      pt: { brandName: 'S+ Academy', nav: { home: 'Início', about: 'Sobre', programs: 'Programas', blog: 'Blog', book: 'Reservar aula', apply: 'Candidatar-se', payments: 'Pagamentos', test: 'Teste seu nível' } },
-      zh: { brandName: 'S+ Academy', nav: { home: '首页', about: '关于我们', programs: '课程', blog: '博客', book: '预约课程', apply: '申请', payments: '支付', test: '测试水平' } },
-      ar: { brandName: 'أكاديمية +S', nav: { home: 'الرئيسية', about: 'من نحن', programs: 'البرامج', blog: 'المدونة', book: 'احجز درسًا', apply: 'التقديم', payments: 'المدفوعات', test: 'اختبر مستواك' } }
+      fr: {
+        brandName: 'S+ Academy',
+        nav: { home: 'Accueil', about: 'À propos', programs: 'Programmes', blog: 'Blog', book: 'Réserver un cours', apply: 'Postuler', payments: 'Paiements', test: 'Tester votre niveau' },
+        hero: { eyebrow: 'Académie d’anglais en ligne premium', title: 'Maîtrisez l’anglais avec confiance et autorité', text: 'Une académie d’anglais en ligne premium pour les étudiants ambitieux et les professionnels souhaitant améliorer leur aisance, leur confiance et leur évolution de carrière.', subtext: 'Tous nos cours sont dispensés en direct via Zoom, garantissant un apprentissage structuré, interactif et professionnel depuis n’importe où.', ctaPrimary: 'S’inscrire maintenant', ctaSecondary: 'Découvrir les programmes' },
+        about: { eyebrow: 'À propos de notre académie', title: 'À propos de S+ Academy', text: 'S+ Academy est une académie d’anglais axée sur les résultats, conçue pour les étudiants ambitieux et les professionnels en quête d’excellence.', b1: 'Une académie d’anglais orientée résultats', b2: 'Conçue pour les étudiants ambitieux et les professionnels', b3: 'Axée sur l’aisance, la confiance et l’évolution de carrière', b4: 'Cours en direct via Zoom, structurés et interactifs', highlight: 'Comparable à une académie internationale de langue en ligne haut de gamme.' },
+        programs: {
+          eyebrow: 'Offres premium', title: 'Programmes Premium', text: 'Choisissez le programme qui correspond à vos objectifs et commencez une véritable transformation en anglais.',
+          business: { title: 'Anglais des affaires', text: 'Maîtrisez la communication professionnelle pour avoir un impact de haut niveau dans des environnements internationaux.' },
+          exam: { title: 'Préparation aux examens', text: 'Une préparation ciblée pour réussir les principaux examens de niveau d’anglais avec des stratégies éprouvées.' },
+          day: { title: 'Anglais du quotidien', text: 'Développez votre aisance et votre confiance dans l’anglais conversationnel de tous les jours.' },
+          private: { title: 'Cours particuliers', text: 'Un accompagnement personnalisé en individuel, adapté à vos objectifs et à votre rythme.' },
+          speaking: { title: 'Cours de conversation', price: 'Contactez-nous pour les tarifs', text: 'Un travail spécialisé pour développer une expression orale claire, fluide et confiante.' }
+        },
+        common: { liveZoom: 'En direct via Zoom', enroll: 'S’inscrire maintenant' },
+        why: {
+          eyebrow: 'Notre distinction', title: 'Pourquoi choisir S+ Academy', text: 'Nous combinons des standards d’enseignement internationaux avec un accompagnement personnalisé pour offrir des résultats exceptionnels.',
+          f1: { title: 'Communication professionnelle avancée', text: 'Des standards internationaux conçus pour les professionnels ambitieux qui souhaitent progresser.' },
+          f2: { title: 'Sessions interactives en direct sur Zoom', text: 'Un apprentissage structuré en temps réel avec interaction directe et retour immédiat.' },
+          f3: { title: 'Parcours d’apprentissage personnalisés', text: 'Des programmes conçus selon vos objectifs, votre rythme et votre style d’apprentissage.' },
+          f4: { title: 'Horaires flexibles', text: 'Apprenez à votre rythme grâce à des horaires adaptables à votre vie professionnelle.' },
+          f5: { title: 'Standards d’enseignement internationaux', text: 'Des enseignants formés selon des standards internationaux pour une qualité premium.' },
+          note: 'Un investissement premium pour votre évolution professionnelle.'
+        },
+        booking: {
+          eyebrow: 'Planifiez votre apprentissage', title: 'Réservez votre cours', text: 'Choisissez votre programme, votre date et votre horaire. Tous les cours sont dispensés en direct via Zoom par des enseignants experts. Vous recevrez une confirmation et l’accès Zoom sous 24 heures.',
+          s1: { title: 'Choisir un programme', text: 'Sélectionnez parmi nos programmes premium' },
+          s2: { title: 'Choisir l’horaire', text: 'Sélectionnez la date et l’heure qui vous conviennent' },
+          s3: { title: 'Recevoir la confirmation', text: 'Recevez votre PDF avec numéro de référence' },
+          chatTitle: 'Assistant de réservation interactif', chatText: 'Cliquez sur le bouton ci-dessous pour commencer votre réservation avec notre assistant interactif. Recevez une aide instantanée pour choisir le bon programme, la bonne date et le bon horaire.', chatBtn: 'Réserver maintenant'
+        },
+        apply: {
+          eyebrow: 'Prêt à transformer votre avenir', title: 'Postulez et réservez votre place', text: 'Les places sont limitées dans chaque groupe. Envoyez votre demande pour réserver votre place. Notre équipe vous transmettra votre confirmation avec les informations d’accès Zoom.',
+          s1: { title: 'Choisir un programme', text: 'Choisissez votre parcours d’apprentissage' },
+          s2: { title: 'Partager vos disponibilités', text: 'Indiquez-nous vos disponibilités' },
+          s3: { title: 'Recevoir la confirmation', text: 'Recevez votre document d’inscription' },
+          boxTitle: 'Rejoignez S+ Academy dès aujourd’hui', boxText: 'Transformez votre anglais avec nos cours interactifs en direct via Zoom. Utilisez notre assistant simple pour réserver votre place et recevoir votre confirmation complète.',
+          b1: { title: 'Processus rapide', text: 'Complétez votre demande en quelques minutes' },
+          b2: { title: 'Réponse sous 24 heures', text: 'Notre équipe examine votre demande et vous contacte sous 24 heures' },
+          b3: { title: 'Accompagnement premium', text: 'Un suivi personnalisé à chaque étape' },
+          button: 'Commencer ma demande'
+        },
+        teachers: {
+          eyebrow: 'Opportunité de carrière', title: 'Rejoignez notre équipe pédagogique', text: 'Êtes-vous professeur d’anglais certifié ? Nous recherchons des éducateurs passionnés pour rejoindre S+ Academy et dispenser des cours premium en direct à des étudiants du monde entier.',
+          boxTitle: 'Êtes-vous professeur d’anglais certifié ?', boxText: 'Rejoignez l’équipe d’enseignants d’élite de S+ Academy. Nous recrutons activement des professeurs d’anglais certifiés avec une expérience en ligne.',
+          needTitle: 'Nous recherchons', need1: '✓ Professeurs d’anglais certifiés', need2: '✓ Expérience professionnelle en enseignement en ligne', need3: '✓ Engagement envers la réussite des étudiants', need4: '✓ Flexibilité et fiabilité',
+          offerTitle: 'Nous offrons', offer1: '✓ Rémunération compétitive', offer2: '✓ Horaires flexibles', offer3: '✓ Développement professionnel', offer4: '✓ Base mondiale d’étudiants',
+          applyText: 'Soumettez votre candidature via notre assistant interactif et nous examinerons votre profil sous 24 heures.', button: 'Postuler à notre équipe'
+        },
+        footer: {
+          about: 'Une académie d’anglais en ligne premium pour les étudiants ambitieux et les professionnels qui visent l’aisance, la confiance et l’évolution de carrière.',
+          quick: 'Liens rapides', contact: 'Contact', email: 'E-mail :', phone: 'Téléphone :', newsletter: 'Newsletter', newsText: 'Recevez chaque semaine des conseils sur la maîtrise de l’anglais et les actualités de l’académie.', emailPlaceholder: 'Entrez votre e-mail', subscribe: 'S’abonner', newsSub: 'Recevez des conseils exclusifs, des mises à jour et des contenus utiles chaque semaine.', privacy: 'Politique de confidentialité', terms: 'Conditions générales', refund: 'Politique de remboursement', cookies: 'Politique de cookies', copy: '© 2026 S+ Academy. Tous droits réservés. En direct via Zoom.'
+        },
+        test: {
+          eyebrow: 'Test de niveau', title: 'Testez votre niveau d’anglais', text: 'Passez l’une de nos 10 versions de quiz pour estimer votre niveau de A1 à C2. Chaque tentative sélectionne un quiz aléatoire et affiche votre résultat immédiatement.',
+          boxTitle: 'Banque de 10 quiz', boxText: 'Notre système de placement utilise 10 quiz aléatoires couvrant la grammaire, le vocabulaire, la compréhension et l’usage. Choisissez la meilleure réponse à chaque question pour obtenir une estimation de niveau de A1 à C2.',
+          b1: { title: '10 versions aléatoires', text: 'Un quiz différent peut apparaître à chaque démarrage' },
+          b2: { title: 'Résultat instantané', text: 'Recevez immédiatement votre estimation de niveau de A1 à C2' },
+          b3: { title: 'Évaluation professionnelle', text: 'Utile pour les candidats, les étudiants et le placement' },
+          start: 'Commencer le test', submit: 'Soumettre le test', new: 'Charger un autre quiz'
+        }
+      },
+      es: {
+        brandName: 'S+ Academy',
+        nav: { home: 'Inicio', about: 'Sobre nosotros', programs: 'Programas', blog: 'Blog', book: 'Reservar clase', apply: 'Aplicar', payments: 'Pagos', test: 'Prueba tu nivel' },
+        hero: { eyebrow: 'Academia de inglés online premium', title: 'Domina el inglés con confianza y autoridad', text: 'Una academia de inglés online de alto nivel para estudiantes ambiciosos y profesionales que buscan fluidez, confianza y crecimiento profesional.', subtext: 'Todos los programas se imparten en directo a través de Zoom, con una experiencia estructurada, interactiva y profesional desde cualquier lugar.', ctaPrimary: 'Inscribirse ahora', ctaSecondary: 'Explorar programas' },
+        about: { eyebrow: 'Sobre nuestra academia', title: 'Sobre S+ Academy', text: 'S+ Academy es una academia de inglés enfocada en resultados, diseñada para estudiantes ambiciosos y profesionales que buscan excelencia.', b1: 'Una academia de inglés orientada a resultados', b2: 'Diseñada para estudiantes ambiciosos y profesionales', b3: 'Enfocada en fluidez, confianza y crecimiento profesional', b4: 'Sesiones en vivo por Zoom, estructuradas e interactivas', highlight: 'Comparable a una academia internacional de idiomas en línea de primer nivel.' },
+        programs: {
+          eyebrow: 'Ofertas premium', title: 'Programas Premium', text: 'Elige el programa que mejor se adapte a tus objetivos y comienza una transformación real en inglés.',
+          business: { title: 'Inglés de negocios', text: 'Domina la comunicación profesional para generar impacto ejecutivo en entornos empresariales internacionales.' },
+          exam: { title: 'Preparación de exámenes', text: 'Entrenamiento específico para destacar en los principales exámenes de inglés con estrategias comprobadas.' },
+          day: { title: 'Inglés del día a día', text: 'Desarrolla fluidez y seguridad en el inglés conversacional para contextos sociales y profesionales.' },
+          private: { title: 'Tutoría privada', text: 'Acompañamiento personalizado uno a uno, adaptado a tus metas y ritmo de aprendizaje.' },
+          speaking: { title: 'Clases de conversación', price: 'Consultar precio', text: 'Enfoque especializado para desarrollar una expresión oral segura, clara y fluida en inglés.' }
+        },
+        common: { liveZoom: 'En vivo por Zoom', enroll: 'Inscribirse ahora' },
+        why: {
+          eyebrow: 'Nuestra diferencia', title: 'Por qué elegir S+ Academy', text: 'Combinamos estándares internacionales de enseñanza con acompañamiento personalizado para ofrecer resultados excepcionales.',
+          f1: { title: 'Comunicación profesional avanzada', text: 'Estándares internacionales diseñados para profesionales ambiciosos que buscan avanzar en su carrera.' },
+          f2: { title: 'Sesiones interactivas en vivo por Zoom', text: 'Aprendizaje estructurado en tiempo real con interacción directa y retroalimentación inmediata.' },
+          f3: { title: 'Rutas de aprendizaje personalizadas', text: 'Programas diseñados según tus objetivos, tu ritmo y tu estilo de aprendizaje.' },
+          f4: { title: 'Horarios flexibles', text: 'Aprende a tu propio ritmo con horarios adaptables a tu vida profesional.' },
+          f5: { title: 'Estándares internacionales de enseñanza', text: 'Docentes formados con estándares de clase mundial para ofrecer educación premium.' },
+          note: 'Una inversión premium en tu crecimiento profesional.'
+        },
+        booking: {
+          eyebrow: 'Organiza tu aprendizaje', title: 'Reserva tu clase', text: 'Selecciona tu programa, fecha y horario preferidos. Todas las sesiones se realizan en vivo por Zoom con instructores expertos. Recibirás confirmación y acceso a Zoom en un plazo de 24 horas.',
+          s1: { title: 'Elegir programa', text: 'Selecciona entre nuestros programas premium' },
+          s2: { title: 'Elegir horario', text: 'Selecciona la fecha y la hora que prefieras' },
+          s3: { title: 'Recibir confirmación', text: 'Recibe tu PDF con número de referencia' },
+          chatTitle: 'Asistente interactivo de reservas', chatText: 'Haz clic en el botón de abajo para comenzar tu reserva con nuestro asistente interactivo. Recibe ayuda inmediata para elegir el programa, la fecha y la hora ideales.', chatBtn: 'Reservar ahora'
+        },
+        apply: {
+          eyebrow: 'Listo para transformar tu futuro', title: 'Aplica y asegura tu plaza', text: 'Las plazas por grupo son limitadas. Envía tu solicitud para asegurar tu lugar. Nuestro equipo te enviará la confirmación con los detalles de acceso a Zoom.',
+          s1: { title: 'Seleccionar programa', text: 'Elige tu ruta de aprendizaje' },
+          s2: { title: 'Compartir horario', text: 'Cuéntanos tu disponibilidad' },
+          s3: { title: 'Recibir confirmación', text: 'Obtén tu documento de inscripción' },
+          boxTitle: 'Únete hoy a S+ Academy', boxText: 'Transforma tu inglés con nuestros cursos en vivo e interactivos por Zoom. Usa nuestro asistente para asegurar tu plaza y recibir tu confirmación con todos los detalles.',
+          b1: { title: 'Proceso rápido', text: 'Completa tu solicitud en pocos minutos' },
+          b2: { title: 'Respuesta en 24 horas', text: 'Nuestro equipo revisa tu solicitud y te contacta en 24 horas' },
+          b3: { title: 'Soporte premium', text: 'Orientación personalizada en cada paso' },
+          button: 'Comenzar solicitud'
+        },
+        teachers: {
+          eyebrow: 'Oportunidad profesional', title: 'Únete a nuestro equipo docente', text: '¿Eres profesor de inglés certificado? Buscamos educadores apasionados para unirse a S+ Academy y ofrecer clases premium en vivo a estudiantes de todo el mundo.',
+          boxTitle: '¿Eres profesor de inglés certificado?', boxText: 'Únete al equipo de educadores de élite de S+ Academy. Estamos reclutando activamente profesores certificados con experiencia online.',
+          needTitle: 'Estamos buscando', need1: '✓ Profesores de inglés certificados', need2: '✓ Experiencia profesional en enseñanza online', need3: '✓ Pasión por el éxito del estudiante', need4: '✓ Flexibilidad y fiabilidad',
+          offerTitle: 'Ofrecemos', offer1: '✓ Remuneración competitiva', offer2: '✓ Horarios flexibles', offer3: '✓ Desarrollo profesional', offer4: '✓ Base global de estudiantes',
+          applyText: 'Envía tu candidatura mediante nuestro asistente interactivo y revisaremos tu perfil en un plazo de 24 horas.', button: 'Aplicar para unirte al equipo'
+        },
+        footer: {
+          about: 'Una academia de inglés online premium para estudiantes ambiciosos y profesionales que buscan fluidez, confianza y crecimiento profesional.',
+          quick: 'Enlaces rápidos', contact: 'Contacto', email: 'Correo:', phone: 'Teléfono:', newsletter: 'Boletín', newsText: 'Recibe consejos semanales sobre dominio del inglés y novedades de la academia.', emailPlaceholder: 'Introduce tu correo', subscribe: 'Suscribirse', newsSub: 'Recibe consejos exclusivos, actualizaciones y contenido útil cada semana.', privacy: 'Política de privacidad', terms: 'Términos y condiciones', refund: 'Política de reembolso', cookies: 'Política de cookies', copy: '© 2026 S+ Academy. Todos los derechos reservados. En vivo por Zoom.'
+        },
+        test: {
+          eyebrow: 'Prueba de nivel', title: 'Prueba tu nivel de inglés', text: 'Haz una de nuestras 10 versiones de cuestionario para estimar tu nivel de A1 a C2. Cada intento selecciona un cuestionario aleatorio y muestra tu resultado al instante.',
+          boxTitle: 'Banco de 10 cuestionarios', boxText: 'Nuestro sistema de nivelación utiliza 10 cuestionarios aleatorios con gramática, vocabulario, comprensión y uso del idioma. Elige la mejor respuesta en cada pregunta y recibe una estimación de nivel de A1 a C2.',
+          b1: { title: '10 versiones aleatorias', text: 'Cada vez puede aparecer un cuestionario diferente' },
+          b2: { title: 'Resultado inmediato', text: 'Recibe tu estimación final de A1 a C2 al terminar' },
+          b3: { title: 'Evaluación profesional', text: 'Útil para postulantes, estudiantes y decisiones de nivelación' },
+          start: 'Comenzar prueba', submit: 'Enviar prueba', new: 'Cargar otro cuestionario'
+        }
+      },
+      pt: {
+        brandName: 'S+ Academy',
+        nav: { home: 'Início', about: 'Sobre', programs: 'Programas', blog: 'Blog', book: 'Reservar aula', apply: 'Candidatar-se', payments: 'Pagamentos', test: 'Teste seu nível' },
+        hero: { eyebrow: 'Academia premium de inglês online', title: 'Domine o inglês com confiança e autoridade', text: 'Uma academia premium de inglês online para estudantes ambiciosos e profissionais que desejam melhorar sua fluência, confiança e crescimento profissional.', subtext: 'Todos os programas são realizados ao vivo via Zoom, garantindo um aprendizado estruturado, interativo e profissional de qualquer lugar.', ctaPrimary: 'Inscreva-se agora', ctaSecondary: 'Explorar programas' },
+        about: { eyebrow: 'Sobre nossa academia', title: 'Sobre a S+ Academy', text: 'A S+ Academy é uma academia de inglês orientada para resultados, criada para estudantes ambiciosos e profissionais que buscam excelência.', b1: 'Uma academia de inglês orientada a resultados', b2: 'Feita para estudantes ambiciosos e profissionais', b3: 'Foco em fluência, confiança e crescimento profissional', b4: 'Aulas ao vivo via Zoom, estruturadas e interativas', highlight: 'Comparável a uma academia internacional de idiomas online de alto nível.' },
+        programs: {
+          eyebrow: 'Ofertas premium', title: 'Programas Premium', text: 'Escolha o programa que melhor se adapta aos seus objetivos e comece uma verdadeira transformação no inglês.',
+          business: { title: 'Inglês para negócios', text: 'Domine a comunicação profissional para gerar impacto em ambientes empresariais internacionais.' },
+          exam: { title: 'Preparação para exames', text: 'Treinamento direcionado para se destacar nos principais exames de proficiência em inglês com estratégias comprovadas.' },
+          day: { title: 'Inglês do dia a dia', text: 'Desenvolva fluência e confiança no inglês conversacional para contextos sociais e profissionais.' },
+          private: { title: 'Aulas particulares', text: 'Acompanhamento individual personalizado, ajustado aos seus objetivos e ritmo de aprendizagem.' },
+          speaking: { title: 'Aulas de conversação', price: 'Preço sob consulta', text: 'Foco especializado no desenvolvimento de uma fala em inglês confiante, clara e articulada.' }
+        },
+        common: { liveZoom: 'Ao vivo via Zoom', enroll: 'Matricular-se agora' },
+        why: {
+          eyebrow: 'Nosso diferencial', title: 'Por que escolher a S+ Academy', text: 'Combinamos padrões internacionais de ensino com acompanhamento personalizado para entregar resultados excepcionais.',
+          f1: { title: 'Treinamento avançado de comunicação', text: 'Padrões internacionais pensados para profissionais ambiciosos que buscam crescimento na carreira.' },
+          f2: { title: 'Aulas interativas ao vivo via Zoom', text: 'Aprendizado estruturado em tempo real com interação direta e feedback imediato.' },
+          f3: { title: 'Trilhas de aprendizagem personalizadas', text: 'Currículos adaptados aos seus objetivos, ritmo e estilo de aprendizagem.' },
+          f4: { title: 'Horários flexíveis', text: 'Aprenda no seu ritmo com horários adaptáveis à sua vida profissional.' },
+          f5: { title: 'Padrões internacionais de ensino', text: 'Instrutores treinados em padrões de excelência para oferecer educação premium.' },
+          note: 'Um investimento premium no seu crescimento profissional.'
+        },
+        booking: {
+          eyebrow: 'Organize seu aprendizado', title: 'Reserve sua aula', text: 'Escolha seu programa, data e horário. Todas as sessões são realizadas ao vivo via Zoom com instrutores especialistas. Você receberá confirmação e acesso ao Zoom em até 24 horas.',
+          s1: { title: 'Escolher programa', text: 'Selecione entre nossos programas premium' },
+          s2: { title: 'Escolher horário', text: 'Selecione a data e o horário desejados' },
+          s3: { title: 'Receber confirmação', text: 'Receba seu PDF com número de referência' },
+          chatTitle: 'Assistente interativo de reservas', chatText: 'Clique no botão abaixo para começar sua reserva com nosso assistente interativo. Receba orientação imediata para escolher o programa, a data e o horário ideais.', chatBtn: 'Reservar agora'
+        },
+        apply: {
+          eyebrow: 'Pronto para transformar seu futuro', title: 'Candidate-se e garanta sua vaga', text: 'As vagas por grupo são limitadas. Envie sua candidatura para garantir seu lugar. Nossa equipe enviará sua confirmação com os detalhes de acesso ao Zoom.',
+          s1: { title: 'Selecionar programa', text: 'Escolha seu caminho de aprendizagem' },
+          s2: { title: 'Compartilhar agenda', text: 'Informe sua disponibilidade' },
+          s3: { title: 'Receber confirmação', text: 'Receba seu documento de matrícula' },
+          boxTitle: 'Junte-se à S+ Academy hoje', boxText: 'Transforme seu inglês com nossos cursos ao vivo e interativos via Zoom. Use nosso assistente para garantir sua vaga e receber sua confirmação com todos os detalhes.',
+          b1: { title: 'Processo rápido', text: 'Conclua sua candidatura em poucos minutos' },
+          b2: { title: 'Resposta em 24 horas', text: 'Nossa equipe analisa e entra em contato em até 24 horas' },
+          b3: { title: 'Suporte premium', text: 'Orientação personalizada em cada etapa' },
+          button: 'Começar candidatura'
+        },
+        teachers: {
+          eyebrow: 'Oportunidade de carreira', title: 'Junte-se à nossa equipe docente', text: 'Você é professor de inglês certificado? Estamos procurando educadores apaixonados para se juntar à S+ Academy e ministrar cursos premium ao vivo para alunos do mundo todo.',
+          boxTitle: 'Você é um professor de inglês certificado?', boxText: 'Junte-se à equipe de educadores de elite da S+ Academy. Estamos recrutando ativamente professores certificados com experiência em ensino online.',
+          needTitle: 'Estamos procurando', need1: '✓ Professores de inglês certificados', need2: '✓ Experiência profissional em ensino online', need3: '✓ Paixão pelo sucesso do aluno', need4: '✓ Flexibilidade e confiabilidade',
+          offerTitle: 'Oferecemos', offer1: '✓ Remuneração competitiva', offer2: '✓ Horários flexíveis', offer3: '✓ Desenvolvimento profissional', offer4: '✓ Base global de alunos',
+          applyText: 'Envie sua candidatura usando nosso assistente interativo e analisaremos seu perfil em até 24 horas.', button: 'Candidatar-se à equipe'
+        },
+        footer: {
+          about: 'Uma academia premium de inglês online para estudantes ambiciosos e profissionais que buscam fluência, confiança e crescimento profissional.',
+          quick: 'Links rápidos', contact: 'Contato', email: 'E-mail:', phone: 'Telefone:', newsletter: 'Newsletter', newsText: 'Receba insights semanais sobre domínio do inglês e novidades da academia.', emailPlaceholder: 'Digite seu e-mail', subscribe: 'Inscrever-se', newsSub: 'Receba dicas exclusivas, atualizações e conteúdos úteis toda semana.', privacy: 'Política de Privacidade', terms: 'Termos e Condições', refund: 'Política de Reembolso', cookies: 'Política de Cookies', copy: '© 2026 S+ Academy. Todos os direitos reservados. Ao vivo via Zoom.'
+        },
+        test: {
+          eyebrow: 'Teste de nivelamento', title: 'Teste seu nível de inglês', text: 'Faça uma das nossas 10 versões de quiz para estimar seu nível de A1 a C2. Cada tentativa seleciona um quiz aleatório e mostra o resultado instantaneamente.',
+          boxTitle: 'Banco com 10 quizzes', boxText: 'Nosso sistema de nivelamento usa 10 quizzes aleatórios com gramática, vocabulário, leitura e uso da língua. Escolha a melhor resposta em cada pergunta e receba uma estimativa de nível de A1 a C2.',
+          b1: { title: '10 versões aleatórias', text: 'Um quiz diferente pode aparecer a cada tentativa' },
+          b2: { title: 'Resultado imediato', text: 'Receba sua estimativa final de A1 a C2 ao terminar' },
+          b3: { title: 'Triagem profissional', text: 'Útil para candidatos, alunos e decisões de nivelamento' },
+          start: 'Começar teste', submit: 'Enviar teste', new: 'Carregar outro quiz'
+        }
+      },
+      zh: {
+        brandName: 'S+ Academy',
+        nav: { home: '首页', about: '关于我们', programs: '课程', blog: '博客', book: '预约课程', apply: '申请', payments: '支付', test: '测试水平' },
+        hero: { eyebrow: '高端在线英语学院', title: '自信而高效地掌握英语', text: '我们是一所高端在线英语学院，专为有抱负的学生和专业人士打造，帮助他们提升英语流利度、自信心，并推动职业发展。', subtext: '我们的所有课程都通过 Zoom 直播进行，确保您无论身在何处都能获得结构化、互动化且专业的学习体验。', ctaPrimary: '立即申请', ctaSecondary: '探索课程' },
+        about: { eyebrow: '关于我们的学院', title: '关于 S+ 英语学院', text: 'S+ 英语学院是一所以成果为导向的在线英语学院，专为有抱负的学生和专业人士打造，帮助他们提升英语能力，实现职业发展。', b1: '以成果为导向的英语学院', b2: '专为有抱负的学生和专业人士设计', b3: '专注提升英语流利度、自信心与职业发展', b4: '通过 Zoom 提供结构化、互动式直播课程', highlight: '可与国际顶级在线语言学院媲美。' },
+        programs: {
+          eyebrow: '精品课程', title: '高级课程', text: '选择符合您目标的课程，开启您的英语提升之旅。',
+          business: { title: '商务英语', text: '掌握专业英语沟通技巧，在国际商业环境中自信表达并提升影响力。' },
+          exam: { title: '考试备考', text: '针对主要英语考试的系统备考培训，通过经过验证的策略帮助您取得优异成绩。' },
+          day: { title: '日常英语', text: '在社交和职业环境中建立自信，并流利地使用英语。' },
+          private: { title: '一对一辅导', text: '个性化的一对一英语辅导，根据您的学习目标和节奏量身定制。' },
+          speaking: { title: '口语课程', price: '价格请咨询', text: '专注提升英语口语表达能力，在真实交流环境中建立自信并提高流利度。' }
+        },
+        common: { liveZoom: 'Zoom 直播课程', enroll: '立即报名' },
+        why: {
+          eyebrow: '我们的优势', title: '为什么选择 S+ 英语学院', text: '我们将国际教学标准与个性化辅导相结合，帮助学员取得卓越的学习成果。',
+          f1: { title: '高阶商务沟通培训', text: '专为希望提升职业发展的专业人士设计，符合国际教学标准。' },
+          f2: { title: '通过 Zoom 进行互动直播课程', text: '实时、结构化的学习，与讲师直接互动并获得即时反馈。' },
+          f3: { title: '个性化学习路径', text: '根据您的目标、学习节奏和学习风格定制课程。' },
+          f4: { title: '灵活的学习时间安排', text: '根据您的节奏学习，课程时间灵活安排以适应您的工作与生活。' },
+          f5: { title: '国际教学标准', text: '所有讲师均接受国际标准培训，确保高质量的教学体验。' },
+          note: '为您的职业发展做出的高价值投资。'
+        },
+        booking: {
+          eyebrow: '安排您的学习', title: '预约您的课程', text: '选择您喜欢的课程、日期和时间。所有课程都通过 Zoom 由专家讲师授课。您将在 24 小时内收到确认和 Zoom 访问信息。',
+          s1: { title: '选择课程', text: '从我们的精选课程中选择' },
+          s2: { title: '选择时间', text: '选择您希望的日期和时间' },
+          s3: { title: '获取确认', text: '获取包含参考编号的确认 PDF' },
+          chatTitle: '智能预约助手', chatText: '点击下方按钮，通过我们的智能助手开始预约。在轻松的对话中获得即时指导，帮助您选择最适合的课程、日期和时间。', chatBtn: '立即预约'
+        },
+        apply: {
+          eyebrow: '准备开启改变', title: '申请并保留您的席位', text: '每个班级席位有限。提交申请以保留您的席位。我们的团队将发送确认详细信息和 Zoom 访问信息。',
+          s1: { title: '选择课程', text: '选择适合您的学习路径' },
+          s2: { title: '提交时间安排', text: '告诉我们您的可用时间' },
+          s3: { title: '获取确认', text: '获取您的报名确认文件' },
+          boxTitle: '立即加入 S+ 英语学院', boxText: '通过我们的实时互动 Zoom 课程提升您的英语能力。使用我们的智能助手预订课程，并获取包含 Zoom 信息的确认文件。',
+          b1: { title: '快速申请流程', text: '几分钟内即可通过聊天助手完成申请' },
+          b2: { title: '24 小时内回复', text: '我们的团队将在 24 小时内审核并联系您' },
+          b3: { title: '专业支持服务', text: '全程为您提供专业指导' },
+          button: '立即申请'
+        },
+        teachers: {
+          eyebrow: '职业机会', title: '加入我们的教师队伍', text: '您是一名认证的英语教师吗？我们正在寻找充满热情的教育工作者加入 S+ 英语学院，为全球学生提供高质量的直播课程。',
+          boxTitle: '您是一名认证的英语教师吗？', boxText: '加入 S+ 英语学院的精英教师团队。我们正在招聘认证英语教师，为全球学生提供高质量的在线直播课程。',
+          needTitle: '我们正在寻找', need1: '✓ 认证英语教师', need2: '✓ 具有在线教学经验', need3: '✓ 热衷于帮助学生成功', need4: '✓ 灵活且可靠',
+          offerTitle: '我们提供', offer1: '✓ 具有竞争力的报酬', offer2: '✓ 灵活的授课时间', offer3: '✓ 专业发展机会', offer4: '✓ 来自全球的学生群体',
+          applyText: '通过我们的互动聊天助手提交申请，我们将在 24 小时内审核您的资历。', button: '申请加入团队'
+        },
+        footer: {
+          about: '一所高端在线英语学院，专为有抱负的学生和专业人士打造，帮助他们提升流利度、自信心与职业发展。',
+          quick: '快速链接', contact: '联系方式', email: '电子邮箱：', phone: '电话：', newsletter: '订阅简报', newsText: '获取每周英语提升建议和学院最新动态。', emailPlaceholder: '输入您的邮箱', subscribe: '订阅', newsSub: '获取独家技巧、更新资讯和英语学习内容。', privacy: '隐私政策', terms: '条款与条件', refund: '退款政策', cookies: 'Cookie 政策', copy: '© 2026 S+ Academy。保留所有权利。课程通过 Zoom 直播。'
+        },
+        test: {
+          eyebrow: '分级测试', title: '测试您的英语水平', text: '参加我们的 10 套随机测验之一，快速估算您的英语水平（A1 至 C2）。每次开始都会随机抽取一套题，完成后立即显示等级结果。',
+          boxTitle: '10 套随机题库', boxText: '我们的分级系统包含 10 套随机测试，覆盖语法、词汇、阅读理解和语言运用。请为每道题选择最佳答案，完成后即可获得 A1 至 C2 的水平评估。',
+          b1: { title: '10 套随机试卷', text: '每次开始都可能出现不同的测验' },
+          b2: { title: '即时等级结果', text: '完成后立即获得从 A1 到 C2 的结果' },
+          b3: { title: '专业筛选工具', text: '适用于申请者、学生和分班判断' },
+          start: '开始测试', submit: '提交测试', new: '加载另一套试题'
+        }
+      },
+      ar: {
+        brandName: 'أكاديمية +S',
+        nav: { home: 'الرئيسية', about: 'من نحن', programs: 'البرامج', blog: 'المدونة', book: 'احجز درسًا', apply: 'التقديم', payments: 'المدفوعات', test: 'اختبر مستواك' },
+        hero: { eyebrow: 'أكاديمية إنجليزية راقية عبر الإنترنت', title: 'أتقن اللغة الإنجليزية بثقة وإتقان', text: 'أكاديمية إنجليزية راقية عبر الإنترنت للطلاب الطموحين والمهنيين الذين يسعون إلى الطلاقة والثقة والتقدم المهني.', subtext: 'جميع برامجنا تُقدَّم مباشرة عبر Zoom، بما يضمن تعليمًا منظمًا وتفاعليًا واحترافيًا من أي مكان.', ctaPrimary: 'سجل الآن', ctaSecondary: 'استكشف البرامج' },
+        about: { eyebrow: 'عن أكاديميتنا', title: 'عن أكاديمية +S', text: 'نحن لا نعلّم الكلمات فحسب، بل نعيد صياغة علاقتك باللغة. نؤمن أن الطلاقة ليست رفاهًا، بل ضرورة، وأن الثقة تُكتسب بالتدريب والممارسة.', b1: 'أكاديمية إنجليزية تركّز على النتائج', b2: 'مصممة للطلاب الطموحين والمهنيين', b3: 'تركيز على الطلاقة والثقة والتقدم الوظيفي', b4: 'جلسات مباشرة منظمة وتفاعلية عبر Zoom', highlight: 'تُضاهي أرقى الأكاديميات الدولية لتعليم اللغات عبر الإنترنت.' },
+        programs: {
+          eyebrow: 'البرامج المتميزة', title: 'برامجنا المتميزة', text: 'اختر البرنامج الذي ينسجم مع أهدافك وابدأ رحلتك التحولية لإتقان اللغة الإنجليزية.',
+          business: { title: 'الإنجليزية للأعمال', text: 'أتقن التواصل المهني باللغة الإنجليزية واصنع حضورًا مؤثرًا في البيئات الدولية.' },
+          exam: { title: 'التحضير للاختبارات', text: 'تدريب موجّه لمساعدتك على التفوق في أهم اختبارات اللغة الإنجليزية باستراتيجيات فعّالة.' },
+          day: { title: 'الإنجليزية اليومية', text: 'طوّر طلاقتك وثقتك في الإنجليزية اليومية للتواصل الاجتماعي والمهني.' },
+          private: { title: 'التدريب الفردي', text: 'توجيه شخصي واحد لواحد وفق أهدافك الخاصة وسرعة تعلمك.' },
+          speaking: { title: 'دروس المحادثة', price: 'تواصل معنا لمعرفة السعر', text: 'تركيز خاص على تنمية مهارات التحدث الواثق والواضح باللغة الإنجليزية في بيئة جماعية.' }
+        },
+        common: { liveZoom: 'مباشر عبر Zoom', enroll: 'سجل الآن' },
+        why: {
+          eyebrow: 'تميزنا', title: 'لماذا تختار أكاديمية +S؟', text: 'لأننا نزاوج بين صرامة المعايير ودفء التوجيه الشخصي لنمنحك علمًا راسخًا وصوتًا حاضرًا وخطوة أكثر ثقة في دربك المهني.',
+          f1: { title: 'تدريب على التواصل المهني الرفيع', text: 'معايير دولية مصممة للمهنيين الطموحين الساعين إلى التقدم المهني.' },
+          f2: { title: 'جلسات Zoom مباشرة وتفاعلية', text: 'تعلم منظم في الوقت الفعلي مع تفاعل مباشر وملاحظات فورية من المدرس.' },
+          f3: { title: 'مسارات تعلم مخصصة', text: 'مناهج مصممة وفق أهدافك وسرعتك وأسلوبك في التعلم.' },
+          f4: { title: 'مواعيد مرنة', text: 'تعلّم وفق وقتك الخاص مع جداول قابلة للتكيف مع حياتك المهنية.' },
+          f5: { title: 'معايير تدريس دولية', text: 'مدرسون مدربون وفق معايير عالمية لضمان جودة تعليم عالية.' },
+          note: 'استثمار متميز في نموك المهني.'
+        },
+        booking: {
+          eyebrow: 'جدولة تعلمك', title: 'احجز درسك', text: 'اختر برنامجك المفضل وتاريخك ووقتك. جميع الجلسات تقدم مباشرة عبر Zoom مع معلمين خبراء. ستتلقى التأكيد وإمكانية الوصول إلى Zoom خلال 24 ساعة.',
+          s1: { title: 'اختر البرنامج', text: 'اختر من بين برامجنا المتميزة' },
+          s2: { title: 'اختر الوقت', text: 'حدد التاريخ والوقت المناسبين لك' },
+          s3: { title: 'استلم التأكيد', text: 'احصل على ملف PDF مع رقم المرجع' },
+          chatTitle: 'مساعد الحجز التفاعلي', chatText: 'اضغط على الزر أدناه لبدء الحجز باستخدام مساعدنا التفاعلي. ستحصل على إرشاد فوري لاختيار البرنامج والتاريخ والوقت المناسبين لك.', chatBtn: 'ابدأ الحجز الآن'
+        },
+        apply: {
+          eyebrow: 'مستعد للتحول', title: 'قدّم طلبك واحجز مقعدك', text: 'المقاعد محدودة في كل مجموعة. قدّم طلبك الآن لتأمين مكانك. سيرسل لك فريقنا تفاصيل التأكيد ومعلومات الدخول إلى Zoom.',
+          s1: { title: 'اختر البرنامج', text: 'اختر المسار التعليمي المناسب لك' },
+          s2: { title: 'شارك جدولك الزمني', text: 'أخبرنا بالأوقات التي تناسبك' },
+          s3: { title: 'استلم التأكيد', text: 'احصل على وثيقة تأكيد التسجيل' },
+          boxTitle: 'انضم إلى أكاديمية +S اليوم', boxText: 'طوّر مهاراتك في اللغة الإنجليزية من خلال دوراتنا المباشرة والتفاعلية عبر Zoom. استخدم مساعدنا الذكي لحجز مقعدك واستلام تأكيدك مع جميع التفاصيل.',
+          b1: { title: 'عملية تسجيل سريعة', text: 'أكمل طلبك خلال دقائق' },
+          b2: { title: 'استجابة خلال 24 ساعة', text: 'يراجع فريقنا طلبك ويتواصل معك خلال 24 ساعة' },
+          b3: { title: 'دعم متميز', text: 'إرشاد شخصي في كل خطوة' },
+          button: 'ابدأ التسجيل الآن'
+        },
+        teachers: {
+          eyebrow: 'فرصة مهنية', title: 'انضم إلى فريق التدريس لدينا', text: 'هل أنت مدرس لغة إنجليزية معتمد؟ نحن نبحث عن تربويين شغوفين للانضمام إلى أكاديمية +S وتقديم دورات مباشرة متميزة للمتعلمين حول العالم.',
+          boxTitle: 'هل أنت مدرس لغة إنجليزية معتمد؟', boxText: 'انضم إلى نخبة المدرسين في أكاديمية +S. نحن نوظف مدرسين معتمدين لديهم خبرة في التدريس عبر الإنترنت.',
+          needTitle: 'نبحث عن', need1: '✓ مدرسين لغة إنجليزية معتمدين', need2: '✓ خبرة مهنية في التدريس عبر الإنترنت', need3: '✓ شغف بنجاح الطلاب', need4: '✓ مرونة وموثوقية',
+          offerTitle: 'نقدّم', offer1: '✓ تعويضات تنافسية', offer2: '✓ جداول مرنة', offer3: '✓ تطوير مهني', offer4: '✓ قاعدة طلاب عالمية',
+          applyText: 'قدّم طلبك باستخدام مساعدنا التفاعلي وسنراجع مؤهلاتك خلال 24 ساعة.', button: 'قدّم للانضمام إلى فريقنا'
+        },
+        footer: {
+          about: 'أكاديمية إنجليزية راقية عبر الإنترنت للطلاب الطموحين والمهنيين الساعين إلى الطلاقة والثقة والتقدم الوظيفي.',
+          quick: 'روابط سريعة', contact: 'تواصل معنا', email: 'البريد الإلكتروني:', phone: 'الهاتف:', newsletter: 'النشرة البريدية', newsText: 'احصل على نصائح أسبوعية لإتقان الإنجليزية وآخر أخبار الأكاديمية.', emailPlaceholder: 'أدخل بريدك الإلكتروني', subscribe: 'اشترك', newsSub: 'احصل على نصائح حصرية وتحديثات ومحتوى مفيد كل أسبوع.', privacy: 'سياسة الخصوصية', terms: 'الشروط والأحكام', refund: 'سياسة الاسترجاع', cookies: 'سياسة ملفات تعريف الارتباط', copy: '© 2026 أكاديمية +S. جميع الحقوق محفوظة. مباشر عبر Zoom.'
+        },
+        test: {
+          eyebrow: 'اختبار تحديد المستوى', title: 'اختبر مستواك في اللغة الإنجليزية', text: 'اخضع لواحد من 10 اختبارات قصيرة لتقدير مستواك من A1 إلى C2. في كل مرة يبدأ اختبار جديد يتم اختيار نموذج عشوائي وتظهر النتيجة النهائية فورًا.',
+          boxTitle: 'بنك من 10 اختبارات', boxText: 'يعتمد نظام تحديد المستوى لدينا على 10 نماذج عشوائية تشمل القواعد والمفردات والقراءة والاستخدام العملي للغة. اختر الإجابة الأفضل في كل سؤال، وفي النهاية ستحصل على تقدير لمستواك من A1 إلى C2.',
+          b1: { title: '10 نماذج عشوائية', text: 'قد يظهر لك اختبار مختلف في كل مرة' },
+          b2: { title: 'نتيجة فورية', text: 'احصل على تقييم نهائي من A1 إلى C2 فور الانتهاء' },
+          b3: { title: 'أداة فرز احترافية', text: 'مناسبة للمتقدمين والطلاب وقرارات التسكين' },
+          start: 'ابدأ الاختبار', submit: 'إرسال الاختبار', new: 'تحميل اختبار آخر'
+        }
+      }
     };
 
     const legalPages = {
-      privacy: { title: 'Privacy Policy', html: `<h1>Privacy Policy</h1><p><strong>S+ English Academy</strong><br>Effective Date: January 2026</p>` },
-      terms: { title: 'Terms & Conditions', html: `<h1>Terms & Conditions</h1><p><strong>S+ English Academy</strong><br>Effective Date: January 2026</p>` },
-      refund: { title: 'Refund Policy', html: `<h1>Refund Policy</h1><p><strong>S+ English Academy</strong><br>Effective Date: January 2026</p>` },
-      cookies: { title: 'Cookie Policy', html: `<h1>Cookie Policy</h1><p><strong>S+ English Academy</strong><br>Effective Date: January 2026</p>` }
+      privacy: {
+        title: 'Privacy Policy',
+        html: `
+          <h1>Privacy Policy</h1>
+          <p><strong>S+ English Academy</strong><br>Effective Date: January 2026</p>
+          <h2>1. Introduction</h2>
+          <p>S+ English Academy is committed to protecting the privacy and personal data of its students, website visitors, and users in accordance with Moroccan Law No. 09-08 relating to the protection of individuals with regard to the processing of personal data.</p>
+          <h2>2. Data Controller</h2>
+          <p>S+ English Academy<br>Email: contact.englishcourse94@gmail.com<br>Phone: +212 718 613 036<br>Morocco</p>
+          <h2>3. Personal Data We Collect</h2>
+          <ul><li>Full name</li><li>Email address</li><li>Phone number</li><li>Payment information</li><li>Course enrollment details</li><li>Communication records</li><li>IP address and browsing data</li></ul>
+          <h2>4. Purpose of Data Processing</h2>
+          <ul><li>Course registration and management</li><li>Payment processing</li><li>Issuing certificates</li><li>Communication with students</li><li>Improving our services</li><li>Marketing communications (with consent)</li><li>Compliance with legal obligations</li></ul>
+          <h2>5. Legal Basis</h2>
+          <ul><li>Your consent</li><li>Performance of a contract</li><li>Legal obligations</li><li>Legitimate business interests</li></ul>
+          <h2>6. Data Sharing</h2>
+          <p>We may share personal data with payment service providers, hosting providers, IT service providers, and legal or regulatory authorities when required by law. We do not sell or rent personal data to third parties.</p>
+          <h2>7. Security</h2>
+          <p>We implement appropriate technical and organizational measures to protect personal data against unauthorized access, loss, destruction, alteration, or misuse.</p>
+          <h2>8. Your Rights</h2>
+          <p>You have the right to access your personal data, request correction, object to certain processing, and request deletion where legally applicable. Requests may be sent to contact.englishcourse94@gmail.com.</p>
+          <h2>9. Cookies</h2>
+          <p>Our website may use cookies to improve user experience, analyze website traffic, and enhance website functionality.</p>
+          <h2>10. International Transfers</h2>
+          <p>If personal data is transferred outside Morocco, appropriate safeguards will be applied in accordance with Moroccan law.</p>
+          <h2>11. Updates</h2>
+          <p>S+ English Academy reserves the right to update this Privacy Policy at any time. Updates will be published on this page.</p>
+        `
+      },
+      terms: {
+        title: 'Terms & Conditions',
+        html: `
+          <h1>Terms & Conditions</h1>
+          <p><strong>S+ English Academy</strong><br>Effective Date: January 2026</p>
+          <h2>1. Acceptance of Terms</h2>
+          <p>By using the S+ English Academy website and enrolling in our programs, you agree to be bound by these Terms and Conditions.</p>
+          <h2>2. Services Description</h2>
+          <ul><li>Business English programs</li><li>Exam preparation courses</li><li>Day-to-day English classes</li><li>Private tutoring sessions</li><li>Speaking and conversation classes</li></ul>
+          <h2>3. Payment and Billing</h2>
+          <p>All courses require payment before enrollment. Full payment must be completed before the course begins.</p>
+          <h2>4. Course Access and Attendance</h2>
+          <ul><li>Zoom access details will be sent via email</li><li>Classes are conducted live at scheduled times</li><li>Regular attendance is required for certificate eligibility</li><li>Students are responsible for stable internet connectivity</li></ul>
+          <h2>5. User Conduct</h2>
+          <ul><li>Behave respectfully during classes</li><li>Follow course guidelines and instructor directions</li><li>Do not record or share sessions without permission</li><li>Avoid harassment or discriminatory behavior</li><li>Maintain professionalism in all communications</li></ul>
+          <h2>6. Intellectual Property</h2>
+          <p>All course materials remain the intellectual property of S+ English Academy and may only be used for personal educational purposes.</p>
+          <h2>7. Limitation of Liability</h2>
+          <p>S+ English Academy is not liable for technical difficulties on the student’s end, indirect damages, or employment outcomes.</p>
+          <h2>8. Certificate of Completion</h2>
+          <p>Certificates may be issued upon successful completion of the course, including minimum attendance and satisfactory performance.</p>
+          <h2>9. Modifications</h2>
+          <p>S+ English Academy may modify, suspend, or discontinue services with reasonable notice where possible.</p>
+          <h2>10. Governing Law</h2>
+          <p>These Terms are governed by the laws of Morocco and fall under the exclusive jurisdiction of Moroccan courts.</p>
+          <h2>11. Contact</h2>
+          <p>Email: contact.englishcourse94@gmail.com<br>Phone: +212 718 613 036<br>Morocco</p>
+        `
+      },
+      refund: {
+        title: 'Refund Policy',
+        html: `
+          <h1>Refund Policy</h1>
+          <p><strong>S+ English Academy</strong><br>Effective Date: January 2026</p>
+          <h2>1. Refund Eligibility</h2>
+          <ul><li>Request made within 7 days of enrollment and before the first class session</li><li>Course cancellation by S+ English Academy</li><li>Documented technical issues that prevent course access and remain unresolved</li></ul>
+          <h2>2. Non-Refundable Situations</h2>
+          <ul><li>Change of mind after the course has started</li><li>Student internet or technical issues</li><li>Requests after the refund period</li><li>Removal for conduct violations</li><li>Private tutoring sessions already delivered</li></ul>
+          <h2>3. Refund Request Process</h2>
+          <ol><li>Email contact.englishcourse94@gmail.com within 7 days of enrollment</li><li>Provide enrollment details and reason</li><li>Your request will be reviewed within 3 business days</li><li>If approved, the refund is processed to the original payment method within 5–10 business days</li></ol>
+          <h2>4. Course Rescheduling</h2>
+          <p>Students may request transfer to a future cohort or apply payment toward a different program. Credits remain valid for 12 months.</p>
+          <h2>5. Partial Refunds</h2>
+          <p>A 50% refund may be considered if cancellation is requested after the first class but within the 7-day window and a valid reason is provided.</p>
+          <h2>6. Course Cancellations</h2>
+          <p>If S+ English Academy cancels a course, students may receive a full refund or transfer to another cohort.</p>
+          <h2>7. Processing Time</h2>
+          <p>Approved refunds are processed within 5–10 business days, with additional bank processing time possible.</p>
+          <h2>8. Contact</h2>
+          <p>Email: contact.englishcourse94@gmail.com<br>Phone: +212 718 613 036<br>Morocco</p>
+          <h2>9. Updates</h2>
+          <p>S+ English Academy may update this policy at any time. Changes become effective 30 days after publication.</p>
+        `
+      },
+      cookies: {
+        title: 'Cookie Policy',
+        html: `
+          <h1>Cookie Policy</h1>
+          <p><strong>S+ English Academy</strong><br>Effective Date: January 2026</p>
+          <h2>1. What Are Cookies?</h2>
+          <p>Cookies are small text files stored on your device when you visit a website. They help websites remember your visit and preferences.</p>
+          <h2>2. Types of Cookies We Use</h2>
+          <ul><li><strong>Essential cookies</strong> – required for core website functionality</li><li><strong>Analytical cookies</strong> – help us understand website usage</li><li><strong>Preference cookies</strong> – remember language and interface settings</li><li><strong>Marketing cookies</strong> – may be used to personalize advertising content</li></ul>
+          <h2>3. How We Use Cookies</h2>
+          <ul><li>Remember sessions and login state</li><li>Store language and interface preferences</li><li>Analyze traffic and user behavior</li><li>Improve website security and functionality</li></ul>
+          <h2>4. Third-Party Cookies</h2>
+          <p>Trusted third-party providers such as analytics or marketing services may place cookies on your device in accordance with their own policies.</p>
+          <h2>5. Cookie Duration</h2>
+          <ul><li>Session cookies – deleted when the browser closes</li><li>Persistent cookies – remain until they expire or are deleted manually</li></ul>
+          <h2>6. Your Choices</h2>
+          <p>You may accept, reject, or delete cookies through your browser settings. Some features may not work correctly if cookies are disabled.</p>
+          <h2>7. Browser Instructions</h2>
+          <p>Most major browsers provide privacy settings that allow control over cookie behavior.</p>
+          <h2>8. Impact of Disabling Cookies</h2>
+          <p>Disabling cookies may affect login functionality, saved preferences, and personalized content delivery.</p>
+          <h2>9. Updates</h2>
+          <p>S+ English Academy may update this Cookie Policy periodically. Changes will be published on this page.</p>
+          <h2>10. Contact</h2>
+          <p>Email: contact.englishcourse94@gmail.com<br>Phone: +212 718 613 036<br>Morocco</p>
+        `
+      }
     };
 
     let currentLang = 'en';
