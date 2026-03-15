@@ -1,3 +1,4 @@
+<!-- /teacher-apply.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Teacher Application | S+ English Academy</title>
   <meta name="description" content="Apply to join S+ English Academy as an English teacher through our guided chat-style application form." />
+
   <style>
     :root {
       --bg: #f6f6fb;
@@ -479,7 +481,11 @@
   <header class="topbar">
     <div class="container nav">
       <a class="brand" href="index.html">
-        <img src="logo.png" alt="S+ English Academy logo" onerror="this.src='S+ Eng Academy.png'" />
+        <img
+          src="logo.png"
+          alt="S+ English Academy logo"
+          onerror="this.onerror=null; this.src='S%2B%20Eng%20Academy.png';"
+        />
         <span>S+ Academy</span>
       </a>
 
@@ -607,319 +613,336 @@
   </footer>
 
   <script>
-    const state = {
-      fullName: '',
-      email: '',
-      phone: '',
-      country: '',
-      experience: '',
-      certification: '',
-      specialization: '',
-      availability: '',
-      whyJoin: ''
-    };
+    document.addEventListener('DOMContentLoaded', () => {
+      const state = {
+        fullName: '',
+        email: '',
+        phone: '',
+        country: '',
+        experience: '',
+        certification: '',
+        specialization: '',
+        availability: '',
+        whyJoin: ''
+      };
 
-    const messages = document.getElementById('messages');
-    const interactiveArea = document.getElementById('interactiveArea');
-    const resultArea = document.getElementById('resultArea');
-    const teacherForm = document.getElementById('teacherForm');
+      const messages = document.getElementById('messages');
+      const interactiveArea = document.getElementById('interactiveArea');
+      const resultArea = document.getElementById('resultArea');
+      const teacherForm = document.getElementById('teacherForm');
 
-    function bot(text) {
-      const div = document.createElement('div');
-      div.className = 'bubble bot';
-      div.textContent = text;
-      messages.appendChild(div);
-      scrollBottom();
-    }
-
-    function user(text) {
-      const div = document.createElement('div');
-      div.className = 'bubble user';
-      div.textContent = text;
-      messages.appendChild(div);
-      scrollBottom();
-    }
-
-    function scrollBottom() {
-      messages.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    }
-
-    function setInteractive(html) {
-      interactiveArea.innerHTML = html;
-    }
-
-    function setFormValues() {
-      document.getElementById('formFullName').value = state.fullName;
-      document.getElementById('formEmail').value = state.email;
-      document.getElementById('formPhone').value = state.phone;
-      document.getElementById('formCountry').value = state.country;
-      document.getElementById('formExperience').value = state.experience;
-      document.getElementById('formCertification').value = state.certification;
-      document.getElementById('formSpecialization').value = state.specialization;
-      document.getElementById('formAvailability').value = state.availability;
-      document.getElementById('formWhyJoin').value = state.whyJoin;
-    }
-
-    function choiceButtons(items) {
-      return `<div class="choice-grid">
-        ${items.map((item, i) => `
-          <button class="choice-btn" data-choice="${i}">
-            <span>${item.label || item}</span>
-            ${item.small ? `<small>${item.small}</small>` : ''}
-          </button>
-        `).join('')}
-      </div>`;
-    }
-
-    function startFlow() {
-      messages.innerHTML = '';
-      interactiveArea.innerHTML = '';
-      resultArea.innerHTML = '';
-
-      state.fullName = '';
-      state.email = '';
-      state.phone = '';
-      state.country = '';
-      state.experience = '';
-      state.certification = '';
-      state.specialization = '';
-      state.availability = '';
-      state.whyJoin = '';
-
-      bot('Welcome to S+ Academy. Thank you for your interest in joining our teaching team.');
-      bot('I will ask you a few short questions and then prepare your application for submission.');
-      askName();
-    }
-
-    function askName() {
-      bot('What is your full name?');
-      setInteractive(`
-        <div class="label">Full name</div>
-        <input class="inline-input" id="nameInput" placeholder="Your full name">
-        <div class="action-row">
-          <button class="btn btn-primary" id="nameNext">Continue</button>
-        </div>
-      `);
-
-      document.getElementById('nameNext').addEventListener('click', () => {
-        const value = document.getElementById('nameInput').value.trim();
-        if (!value) return alert('Please enter your full name.');
-        state.fullName = value;
-        user(value);
-        askEmail();
-      });
-    }
-
-    function askEmail() {
-      bot('What is your email address?');
-      setInteractive(`
-        <div class="label">Email address</div>
-        <input class="inline-input" id="emailInput" type="email" placeholder="name@example.com">
-        <div class="action-row">
-          <button class="btn btn-primary" id="emailNext">Continue</button>
-        </div>
-      `);
-
-      document.getElementById('emailNext').addEventListener('click', () => {
-        const value = document.getElementById('emailInput').value.trim();
-        if (!value || !value.includes('@')) return alert('Please enter a valid email address.');
-        state.email = value;
-        user(value);
-        askPhone();
-      });
-    }
-
-    function askPhone() {
-      bot('What is your phone or WhatsApp number?');
-      setInteractive(`
-        <div class="label">Phone / WhatsApp</div>
-        <input class="inline-input" id="phoneInput" placeholder="+212 ...">
-        <div class="action-row">
-          <button class="btn btn-primary" id="phoneNext">Continue</button>
-        </div>
-      `);
-
-      document.getElementById('phoneNext').addEventListener('click', () => {
-        const value = document.getElementById('phoneInput').value.trim();
-        if (!value) return alert('Please enter your phone number.');
-        state.phone = value;
-        user(value);
-        askCountry();
-      });
-    }
-
-    function askCountry() {
-      bot('Which country are you based in?');
-      setInteractive(`
-        <div class="label">Country</div>
-        <input class="inline-input" id="countryInput" placeholder="Your country">
-        <div class="action-row">
-          <button class="btn btn-primary" id="countryNext">Continue</button>
-        </div>
-      `);
-
-      document.getElementById('countryNext').addEventListener('click', () => {
-        const value = document.getElementById('countryInput').value.trim();
-        if (!value) return alert('Please enter your country.');
-        state.country = value;
-        user(value);
-        askExperience();
-      });
-    }
-
-    function askExperience() {
-      bot('How much English teaching experience do you have?');
-      const options = [
-        { label: 'Less than 1 year' },
-        { label: '1 to 2 years' },
-        { label: '3 to 5 years' },
-        { label: 'More than 5 years' }
-      ];
-
-      setInteractive(choiceButtons(options));
-
-      interactiveArea.querySelectorAll('[data-choice]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const selected = options[Number(btn.dataset.choice)].label;
-          state.experience = selected;
-          user(selected);
-          askCertification();
+      if (!messages || !interactiveArea || !resultArea || !teacherForm) {
+        console.error('Teacher assistant: missing required elements.', {
+          messages, interactiveArea, resultArea, teacherForm
         });
-      });
-    }
+        return;
+      }
 
-    function askCertification() {
-      bot('Do you hold an English teaching certificate?');
-      const options = [
-        { label: 'Yes — TESOL / TEFL / CELTA / equivalent' },
-        { label: 'Yes — other teaching qualification' },
-        { label: 'No certificate yet' }
-      ];
+      function scrollBottom() {
+        messages.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }
 
-      setInteractive(choiceButtons(options));
+      function bot(text) {
+        const div = document.createElement('div');
+        div.className = 'bubble bot';
+        div.textContent = text;
+        messages.appendChild(div);
+        scrollBottom();
+      }
 
-      interactiveArea.querySelectorAll('[data-choice]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const selected = options[Number(btn.dataset.choice)].label;
-          state.certification = selected;
-          user(selected);
-          askSpecialization();
+      function user(text) {
+        const div = document.createElement('div');
+        div.className = 'bubble user';
+        div.textContent = text;
+        messages.appendChild(div);
+        scrollBottom();
+      }
+
+      function setInteractive(html) {
+        interactiveArea.innerHTML = html;
+      }
+
+      function setFormValues() {
+        document.getElementById('formFullName').value = state.fullName;
+        document.getElementById('formEmail').value = state.email;
+        document.getElementById('formPhone').value = state.phone;
+        document.getElementById('formCountry').value = state.country;
+        document.getElementById('formExperience').value = state.experience;
+        document.getElementById('formCertification').value = state.certification;
+        document.getElementById('formSpecialization').value = state.specialization;
+        document.getElementById('formAvailability').value = state.availability;
+        document.getElementById('formWhyJoin').value = state.whyJoin;
+      }
+
+      function choiceButtons(items) {
+        return `<div class="choice-grid">
+          ${items.map((item, i) => `
+            <button type="button" class="choice-btn" data-choice="${i}">
+              <span>${item.label || item}</span>
+              ${item.small ? `<small>${item.small}</small>` : ''}
+            </button>
+          `).join('')}
+        </div>`;
+      }
+
+      function startFlow() {
+        messages.innerHTML = '';
+        interactiveArea.innerHTML = '';
+        resultArea.innerHTML = '';
+
+        Object.assign(state, {
+          fullName: '',
+          email: '',
+          phone: '',
+          country: '',
+          experience: '',
+          certification: '',
+          specialization: '',
+          availability: '',
+          whyJoin: ''
         });
-      });
-    }
 
-    function askSpecialization() {
-      bot('Which area do you feel most comfortable teaching?');
-      const options = [
-        { label: 'Business English' },
-        { label: 'Exam Preparation' },
-        { label: 'General English' },
-        { label: 'Conversation / Speaking' },
-        { label: 'Private Tutoring' }
-      ];
+        bot('Welcome to S+ Academy. Thank you for your interest in joining our teaching team.');
+        bot('I will ask you a few short questions and then prepare your application for submission.');
+        askName();
+      }
 
-      setInteractive(choiceButtons(options));
-
-      interactiveArea.querySelectorAll('[data-choice]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const selected = options[Number(btn.dataset.choice)].label;
-          state.specialization = selected;
-          user(selected);
-          askAvailability();
-        });
-      });
-    }
-
-    function askAvailability() {
-      bot('Please describe your general availability for teaching classes.');
-      setInteractive(`
-        <div class="label">Availability</div>
-        <textarea class="inline-textarea" id="availabilityInput" placeholder="Example: Monday to Friday evenings, weekends flexible..."></textarea>
-        <div class="action-row">
-          <button class="btn btn-primary" id="availabilityNext">Continue</button>
-        </div>
-      `);
-
-      document.getElementById('availabilityNext').addEventListener('click', () => {
-        const value = document.getElementById('availabilityInput').value.trim();
-        if (!value) return alert('Please enter your availability.');
-        state.availability = value;
-        user(value);
-        askWhyJoin();
-      });
-    }
-
-    function askWhyJoin() {
-      bot('Why would you like to join S+ Academy?');
-      setInteractive(`
-        <div class="label">Why do you want to join?</div>
-        <textarea class="inline-textarea" id="whyJoinInput" placeholder="Tell us briefly why you would like to teach with S+ Academy..."></textarea>
-        <div class="action-row">
-          <button class="btn btn-primary" id="whyJoinNext">Continue</button>
-        </div>
-      `);
-
-      document.getElementById('whyJoinNext').addEventListener('click', () => {
-        const value = document.getElementById('whyJoinInput').value.trim();
-        if (!value) return alert('Please enter your answer.');
-        state.whyJoin = value;
-        user(value);
-        showSummary();
-      });
-    }
-
-    function showSummary() {
-      bot('Thank you. Please review your application before submitting it.');
-      setInteractive(`
-        <div class="summary">
-          <div><strong>Full Name:</strong> ${state.fullName}</div>
-          <div><strong>Email:</strong> ${state.email}</div>
-          <div><strong>Phone:</strong> ${state.phone}</div>
-          <div><strong>Country:</strong> ${state.country}</div>
-          <div><strong>Teaching Experience:</strong> ${state.experience}</div>
-          <div><strong>Certification:</strong> ${state.certification}</div>
-          <div><strong>Specialization:</strong> ${state.specialization}</div>
-          <div><strong>Availability:</strong> ${state.availability}</div>
-          <div><strong>Why Join S+ Academy:</strong> ${state.whyJoin}</div>
-        </div>
-        <div class="action-row">
-          <button class="btn btn-primary" id="submitApplicationBtn">Submit Application</button>
-          <button class="btn btn-outline" id="restartBtn">Start Over</button>
-        </div>
-      `);
-
-      document.getElementById('submitApplicationBtn').addEventListener('click', submitApplication);
-      document.getElementById('restartBtn').addEventListener('click', () => {
-        user('Start Over');
-        startFlow();
-      });
-    }
-
-    function submitApplication() {
-      setFormValues();
-      user('Submit Application');
-      bot('Your application is ready and is being sent to S+ Academy.');
-
-      setInteractive(`
-        <div class="success-card">
-          <h4>Application ready</h4>
-          <p>Your teacher application has been prepared for submission.</p>
-          <p>After submission, S+ Academy will receive your details by email for review.</p>
+      function askName() {
+        bot('What is your full name?');
+        setInteractive(`
+          <div class="label">Full name</div>
+          <input class="inline-input" id="nameInput" placeholder="Your full name" autocomplete="name">
           <div class="action-row">
-            <button class="btn btn-primary" id="finalSubmitBtn">Send Application</button>
-            <button class="btn btn-outline" id="restartAfterBtn">Start New Application</button>
+            <button type="button" class="btn btn-primary" id="nameNext">Continue</button>
           </div>
-        </div>
-      `);
+        `);
 
-      document.getElementById('finalSubmitBtn').addEventListener('click', () => {
-        teacherForm.submit();
-      });
+        document.getElementById('nameNext').addEventListener('click', () => {
+          const value = document.getElementById('nameInput').value.trim();
+          if (!value) return alert('Please enter your full name.');
+          state.fullName = value;
+          user(value);
+          askEmail();
+        });
+      }
 
-      document.getElementById('restartAfterBtn').addEventListener('click', startFlow);
-    }
+      function askEmail() {
+        bot('What is your email address?');
+        setInteractive(`
+          <div class="label">Email address</div>
+          <input class="inline-input" id="emailInput" type="email" placeholder="name@example.com" autocomplete="email">
+          <div class="action-row">
+            <button type="button" class="btn btn-primary" id="emailNext">Continue</button>
+          </div>
+        `);
 
-    startFlow();
+        document.getElementById('emailNext').addEventListener('click', () => {
+          const value = document.getElementById('emailInput').value.trim();
+          if (!value || !value.includes('@')) return alert('Please enter a valid email address.');
+          state.email = value;
+          user(value);
+          askPhone();
+        });
+      }
+
+      function askPhone() {
+        bot('What is your phone or WhatsApp number?');
+        setInteractive(`
+          <div class="label">Phone / WhatsApp</div>
+          <input class="inline-input" id="phoneInput" placeholder="+212 ..." autocomplete="tel">
+          <div class="action-row">
+            <button type="button" class="btn btn-primary" id="phoneNext">Continue</button>
+          </div>
+        `);
+
+        document.getElementById('phoneNext').addEventListener('click', () => {
+          const value = document.getElementById('phoneInput').value.trim();
+          if (!value) return alert('Please enter your phone number.');
+          state.phone = value;
+          user(value);
+          askCountry();
+        });
+      }
+
+      function askCountry() {
+        bot('Which country are you based in?');
+        setInteractive(`
+          <div class="label">Country</div>
+          <input class="inline-input" id="countryInput" placeholder="Your country" autocomplete="country-name">
+          <div class="action-row">
+            <button type="button" class="btn btn-primary" id="countryNext">Continue</button>
+          </div>
+        `);
+
+        document.getElementById('countryNext').addEventListener('click', () => {
+          const value = document.getElementById('countryInput').value.trim();
+          if (!value) return alert('Please enter your country.');
+          state.country = value;
+          user(value);
+          askExperience();
+        });
+      }
+
+      function askExperience() {
+        bot('How much English teaching experience do you have?');
+        const options = [
+          { label: 'Less than 1 year' },
+          { label: '1 to 2 years' },
+          { label: '3 to 5 years' },
+          { label: 'More than 5 years' }
+        ];
+
+        setInteractive(choiceButtons(options));
+
+        interactiveArea.querySelectorAll('[data-choice]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const selected = options[Number(btn.dataset.choice)].label;
+            state.experience = selected;
+            user(selected);
+            askCertification();
+          });
+        });
+      }
+
+      function askCertification() {
+        bot('Do you hold an English teaching certificate?');
+        const options = [
+          { label: 'Yes — TESOL / TEFL / CELTA / equivalent' },
+          { label: 'Yes — other teaching qualification' },
+          { label: 'No certificate yet' }
+        ];
+
+        setInteractive(choiceButtons(options));
+
+        interactiveArea.querySelectorAll('[data-choice]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const selected = options[Number(btn.dataset.choice)].label;
+            state.certification = selected;
+            user(selected);
+            askSpecialization();
+          });
+        });
+      }
+
+      function askSpecialization() {
+        bot('Which area do you feel most comfortable teaching?');
+        const options = [
+          { label: 'Business English' },
+          { label: 'Exam Preparation' },
+          { label: 'General English' },
+          { label: 'Conversation / Speaking' },
+          { label: 'Private Tutoring' }
+        ];
+
+        setInteractive(choiceButtons(options));
+
+        interactiveArea.querySelectorAll('[data-choice]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const selected = options[Number(btn.dataset.choice)].label;
+            state.specialization = selected;
+            user(selected);
+            askAvailability();
+          });
+        });
+      }
+
+      function askAvailability() {
+        bot('Please describe your general availability for teaching classes.');
+        setInteractive(`
+          <div class="label">Availability</div>
+          <textarea class="inline-textarea" id="availabilityInput" placeholder="Example: Monday to Friday evenings, weekends flexible..."></textarea>
+          <div class="action-row">
+            <button type="button" class="btn btn-primary" id="availabilityNext">Continue</button>
+          </div>
+        `);
+
+        document.getElementById('availabilityNext').addEventListener('click', () => {
+          const value = document.getElementById('availabilityInput').value.trim();
+          if (!value) return alert('Please enter your availability.');
+          state.availability = value;
+          user(value);
+          askWhyJoin();
+        });
+      }
+
+      function askWhyJoin() {
+        bot('Why would you like to join S+ Academy?');
+        setInteractive(`
+          <div class="label">Why do you want to join?</div>
+          <textarea class="inline-textarea" id="whyJoinInput" placeholder="Tell us briefly why you would like to teach with S+ Academy..."></textarea>
+          <div class="action-row">
+            <button type="button" class="btn btn-primary" id="whyJoinNext">Continue</button>
+          </div>
+        `);
+
+        document.getElementById('whyJoinNext').addEventListener('click', () => {
+          const value = document.getElementById('whyJoinInput').value.trim();
+          if (!value) return alert('Please enter your answer.');
+          state.whyJoin = value;
+          user(value);
+          showSummary();
+        });
+      }
+
+      function showSummary() {
+        bot('Thank you. Please review your application before submitting it.');
+        setInteractive(`
+          <div class="summary">
+            <div><strong>Full Name:</strong> ${escapeHtml(state.fullName)}</div>
+            <div><strong>Email:</strong> ${escapeHtml(state.email)}</div>
+            <div><strong>Phone:</strong> ${escapeHtml(state.phone)}</div>
+            <div><strong>Country:</strong> ${escapeHtml(state.country)}</div>
+            <div><strong>Teaching Experience:</strong> ${escapeHtml(state.experience)}</div>
+            <div><strong>Certification:</strong> ${escapeHtml(state.certification)}</div>
+            <div><strong>Specialization:</strong> ${escapeHtml(state.specialization)}</div>
+            <div><strong>Availability:</strong> ${escapeHtml(state.availability)}</div>
+            <div><strong>Why Join S+ Academy:</strong> ${escapeHtml(state.whyJoin)}</div>
+          </div>
+          <div class="action-row">
+            <button type="button" class="btn btn-primary" id="submitApplicationBtn">Submit Application</button>
+            <button type="button" class="btn btn-outline" id="restartBtn">Start Over</button>
+          </div>
+        `);
+
+        document.getElementById('submitApplicationBtn').addEventListener('click', submitApplication);
+        document.getElementById('restartBtn').addEventListener('click', () => {
+          user('Start Over');
+          startFlow();
+        });
+      }
+
+      function submitApplication() {
+        setFormValues();
+        user('Submit Application');
+        bot('Your application is ready and is being sent to S+ Academy.');
+
+        setInteractive(`
+          <div class="success-card">
+            <h4>Application ready</h4>
+            <p>Your teacher application has been prepared for submission.</p>
+            <p>After submission, S+ Academy will receive your details by email for review.</p>
+            <div class="action-row">
+              <button type="button" class="btn btn-primary" id="finalSubmitBtn">Send Application</button>
+              <button type="button" class="btn btn-outline" id="restartAfterBtn">Start New Application</button>
+            </div>
+          </div>
+        `);
+
+        document.getElementById('finalSubmitBtn').addEventListener('click', () => teacherForm.submit());
+        document.getElementById('restartAfterBtn').addEventListener('click', startFlow);
+      }
+
+      function escapeHtml(input) {
+        return String(input)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#039;');
+      }
+
+      startFlow();
+    });
   </script>
 
 </body>
