@@ -25,6 +25,10 @@ export function getSupabaseClient() {
 }
 
 export async function getSignedInUser(supabase) {
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError) throw sessionError;
+  if (!sessionData.session) return null;
+
   const { data, error } = await supabase.auth.getUser();
   if (error) throw error;
   return data.user;

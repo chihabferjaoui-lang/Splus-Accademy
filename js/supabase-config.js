@@ -1,5 +1,5 @@
 window.SPLUS_SUPABASE_CONFIG = Object.freeze({
-  url: "https://ozbvldnbnnorosfwitxs.supabase.co",
-  publishableKey: "sb_publishable_HU4LBk7e1YSJeVvq0NHfyg_LcepUs_r",
+  url: "https://awhcmgyoldepoghxmtfs.supabase.co",
+  publishableKey: "sb_publishable_z0XE84bwp4vKDoZ0jAIuHw_dLhUd6jE",
   turnstileSiteKey: ""
 });

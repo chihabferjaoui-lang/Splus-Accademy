@@ -104,20 +104,25 @@ async function renderResetCaptcha() {
 
 async function routeSignedInUser(supabase, user) {
   if (!user) return false;
+  let isAdmin;
+  try {
+    isAdmin = await hasAdminRole(supabase, user.id);
+  } catch (error) {
+    await supabase.auth.signOut();
+    throw error;
+  }
+
+  if (isAdmin) {
+    adminRedirect();
+    return true;
+  }
+
   if (pageRole === "admin") {
-    try {
-      if (await hasAdminRole(supabase, user.id)) {
-        adminRedirect();
-        return true;
-      }
-    } catch (error) {
-      await supabase.auth.signOut();
-      throw error;
-    }
     await supabase.auth.signOut();
     showMessage("This account is not authorized for the administrator workspace.", "error");
     return true;
   }
+
   studentRedirect();
   return true;
 }
@@ -219,26 +224,29 @@ loginForm.addEventListener("submit", async (event) => {
   try {
     const supabase = getSupabaseClient();
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: String(formData.get("email")).trim(),
-      password: String(formData.get("password"))
+      email: formData.get("email"),
+      password: formData.get("password")
     });
     if (error) throw error;
 
-    if (pageRole === "admin") {
-      let isAdmin;
-      try {
-        isAdmin = await hasAdminRole(supabase, data.user.id);
-      } catch (roleError) {
-        await supabase.auth.signOut();
-        throw roleError;
-      }
-      if (!isAdmin) {
-        await supabase.auth.signOut();
-        throw new Error("This account is not authorized for the administrator workspace.");
-      }
+    let isAdmin;
+    try {
+      isAdmin = await hasAdminRole(supabase, data.user.id);
+    } catch (roleError) {
+      await supabase.auth.signOut();
+      throw roleError;
+    }
+
+    if (pageRole === "admin" && !isAdmin) {
+      await supabase.auth.signOut();
+      throw new Error("This account is not authorized for the administrator workspace.");
+    }
+
+    if (isAdmin) {
       adminRedirect();
       return;
     }
+
     studentRedirect();
   } catch (error) {
     showMessage(error.message, "error");
