@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
   <meta name="description" content="Authorized S+ Academy administrator sign-in.">
   <title>Admin Login | S+ Academy</title>
   <link rel="stylesheet" href="css/portal.css">
@@ -27,7 +28,7 @@
       <div class="portal-message" data-auth-message role="status" aria-live="polite">Sign-in setup is not connected yet. Please contact S+ Academy if you need help.</div>
       <form class="auth-form" data-login-form>
         <label>Administrator email
-          <input name="email" type="email" value="chihabferjaoui@gmail.com" autocomplete="username" maxlength="254" readonly required>
+          <input name="email" type="email" autocomplete="username" maxlength="254" required>
         </label>
         <label>Password
           <input name="password" type="password" autocomplete="current-password" required>
@@ -39,7 +40,7 @@
         <h2>Reset your administrator password</h2>
         <p class="portal-note">We’ll email a secure reset link to the registered administrator address.</p>
         <label>Administrator email
-          <input name="email" type="email" value="chihabferjaoui@gmail.com" autocomplete="username" maxlength="254" readonly required>
+          <input name="email" type="email" autocomplete="username" maxlength="254" required>
         </label>
         <div data-reset-captcha></div>
         <button type="submit" disabled>Send password reset email</button>

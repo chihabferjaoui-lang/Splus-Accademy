@@ -55,7 +55,7 @@ CMI's current e-commerce overview describes local and international card accepta
    insert into public.user_roles (user_id, role)
    select id, 'admin'
    from auth.users
-   where lower(email) = lower('chihabferjaoui@gmail.com')
+   where lower(email) = lower('ADMIN_EMAIL')
    on conflict do nothing;
    ```
 
@@ -63,7 +63,7 @@ CMI's current e-commerce overview describes local and international card accepta
    - In `js/supabase-config.js`, set the Supabase project URL, publishable/anon key, and Cloudflare Turnstile **site key**. These are the only backend values that belong in the static website.
    - In Supabase Auth, enable email/password accounts, keep email verification enabled, and configure CAPTCHA with the Turnstile secret. Do not restrict signup to an academy email domain: students may register with any valid email address they control. Allow redirects to the deployed `student.html` and `reset-password.html` URLs, including `reset-password.html?role=student` and `reset-password.html?role=admin` (and the GitHub Pages repository path).
    - Configure a production SMTP provider in Supabase Auth so verification emails reach students reliably.
-   - In Supabase Auth → Users, create the administrator account for `chihabferjaoui@gmail.com` and choose its password privately in the dashboard. Never send or store that password in source code or chat. Verify the email, then run the role-grant SQL above. Require multi-factor authentication for administrator accounts in Supabase Auth.
+   - In Supabase Auth → Users, create the administrator account for the email address you control and choose its password privately in the dashboard. Substitute that address for `ADMIN_EMAIL` in the role-grant SQL above. Never send or store the password in source code or chat. Verify the email, then grant the role. Require multi-factor authentication for administrator accounts in Supabase Auth.
    - Deploy the site. Students use `student-login.html`; the designated admin signs in at `admin-login.html`, which opens `admin.html` only after the database confirms its admin role.
    - Never add a service-role key, CAPTCHA secret, or payment-provider secret to `js/supabase-config.js`.
 
