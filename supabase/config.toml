@@ -1,0 +1,10 @@
+project_id = "splus-academy"
+
+[functions.submit-student-application]
+verify_jwt = false
+
+[functions.submit-teacher-application]
+verify_jwt = false
+
+[functions.subscribe-newsletter]
+verify_jwt = false

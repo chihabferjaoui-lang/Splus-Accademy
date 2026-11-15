@@ -21,11 +21,39 @@
 
   <main class="portal-shell">
     <h1 class="portal-heading">My student account</h1>
-    <p class="portal-subtitle">Manage your profile and review your academy records.</p>
+    <p class="portal-subtitle">See your next lesson, course progress, and enrollment details.</p>
     <div class="portal-message" data-portal-message role="status" aria-live="polite"></div>
     <p class="portal-loading" data-loading>Loading your account…</p>
 
     <div class="portal-dashboard" data-student-dashboard hidden>
+      <div class="portal-dashboard-grid">
+        <section class="portal-card" aria-labelledby="next-lesson-title">
+          <h2 id="next-lesson-title">Next lesson</h2>
+          <div data-next-lesson><p class="portal-note">Checking your schedule…</p></div>
+        </section>
+
+        <section class="portal-card" aria-labelledby="teacher-contact-title">
+          <h2 id="teacher-contact-title">Contact your teacher</h2>
+          <p data-teacher-contact-text>Contact the academy and we’ll connect you with your teacher.</p>
+          <a class="portal-button" data-teacher-contact href="https://wa.me/212718613036" target="_blank" rel="noopener">Message your teacher</a>
+        </section>
+      </div>
+
+      <section class="portal-card" aria-labelledby="progress-title" style="margin-top:20px">
+        <h2 id="progress-title">My learning progress</h2>
+        <div class="portal-stats" aria-label="Learning progress summary">
+          <div class="portal-stat"><strong data-progress-stat="attended">0</strong><span>Lessons attended</span></div>
+          <div class="portal-stat"><strong data-progress-stat="average">—</strong><span>Average assessment score</span></div>
+          <div class="portal-stat"><strong data-progress-stat="marked">0</strong><span>Lessons marked by teacher</span></div>
+        </div>
+        <div class="portal-table-wrap">
+          <table class="portal-table">
+            <thead><tr><th>Lesson</th><th>Date</th><th>Attendance</th><th>Score</th><th>Teacher feedback</th></tr></thead>
+            <tbody data-progress-body><tr><td colspan="5">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
       <div class="portal-dashboard-grid">
         <section class="portal-card" aria-labelledby="profile-title">
           <h2 id="profile-title">My profile</h2>

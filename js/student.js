@@ -25,7 +25,8 @@ function formatDate(value) {
 
 function appendCell(row, value) {
   const cell = document.createElement("td");
-  cell.textContent = value == null || value === "" ? "—" : String(value);
+  if (value instanceof Node) cell.append(value);
+  else cell.textContent = value == null || value === "" ? "—" : String(value);
   row.append(cell);
 }
 
@@ -45,6 +46,40 @@ function fillTable(body, rows, columnCount, emptyText) {
     values.forEach((value) => appendCell(row, value));
     body.append(row);
   });
+}
+
+function showNextLesson(session) {
+  const container = document.querySelector("[data-next-lesson]");
+  container.replaceChildren();
+  if (!session) {
+    const note = document.createElement("p");
+    note.className = "portal-note";
+    note.textContent = "No lesson is scheduled yet. Contact the academy for help with your class schedule.";
+    container.append(note);
+    return;
+  }
+
+  const title = document.createElement("h3");
+  title.textContent = session.title;
+  const program = document.createElement("p");
+  program.className = "portal-note";
+  program.textContent = session.class_slots?.programs?.name || "Your course";
+  const time = document.createElement("p");
+  time.textContent = `${formatDate(session.starts_at)} – ${formatDate(session.ends_at)}`;
+  container.append(title, program, time);
+
+  if (session.meeting_url) {
+    const linkUrl = new URL(session.meeting_url);
+    if (linkUrl.protocol === "https:") {
+      const link = document.createElement("a");
+      link.className = "portal-button";
+      link.href = linkUrl.href;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = "Open lesson";
+      container.append(link);
+    }
+  }
 }
 
 document.querySelector("[data-sign-out]").addEventListener("click", async (event) => {
@@ -102,7 +137,7 @@ async function loadStudentAccount() {
   const [profileResult, membershipResult, orderResult] = await Promise.all([
     supabase.from("profiles").select("full_name,email,phone").eq("id", user.id).maybeSingle(),
     supabase.from("memberships")
-      .select("status,starts_at,ends_at,programs(name)")
+      .select("id,program_id,class_slot_id,status,starts_at,ends_at,programs(name)")
       .eq("student_id", user.id)
       .order("starts_at", { ascending: false }),
     supabase.from("orders")
@@ -114,10 +149,63 @@ async function loadStudentAccount() {
   if (membershipResult.error) throw membershipResult.error;
   if (orderResult.error) throw orderResult.error;
 
+  const membershipIds = membershipResult.data.map((item) => item.id);
+  const activeMemberships = membershipResult.data.filter((item) =>
+    item.status === "active" && new Date(item.ends_at).getTime() > Date.now()
+  );
+  const activeSlotIds = [...new Set(activeMemberships.map((item) => item.class_slot_id))];
+  const [sessionResult, progressResult] = await Promise.all([
+    activeSlotIds.length
+      ? supabase.from("class_sessions")
+        .select("title,description,starts_at,ends_at,meeting_url,status,class_slots(program_id,programs(name))")
+        .in("class_slot_id", activeSlotIds)
+        .eq("status", "scheduled")
+        .gte("starts_at", new Date().toISOString())
+        .order("starts_at", { ascending: true })
+        .limit(1)
+      : Promise.resolve({ data: [], error: null }),
+    membershipIds.length
+      ? supabase.from("lesson_progress")
+        .select("attendance,score,teacher_notes,created_at,class_sessions(title,starts_at)")
+        .in("membership_id", membershipIds)
+        .order("created_at", { ascending: false })
+        .limit(200)
+      : Promise.resolve({ data: [], error: null })
+  ]);
+  if (sessionResult.error) throw sessionResult.error;
+  if (progressResult.error) throw progressResult.error;
+
   const profile = profileResult.data;
   profileForm.elements.fullName.value = profile?.full_name || "";
   profileForm.elements.email.value = profile?.email || user.email || "";
   profileForm.elements.phone.value = profile?.phone || "";
+
+  showNextLesson(sessionResult.data[0]);
+  const markedProgress = progressResult.data.filter((item) => item.attendance !== "not_marked");
+  const attendedCount = markedProgress.filter((item) => item.attendance === "attended").length;
+  const scoredLessons = progressResult.data.filter((item) => Number.isFinite(item.score));
+  const scoreAverage = scoredLessons.length
+    ? Math.round(scoredLessons.reduce((total, item) => total + item.score, 0) / scoredLessons.length)
+    : null;
+  document.querySelector('[data-progress-stat="attended"]').textContent = String(attendedCount);
+  document.querySelector('[data-progress-stat="marked"]').textContent = String(markedProgress.length);
+  document.querySelector('[data-progress-stat="average"]').textContent = scoreAverage === null ? "—" : `${scoreAverage}%`;
+  fillTable(
+    document.querySelector("[data-progress-body]"),
+    progressResult.data.map((item) => [
+      item.class_sessions?.title || "Lesson",
+      formatDate(item.class_sessions?.starts_at),
+      item.attendance.replaceAll("_", " "),
+      item.score == null ? "—" : `${item.score}%`,
+      item.teacher_notes
+    ]),
+    5,
+    "Your teacher’s attendance, scores, and feedback will appear here."
+  );
+
+  const contactText = activeMemberships[0]?.programs?.name || "my S+ Academy course";
+  document.querySelector("[data-teacher-contact]").href =
+    `https://wa.me/212718613036?text=${encodeURIComponent(`Hello, I am a student in ${contactText} and would like to contact my teacher.`)}`;
 
   fillTable(
     document.querySelector("[data-memberships-body]"),
