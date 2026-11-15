@@ -21,10 +21,10 @@
 
   <main class="portal-shell">
     <section class="portal-card auth-card" aria-labelledby="admin-login-title">
-      <p class="portal-note">Restricted access</p>
+      <p class="portal-note">S+ Academy administrator account</p>
       <h1 class="portal-heading" id="admin-login-title">Administrator login</h1>
       <p class="portal-subtitle">Sign in with the administrator account assigned by the academy owner.</p>
-      <div class="portal-message" data-auth-message role="status" aria-live="polite">Administrator sign-in is not active until the academy connects its authentication service.</div>
+      <div class="portal-message" data-auth-message role="status" aria-live="polite">Sign-in setup is not connected yet. Please contact S+ Academy if you need help.</div>
       <form class="auth-form" data-login-form>
         <label>Administrator email
           <input name="email" type="email" value="chihabferjaoui@gmail.com" autocomplete="username" maxlength="254" readonly required>
@@ -33,6 +33,17 @@
           <input name="password" type="password" autocomplete="current-password" required>
         </label>
         <button type="submit" disabled>Sign in to admin workspace</button>
+        <button type="button" class="portal-link-button" data-show-reset>Forgot your password?</button>
+      </form>
+      <form class="auth-form" data-reset-form hidden>
+        <h2>Reset your administrator password</h2>
+        <p class="portal-note">We’ll email a secure reset link to the registered administrator address.</p>
+        <label>Administrator email
+          <input name="email" type="email" value="chihabferjaoui@gmail.com" autocomplete="username" maxlength="254" readonly required>
+        </label>
+        <div data-reset-captcha></div>
+        <button type="submit" disabled>Send password reset email</button>
+        <button type="button" class="portal-link-button" data-cancel-reset>Back to sign in</button>
       </form>
       <p class="portal-note">Admin access is checked against the protected database role; creating a student account cannot grant it.</p>
     </section>

@@ -97,6 +97,8 @@ button:hover, .portal-button:hover { background: var(--portal-primary-dark); }
 button:disabled { cursor: not-allowed; opacity: .58; }
 .portal-button-secondary { background: #edf0fb; color: var(--portal-primary-dark); }
 .portal-button-secondary:hover { background: #dfe4f8; }
+.portal-link-button { background: transparent; color: var(--portal-primary); justify-self: start; min-height: auto; padding: 4px 0; text-decoration: underline; }
+.portal-link-button:hover { background: transparent; color: var(--portal-primary-dark); }
 
 .portal-message {
   border-radius: 10px;
@@ -113,6 +115,7 @@ button:disabled { cursor: not-allowed; opacity: .58; }
 .portal-details { border-top: 1px solid var(--portal-border); margin-top: 24px; padding-top: 20px; }
 .portal-details summary { color: var(--portal-primary-dark); cursor: pointer; font-weight: 700; }
 .portal-dashboard[hidden], [data-admin-panel][hidden] { display: none; }
+.portal-button[hidden] { display: none; }
 .portal-dashboard-grid { display: grid; gap: 20px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 24px; }
 .portal-dashboard-grid .portal-card h2 { margin-top: 0; }
 .portal-user-email { color: var(--portal-muted); overflow-wrap: anywhere; }

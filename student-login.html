@@ -24,7 +24,7 @@
       <p class="portal-note">S+ Academy student area</p>
       <h1 class="portal-heading" id="student-login-title">Student login</h1>
       <p class="portal-subtitle">Sign in to view your account, course access, and enrollment details.</p>
-      <div class="portal-message" data-auth-message role="status" aria-live="polite">Student sign-in is not active until the academy connects its authentication service.</div>
+      <div class="portal-message" data-auth-message role="status" aria-live="polite">Sign-in setup is not connected yet. Please contact S+ Academy if you need help.</div>
 
       <form class="auth-form" data-login-form>
         <label>Email address
@@ -34,6 +34,18 @@
           <input name="password" type="password" autocomplete="current-password" required>
         </label>
         <button type="submit" disabled>Sign in</button>
+        <button type="button" class="portal-link-button" data-show-reset>Forgot your password?</button>
+      </form>
+
+      <form class="auth-form" data-reset-form hidden>
+        <h2>Reset your password</h2>
+        <p class="portal-note">We’ll email a secure reset link to the address registered to your account.</p>
+        <label>Email address
+          <input name="email" type="email" autocomplete="email" maxlength="254" required>
+        </label>
+        <div data-reset-captcha></div>
+        <button type="submit" disabled>Send password reset email</button>
+        <button type="button" class="portal-link-button" data-cancel-reset>Back to sign in</button>
       </form>
 
       <details class="portal-details">
@@ -57,7 +69,7 @@
         </form>
       </details>
 
-      <p class="portal-note">If you don’t have an account yet, registration requires academy email verification.</p>
+      <p class="portal-note">If you don’t have an account yet, register with any email address you can access and verify it.</p>
     </section>
   </main>
 
