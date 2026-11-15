@@ -384,9 +384,12 @@
   const postCount = document.getElementById("postCount");
   const blogContent = document.getElementById("blogContent");
   const articleView = document.getElementById("articleView");
+  const blogSection = document.getElementById("blog");
+  const pageTitle = document.title;
   const categories = [...new Set(posts.map((post) => post.category))].sort();
 
-  document.getElementById("currentYear").textContent = String(new Date().getFullYear());
+  const currentYear = document.getElementById("currentYear");
+  if (currentYear) currentYear.textContent = String(new Date().getFullYear());
   categories.forEach((category) => {
     const option = document.createElement("option");
     option.value = category;
@@ -396,10 +399,10 @@
 
   function makeCard(post) {
     const card = document.createElement("article");
-    card.className = "post-card";
+    card.className = "blog-card";
     const link = document.createElement("a");
-    link.className = "read-link";
-    link.href = `blog.html?post=${encodeURIComponent(post.slug)}`;
+    link.className = "blog-read-link";
+    link.href = `#blog/${encodeURIComponent(post.slug)}`;
     link.setAttribute("aria-label", `Read ${post.title}`);
     link.textContent = "Read article";
     const arrow = document.createElement("span");
@@ -408,7 +411,7 @@
     link.appendChild(arrow);
 
     const img = document.createElement("img");
-    img.className = "post-image";
+    img.className = "blog-image";
     img.src = post.image;
     img.alt = post.alt;
     img.loading = "lazy";
@@ -418,11 +421,11 @@
     }, { once: true });
 
     const content = document.createElement("div");
-    content.className = "post-content";
+    content.className = "blog-card-content";
     const meta = document.createElement("div");
-    meta.className = "post-meta";
+    meta.className = "blog-meta";
     const category = document.createElement("span");
-    category.className = "post-category";
+    category.className = "blog-category";
     category.textContent = post.category;
     const time = document.createElement("span");
     time.textContent = post.time;
@@ -438,6 +441,10 @@
   }
 
   function renderPosts() {
+    blogContent.hidden = false;
+    articleView.hidden = true;
+    articleView.replaceChildren();
+    document.title = pageTitle;
     const query = searchInput.value.trim().toLocaleLowerCase();
     const category = categoryFilter.value;
     const visiblePosts = posts.filter((post) => {
@@ -451,7 +458,7 @@
     postGrid.replaceChildren();
     if (visiblePosts.length === 0) {
       const empty = document.createElement("p");
-      empty.className = "empty-state";
+      empty.className = "blog-empty-state";
       empty.textContent = "No articles match that search. Try another word or choose a different topic.";
       postGrid.appendChild(empty);
     } else {
@@ -464,12 +471,12 @@
     blogContent.hidden = true;
     articleView.hidden = false;
     const back = document.createElement("a");
-    back.className = "article-back";
-    back.href = "blog.html";
+    back.className = "blog-article-back";
+    back.href = "#blog";
     back.textContent = "← All articles";
 
     const cover = document.createElement("img");
-    cover.className = "article-cover";
+    cover.className = "blog-article-cover";
     cover.src = post.image;
     cover.alt = post.alt;
     cover.fetchPriority = "high";
@@ -478,7 +485,7 @@
     }, { once: true });
 
     const meta = document.createElement("div");
-    meta.className = "article-meta";
+    meta.className = "blog-article-meta";
     const category = document.createElement("strong");
     category.textContent = post.category;
     const time = document.createElement("span");
@@ -486,21 +493,21 @@
     meta.append(category, time);
 
     const title = document.createElement("h1");
-    title.className = "article-title";
+    title.className = "blog-article-title";
     title.textContent = post.title;
     const intro = document.createElement("p");
-    intro.className = "article-intro";
+    intro.className = "blog-article-intro";
     intro.textContent = post.summary;
 
     const body = document.createElement("div");
-    body.className = "article-body";
+    body.className = "blog-article-body";
     post.paragraphs.forEach((text) => {
       const paragraph = document.createElement("p");
       paragraph.textContent = text;
       body.appendChild(paragraph);
     });
     const takeaway = document.createElement("div");
-    takeaway.className = "takeaway";
+    takeaway.className = "blog-takeaway";
     const takeawayLabel = document.createElement("strong");
     takeawayLabel.textContent = "Try this";
     const takeawayText = document.createElement("span");
@@ -509,7 +516,7 @@
     body.appendChild(takeaway);
 
     const cta = document.createElement("aside");
-    cta.className = "article-cta";
+    cta.className = "blog-article-cta";
     const ctaTitle = document.createElement("h2");
     ctaTitle.textContent = "Ready for your next step?";
     const ctaCopy = document.createElement("p");
@@ -523,21 +530,35 @@
     document.title = `${post.title} | S+ Academy Blog`;
   }
 
-  searchInput.addEventListener("input", renderPosts);
-  categoryFilter.addEventListener("change", renderPosts);
-  const postSlug = new URLSearchParams(window.location.search).get("post");
-  if (postSlug) {
-    const selectedPost = posts.find((post) => post.slug === postSlug);
-    if (selectedPost) {
-      renderArticle(selectedPost);
-    } else {
-      renderPosts();
-      const empty = document.createElement("p");
-      empty.className = "empty-state";
-      empty.textContent = "That article could not be found. Browse all of our English learning guides below.";
-      postGrid.prepend(empty);
+  function renderRoute() {
+    const articlePrefix = "#blog/";
+    const postSlug = window.location.hash.startsWith(articlePrefix)
+      ? decodeURIComponent(window.location.hash.slice(articlePrefix.length))
+      : "";
+    if (postSlug) {
+      const selectedPost = posts.find((post) => post.slug === postSlug);
+      if (selectedPost) {
+        renderArticle(selectedPost);
+      } else {
+        renderPosts();
+        const empty = document.createElement("p");
+        empty.className = "blog-empty-state";
+        empty.textContent = "That article could not be found. Browse all of our English learning guides below.";
+        postGrid.prepend(empty);
+      }
+      blogSection.scrollIntoView({ block: "start" });
+      return;
     }
-  } else {
+
     renderPosts();
   }
+
+  searchInput.addEventListener("input", renderPosts);
+  categoryFilter.addEventListener("change", renderPosts);
+  window.addEventListener("hashchange", () => {
+    if (window.location.hash === "#blog" || window.location.hash.startsWith("#blog/")) {
+      renderRoute();
+    }
+  });
+  renderRoute();
 })();
