@@ -1,31 +1,163 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Blog | S+ English Academy</title>
-<link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Practical English learning advice, study plans, exam preparation, and communication tips from S+ Academy.">
+  <meta name="theme-color" content="#3124a8">
+  <title>English Learning Blog | S+ Academy</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17172d;
+      --muted: #65677d;
+      --purple: #3124a8;
+      --purple-light: #5144c7;
+      --teal: #0c9898;
+      --line: #e4e5ef;
+      --paper: #fff;
+      --wash: #f6f6fb;
+      --shadow: 0 16px 42px rgba(27, 24, 76, .09);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--wash); line-height: 1.65; }
+    a { color: inherit; }
+    .container { width: min(1160px, calc(100% - 36px)); margin: 0 auto; }
+    .site-header { position: sticky; top: 0; z-index: 5; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.94); backdrop-filter: blur(12px); }
+    .nav { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { display: inline-flex; align-items: center; gap: 11px; color: var(--purple); font-family: Georgia, "Times New Roman", serif; font-size: 21px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+    .brand img { width: 42px; height: 42px; object-fit: contain; border-radius: 10px; }
+    .nav-links { display: flex; align-items: center; flex-wrap: wrap; gap: 22px; }
+    .nav-links a { color: #39394e; font-size: 14px; font-weight: 650; text-decoration: none; }
+    .nav-links a:hover, .nav-links a[aria-current="page"] { color: var(--purple); }
+    .nav-links .nav-cta { padding: 10px 16px; border-radius: 12px; color: #fff; background: var(--purple); }
+    .hero { position: relative; overflow: hidden; padding: 82px 0 76px; color: white; background: linear-gradient(110deg, rgba(28,20,104,.92), rgba(44,34,155,.78)), url("https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=2000&q=85") center 48% / cover; }
+    .hero::after { position: absolute; right: -80px; bottom: -180px; width: 440px; height: 440px; border: 1px solid rgba(255,255,255,.16); border-radius: 50%; content: ""; box-shadow: 0 0 0 45px rgba(255,255,255,.035), 0 0 0 90px rgba(255,255,255,.025); }
+    .hero-content { position: relative; z-index: 1; max-width: 760px; }
+    .eyebrow { margin: 0 0 12px; color: #c8c4ff; font-size: 12px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+    .hero h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(42px, 7vw, 72px); letter-spacing: -.035em; line-height: 1.06; }
+    .hero p:not(.eyebrow) { max-width: 620px; margin: 19px 0 0; color: #f0efff; font-size: 18px; }
+    .hero-link { display: inline-flex; margin-top: 25px; padding: 12px 19px; border: 1px solid rgba(255,255,255,.55); border-radius: 12px; color: #fff; font-weight: 750; text-decoration: none; transition: background .2s, transform .2s; }
+    .hero-link:hover { transform: translateY(-2px); background: rgba(255,255,255,.13); }
+    main { padding: 50px 0 76px; }
+    .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 25px; }
+    .section-heading h2 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(30px, 4vw, 40px); line-height: 1.15; }
+    .section-heading p { max-width: 520px; margin: 8px 0 0; color: var(--muted); }
+    .post-count { flex: 0 0 auto; color: var(--purple); font-size: 14px; font-weight: 750; }
+    .filters { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(200px, 270px); gap: 12px; margin: 26px 0 30px; }
+    .filters input, .filters select { width: 100%; min-height: 48px; padding: 0 15px; border: 1px solid #d8d9e7; border-radius: 12px; outline: none; color: var(--ink); background: #fff; font: inherit; }
+    .filters input:focus, .filters select:focus { border-color: var(--purple-light); box-shadow: 0 0 0 3px rgba(81,68,199,.13); }
+    .post-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 23px; }
+    .post-card { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: var(--paper); box-shadow: 0 5px 22px rgba(27,24,76,.045); transition: transform .2s, box-shadow .2s; }
+    .post-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+    .post-image { display: block; width: 100%; height: 190px; object-fit: cover; background: linear-gradient(135deg,#d9d4ff,#b9eeee); }
+    .post-content { display: flex; min-height: 235px; flex-direction: column; align-items: flex-start; padding: 19px 20px 20px; }
+    .post-meta { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 12px; }
+    .post-category { color: var(--purple); font-weight: 800; letter-spacing: .04em; }
+    .post-card h3 { margin: 12px 0 8px; font-family: Georgia, "Times New Roman", serif; font-size: 21px; line-height: 1.28; }
+    .post-card p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.65; }
+    .read-link { display: inline-flex; align-items: center; gap: 7px; margin-top: auto; padding-top: 17px; color: var(--purple); font-size: 14px; font-weight: 800; text-decoration: none; }
+    .read-link:hover { color: var(--teal); }
+    .empty-state { grid-column: 1 / -1; padding: 48px 20px; border: 1px dashed #c9c8dc; border-radius: 16px; color: var(--muted); text-align: center; }
+    .article-view { max-width: 840px; margin: 0 auto; }
+    .article-back { display: inline-block; margin-bottom: 20px; color: var(--purple); font-weight: 750; text-decoration: none; }
+    .article-cover { display: block; width: 100%; max-height: 440px; border-radius: 20px; object-fit: cover; background: #dedcff; }
+    .article-meta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 25px; color: var(--muted); font-size: 14px; }
+    .article-title { margin: 8px 0 14px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(34px, 6vw, 54px); letter-spacing: -.025em; line-height: 1.12; }
+    .article-intro { color: #4a4b60; font-size: 19px; }
+    .article-body { margin-top: 27px; padding: clamp(22px, 5vw, 42px); border: 1px solid var(--line); border-radius: 18px; background: #fff; box-shadow: 0 8px 28px rgba(27,24,76,.05); }
+    .article-body p { margin: 0 0 19px; font-size: 17px; line-height: 1.85; }
+    .article-body p:last-child { margin-bottom: 0; }
+    .takeaway { margin-top: 22px; padding: 20px 22px; border-left: 4px solid var(--teal); border-radius: 0 12px 12px 0; background: #eaf8f7; }
+    .takeaway strong { display: block; margin-bottom: 3px; }
+    .article-cta { margin-top: 35px; padding: 28px; border-radius: 18px; color: white; background: linear-gradient(135deg, var(--purple-light), var(--purple)); }
+    .article-cta h2 { margin: 0 0 8px; font-family: Georgia, "Times New Roman", serif; font-size: 28px; }
+    .article-cta p { margin: 0 0 18px; color: #eeedff; }
+    .article-cta a { display: inline-flex; padding: 11px 16px; border-radius: 10px; color: var(--purple); background: white; font-weight: 800; text-decoration: none; }
+    .site-footer { padding: 31px 0; color: #e9e8f7; background: #19172e; }
+    .footer-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+    .site-footer p { margin: 0; font-size: 14px; }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 18px; }
+    .footer-links a { color: #e9e8f7; font-size: 14px; text-decoration: none; }
+    .footer-links a:hover { color: #c8c4ff; }
+
+    @media (max-width: 900px) { .post-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 680px) {
+      .nav { min-height: 68px; flex-wrap: wrap; padding: 12px 0; }
+      .nav-links { justify-content: flex-end; gap: 11px 15px; }
+      .nav-links a { font-size: 13px; }
+      .hero { padding: 64px 0; }
+      .hero p:not(.eyebrow) { font-size: 16px; }
+      main { padding: 38px 0 56px; }
+      .section-heading { align-items: flex-start; flex-direction: column; gap: 8px; }
+      .filters { grid-template-columns: 1fr; }
+      .post-grid { grid-template-columns: 1fr; gap: 16px; }
+      .post-image { height: 210px; }
+      .post-content { min-height: 205px; }
+      .footer-inner { align-items: flex-start; flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+  </style>
 </head>
 <body>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html" aria-label="S+ Academy home">
+        <img src="assets/logo.png" alt="">
+        <span>S+ Academy</span>
+      </a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="index.html">Home</a>
+        <a href="programs.html">Programs</a>
+        <a href="blog.html" aria-current="page">Blog</a>
+        <a href="test.html">Test your level</a>
+        <a class="nav-cta" href="apply.html">Apply now</a>
+      </nav>
+    </div>
+  </header>
 
-<header>
-  <div class="logo">S+ English Academy</div>
-</header>
+  <section class="hero">
+    <div class="container hero-content">
+      <p class="eyebrow">Learn with confidence</p>
+      <h1>Small steps.<br>Stronger English.</h1>
+      <p>Fresh ideas, practical study habits, and useful English for your classroom, career, and everyday life.</p>
+      <a class="hero-link" href="#articles">Explore the latest articles <span aria-hidden="true">↓</span></a>
+    </div>
+  </section>
 
-<section class="blog">
-<h1>Insights & English Mastery</h1>
+  <main class="container" id="articles">
+    <div id="blogContent">
+      <div class="section-heading">
+        <div>
+          <h2>Ideas for your English journey</h2>
+          <p>Explore practical guides written for learners at every stage, from your first phrases to confident professional English.</p>
+        </div>
+        <span class="post-count" id="postCount" aria-live="polite">25 articles</span>
+      </div>
+      <div class="filters">
+        <input id="searchInput" type="search" placeholder="Search articles, skills, or topics…" aria-label="Search articles">
+        <select id="categoryFilter" aria-label="Filter articles by topic">
+          <option value="all">All topics</option>
+        </select>
+      </div>
+      <div class="post-grid" id="postGrid" aria-live="polite"></div>
+    </div>
+    <article class="article-view" id="articleView" hidden></article>
+  </main>
 
-<div class="blog-card">
-  <h3>IELTS vs TOEFL: Which Exam is Right?</h3>
-  <p>Strategic comparison for academic success.</p>
-</div>
-
-<div class="blog-card">
-  <h3>Professional Vocabulary Guide</h3>
-  <p>Upgrade your business communication.</p>
-</div>
-
-</section>
-
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>© <span id="currentYear"></span> S+ Academy · Keep learning, one day at a time.</p>
+      <nav class="footer-links" aria-label="Footer navigation">
+        <a href="index.html">Home</a>
+        <a href="programs.html">Programs</a>
+        <a href="test.html">Test your level</a>
+        <a href="apply.html">Apply</a>
+      </nav>
+    </div>
+  </footer>
+  <script src="js/blog.js" defer></script>
 </body>
 </html>
