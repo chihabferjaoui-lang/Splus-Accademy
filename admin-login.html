@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Authorized S+ Academy administrator sign-in.">
+  <title>Admin Login | S+ Academy</title>
+  <link rel="stylesheet" href="css/portal.css">
+</head>
+<body data-login-role="admin">
+  <header class="portal-header">
+    <a class="portal-brand" href="index.html">
+      <img src="assets/logo.png" alt="">
+      <span>S+ Academy</span>
+    </a>
+    <nav class="portal-header-links" aria-label="Account navigation">
+      <a href="student-login.html">Student login</a>
+      <a href="index.html">Home</a>
+    </nav>
+  </header>
+
+  <main class="portal-shell">
+    <section class="portal-card auth-card" aria-labelledby="admin-login-title">
+      <p class="portal-note">Restricted access</p>
+      <h1 class="portal-heading" id="admin-login-title">Administrator login</h1>
+      <p class="portal-subtitle">Sign in with the administrator account assigned by the academy owner.</p>
+      <div class="portal-message" data-auth-message role="status" aria-live="polite">Administrator sign-in is not active until the academy connects its authentication service.</div>
+      <form class="auth-form" data-login-form>
+        <label>Administrator email
+          <input name="email" type="email" autocomplete="username" maxlength="254" required>
+        </label>
+        <label>Password
+          <input name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <button type="submit" disabled>Sign in to admin workspace</button>
+      </form>
+      <p class="portal-note">Admin access is checked against the protected database role; creating a student account cannot grant it.</p>
+    </section>
+  </main>
+
+  <script src="js/supabase-config.js"></script>
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>

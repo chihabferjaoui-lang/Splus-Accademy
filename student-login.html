@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Sign in or create your S+ Academy student account.">
+  <title>Student Login | S+ Academy</title>
+  <link rel="stylesheet" href="css/portal.css">
+</head>
+<body data-login-role="student">
+  <header class="portal-header">
+    <a class="portal-brand" href="index.html">
+      <img src="assets/logo.png" alt="">
+      <span>S+ Academy</span>
+    </a>
+    <nav class="portal-header-links" aria-label="Account navigation">
+      <a href="admin-login.html">Admin login</a>
+      <a href="index.html">Home</a>
+    </nav>
+  </header>
+
+  <main class="portal-shell">
+    <section class="portal-card auth-card" aria-labelledby="student-login-title">
+      <p class="portal-note">S+ Academy student area</p>
+      <h1 class="portal-heading" id="student-login-title">Student login</h1>
+      <p class="portal-subtitle">Sign in to view your account, course access, and enrollment details.</p>
+      <div class="portal-message" data-auth-message role="status" aria-live="polite">Student sign-in is not active until the academy connects its authentication service.</div>
+
+      <form class="auth-form" data-login-form>
+        <label>Email address
+          <input name="email" type="email" autocomplete="email" maxlength="254" required>
+        </label>
+        <label>Password
+          <input name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <button type="submit" disabled>Sign in</button>
+      </form>
+
+      <details class="portal-details">
+        <summary>Create a student account</summary>
+        <p class="portal-note">Use your own email address. Account registration never grants administrator access.</p>
+        <form class="auth-form" data-signup-form>
+          <label>Full name
+            <input name="fullName" type="text" autocomplete="name" minlength="2" maxlength="120" required>
+          </label>
+          <label>Email address
+            <input name="email" type="email" autocomplete="email" maxlength="254" required>
+          </label>
+          <label>Password (at least 8 characters)
+            <input name="password" type="password" autocomplete="new-password" minlength="8" required>
+          </label>
+          <div>
+            <span class="portal-note">Security check</span>
+            <div id="signup-captcha"></div>
+          </div>
+          <button type="submit" disabled>Create student account</button>
+        </form>
+      </details>
+
+      <p class="portal-note">If you don’t have an account yet, registration requires academy email verification.</p>
+    </section>
+  </main>
+
+  <script src="js/supabase-config.js"></script>
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>

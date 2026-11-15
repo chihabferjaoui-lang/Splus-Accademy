@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="S+ Academy administrator workspace.">
+  <title>Admin Workspace | S+ Academy</title>
+  <link rel="stylesheet" href="css/portal.css">
+</head>
+<body>
+  <header class="portal-header">
+    <a class="portal-brand" href="index.html">
+      <img src="assets/logo.png" alt="">
+      <span>S+ Academy Admin</span>
+    </a>
+    <nav class="portal-header-links" aria-label="Admin navigation">
+      <span class="portal-user-email" data-user-email></span>
+      <button type="button" class="portal-button-secondary" data-sign-out>Sign out</button>
+    </nav>
+  </header>
+
+  <main class="portal-shell">
+    <h1 class="portal-heading">Admin workspace</h1>
+    <p class="portal-subtitle">Manage academy records. Access is protected by Supabase authentication and database row-level security.</p>
+    <div class="portal-message" data-portal-message role="status" aria-live="polite"></div>
+    <p class="portal-loading" data-loading>Verifying administrator access…</p>
+
+    <div class="portal-dashboard" data-admin-dashboard hidden>
+      <section class="portal-stats" aria-label="Record totals">
+        <div class="portal-stat"><strong data-stat="student_applications">—</strong><span>Student applications</span></div>
+        <div class="portal-stat"><strong data-stat="teacher_applications">—</strong><span>Teacher applications</span></div>
+        <div class="portal-stat"><strong data-stat="profiles">—</strong><span>User profiles</span></div>
+        <div class="portal-stat"><strong data-stat="newsletter_subscribers">—</strong><span>Newsletter subscribers</span></div>
+      </section>
+
+      <nav class="portal-tabs" aria-label="Admin data sections">
+        <button type="button" data-admin-tab="student_applications" aria-selected="true">Student applications</button>
+        <button type="button" data-admin-tab="teacher_applications" aria-selected="false">Teacher applications</button>
+        <button type="button" data-admin-tab="profiles" aria-selected="false">Students</button>
+        <button type="button" data-admin-tab="class_slots" aria-selected="false">Class slots</button>
+        <button type="button" data-admin-tab="orders" aria-selected="false">Orders</button>
+        <button type="button" data-admin-tab="newsletter_subscribers" aria-selected="false">Newsletter</button>
+      </nav>
+
+      <section class="portal-card" data-admin-panel="student_applications" aria-labelledby="student-apps-title">
+        <h2 class="portal-section-title" id="student-apps-title">Student applications</h2>
+        <div class="portal-table-wrap"><table class="portal-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Program</th><th>Level</th><th>Schedule / goals</th><th>Status</th><th>Submitted</th></tr></thead>
+          <tbody data-table-body="student_applications"><tr><td colspan="8">Loading…</td></tr></tbody>
+        </table></div>
+      </section>
+
+      <section class="portal-card" data-admin-panel="teacher_applications" aria-labelledby="teacher-apps-title" hidden>
+        <h2 class="portal-section-title" id="teacher-apps-title">Teacher applications</h2>
+        <div class="portal-table-wrap"><table class="portal-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Country</th><th>Experience / certification</th><th>Specialization</th><th>Availability / motivation</th><th>Status</th><th>Submitted</th></tr></thead>
+          <tbody data-table-body="teacher_applications"><tr><td colspan="9">Loading…</td></tr></tbody>
+        </table></div>
+      </section>
+
+      <section class="portal-card" data-admin-panel="profiles" aria-labelledby="students-title" hidden>
+        <h2 class="portal-section-title" id="students-title">Student accounts</h2>
+        <div class="portal-table-wrap"><table class="portal-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Account created</th></tr></thead>
+          <tbody data-table-body="profiles"><tr><td colspan="4">Loading…</td></tr></tbody>
+        </table></div>
+      </section>
+
+      <section class="portal-card" data-admin-panel="class_slots" aria-labelledby="slots-title" hidden>
+        <h2 class="portal-section-title" id="slots-title">Class slots</h2>
+        <form class="portal-form-grid" data-slot-form>
+          <label>Program<select name="programId" required><option value="">Loading programs…</option></select></label>
+          <label>Starts at<input name="startsAt" type="datetime-local" required></label>
+          <label>Ends at<input name="endsAt" type="datetime-local" required></label>
+          <label>Capacity<input name="capacity" type="number" min="1" max="200" value="10" required></label>
+          <button type="submit">Add slot</button>
+        </form>
+        <p class="portal-note">Times are saved in UTC from your local time selection.</p>
+        <div class="portal-table-wrap"><table class="portal-table">
+          <thead><tr><th>Program</th><th>Starts</th><th>Ends</th><th>Capacity</th><th>Active</th></tr></thead>
+          <tbody data-table-body="class_slots"><tr><td colspan="5">Loading…</td></tr></tbody>
+        </table></div>
+      </section>
+
+      <section class="portal-card" data-admin-panel="orders" aria-labelledby="orders-title" hidden>
+        <h2 class="portal-section-title" id="orders-title">Enrollment and payment records</h2>
+        <p class="portal-note">Payments are not enabled. These records must not be treated as proof of payment until a verified provider integration is deployed.</p>
+        <div class="portal-table-wrap"><table class="portal-table">
+          <thead><tr><th>Student ID</th><th>Program</th><th>Amount</th><th>Status</th><th>Provider</th><th>Created</th></tr></thead>
+          <tbody data-table-body="orders"><tr><td colspan="6">Loading…</td></tr></tbody>
+        </table></div>
+      </section>
+
+      <section class="portal-card" data-admin-panel="newsletter_subscribers" aria-labelledby="newsletter-title" hidden>
+        <h2 class="portal-section-title" id="newsletter-title">Newsletter subscribers</h2>
+        <div class="portal-table-wrap"><table class="portal-table">
+          <thead><tr><th>Email</th><th>Consent recorded</th><th>Unsubscribed</th></tr></thead>
+          <tbody data-table-body="newsletter_subscribers"><tr><td colspan="3">Loading…</td></tr></tbody>
+        </table></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="js/supabase-config.js"></script>
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

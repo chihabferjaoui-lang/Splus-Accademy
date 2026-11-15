@@ -751,6 +751,7 @@
         <a href="#blog" data-i18n="nav.blog">Blog</a>
         <a href="booking.html" data-i18n="nav.book">Book a Class</a>
         <a href="teacher-apply.html" data-i18n="nav.apply">Apply</a>
+        <a href="student-login.html" data-i18n="nav.studentLogin">Student Login</a>
         <a href="#payments" data-i18n="nav.payments">Payments</a>
       </nav>
 
@@ -779,6 +780,7 @@
           <div class="hero-actions">
             <a class="btn btn-primary" href="teacher-apply.html" data-i18n="hero.ctaPrimary">Apply Now</a>
             <a class="btn btn-outline" href="#programs" data-i18n="hero.ctaSecondary">Explore Programs</a>
+            <a class="btn btn-outline" href="student-login.html" data-i18n="nav.studentLogin">Student Login</a>
           </div>
         </div>
         <div class="hero-media">
@@ -1062,6 +1064,8 @@
             <li><a href="#programs" data-i18n="nav.programs">Programs</a></li>
             <li><a href="#blog" data-i18n="nav.blog">Blog</a></li>
             <li><a href="#booking" data-i18n="nav.book">Book a Class</a></li>
+            <li><a href="student-login.html" data-i18n="nav.studentLogin">Student Login</a></li>
+            <li><a href="admin-login.html" data-i18n="nav.adminLogin">Admin Login</a></li>
           </ul>
         </div>
 
@@ -1103,7 +1107,7 @@
     const translations = {
       en: {
         brandName: 'S+ Academy',
-        nav: { home: 'Home', about: 'About', programs: 'Programs', blog: 'Blog', book: 'Book a Class', apply: 'Apply', payments: 'Payments', test: 'Test Your Level' },
+        nav: { home: 'Home', about: 'About', programs: 'Programs', blog: 'Blog', book: 'Book a Class', apply: 'Apply', studentLogin: 'Student Login', adminLogin: 'Admin Login', payments: 'Payments', test: 'Test Your Level' },
         hero: { eyebrow: 'Elite Online English Academy', title: 'Master English with Authority & Confidence', text: 'An elite online English academy for ambitious students and professionals seeking fluency, confidence, and career advancement.', subtext: 'All programs are delivered live via Zoom, ensuring structured, interactive, and professional learning from anywhere.', ctaPrimary: 'Apply Now', ctaSecondary: 'Explore Programs' },
         about: { eyebrow: 'About Our Academy', title: 'About S+ Academy', text: 'S+ Academy is a results-focused English academy designed for ambitious students and professionals who demand excellence.', b1: 'A results-focused English academy', b2: 'Designed for ambitious students & professionals', b3: 'Focused on fluency, confidence, and career advancement', b4: 'Delivering structured, interactive live sessions via Zoom', highlight: 'Comparable to a top-tier international online language academy.' },
         programs: {
@@ -1164,7 +1168,7 @@
       },
       fr: {
         brandName: 'S+ Academy',
-        nav: { home: 'Accueil', about: 'À propos', programs: 'Programmes', blog: 'Blog', book: 'Réserver un cours', apply: 'Postuler', payments: 'Paiements', test: 'Tester votre niveau' },
+        nav: { home: 'Accueil', about: 'À propos', programs: 'Programmes', blog: 'Blog', book: 'Réserver un cours', apply: 'Postuler', studentLogin: 'Connexion étudiant', adminLogin: 'Connexion administrateur', payments: 'Paiements', test: 'Tester votre niveau' },
         hero: { eyebrow: 'Académie d’anglais en ligne premium', title: 'Maîtrisez l’anglais avec confiance et autorité', text: 'Une académie d’anglais en ligne premium pour les étudiants ambitieux et les professionnels souhaitant améliorer leur aisance, leur confiance et leur évolution de carrière.', subtext: 'Tous nos cours sont dispensés en direct via Zoom, garantissant un apprentissage structuré, interactif et professionnel depuis n’importe où.', ctaPrimary: 'S’inscrire maintenant', ctaSecondary: 'Découvrir les programmes' },
         about: { eyebrow: 'À propos de notre académie', title: 'À propos de S+ Academy', text: 'S+ Academy est une académie d’anglais axée sur les résultats, conçue pour les étudiants ambitieux et les professionnels en quête d’excellence.', b1: 'Une académie d’anglais orientée résultats', b2: 'Conçue pour les étudiants ambitieux et les professionnels', b3: 'Axée sur l’aisance, la confiance et l’évolution de carrière', b4: 'Cours en direct via Zoom, structurés et interactifs', highlight: 'Comparable à une académie internationale de langue en ligne haut de gamme.' },
         programs: {
@@ -1225,7 +1229,7 @@
       },
       es: {
         brandName: 'S+ Academy',
-        nav: { home: 'Inicio', about: 'Sobre nosotros', programs: 'Programas', blog: 'Blog', book: 'Reservar clase', apply: 'Aplicar', payments: 'Pagos', test: 'Prueba tu nivel' },
+        nav: { home: 'Inicio', about: 'Sobre nosotros', programs: 'Programas', blog: 'Blog', book: 'Reservar clase', apply: 'Aplicar', studentLogin: 'Acceso de estudiante', adminLogin: 'Acceso de administrador', payments: 'Pagos', test: 'Prueba tu nivel' },
         hero: { eyebrow: 'Academia de inglés online premium', title: 'Domina el inglés con confianza y autoridad', text: 'Una academia de inglés online de alto nivel para estudiantes ambiciosos y profesionales que buscan fluidez, confianza y crecimiento profesional.', subtext: 'Todos los programas se imparten en directo a través de Zoom, con una experiencia estructurada, interactiva y profesional desde cualquier lugar.', ctaPrimary: 'Inscribirse ahora', ctaSecondary: 'Explorar programas' },
         about: { eyebrow: 'Sobre nuestra academia', title: 'Sobre S+ Academy', text: 'S+ Academy es una academia de inglés enfocada en resultados, diseñada para estudiantes ambiciosos y profesionales que buscan excelencia.', b1: 'Una academia de inglés orientada a resultados', b2: 'Diseñada para estudiantes ambiciosos y profesionales', b3: 'Enfocada en fluidez, confianza y crecimiento profesional', b4: 'Sesiones en vivo por Zoom, estructuradas e interactivas', highlight: 'Comparable a una academia internacional de idiomas en línea de primer nivel.' },
         programs: {
@@ -1286,7 +1290,7 @@
       },
       pt: {
         brandName: 'S+ Academy',
-        nav: { home: 'Início', about: 'Sobre', programs: 'Programas', blog: 'Blog', book: 'Reservar aula', apply: 'Candidatar-se', payments: 'Pagamentos', test: 'Teste seu nível' },
+        nav: { home: 'Início', about: 'Sobre', programs: 'Programas', blog: 'Blog', book: 'Reservar aula', apply: 'Candidatar-se', studentLogin: 'Acesso do aluno', adminLogin: 'Acesso do administrador', payments: 'Pagamentos', test: 'Teste seu nível' },
         hero: { eyebrow: 'Academia premium de inglês online', title: 'Domine o inglês com confiança e autoridade', text: 'Uma academia premium de inglês online para estudantes ambiciosos e profissionais que desejam melhorar sua fluência, confiança e crescimento profissional.', subtext: 'Todos os programas são realizados ao vivo via Zoom, garantindo um aprendizado estruturado, interativo e profissional de qualquer lugar.', ctaPrimary: 'Inscreva-se agora', ctaSecondary: 'Explorar programas' },
         about: { eyebrow: 'Sobre nossa academia', title: 'Sobre a S+ Academy', text: 'A S+ Academy é uma academia de inglês orientada para resultados, criada para estudantes ambiciosos e profissionais que buscam excelência.', b1: 'Uma academia de inglês orientada a resultados', b2: 'Feita para estudantes ambiciosos e profissionais', b3: 'Foco em fluência, confiança e crescimento profissional', b4: 'Aulas ao vivo via Zoom, estruturadas e interativas', highlight: 'Comparável a uma academia internacional de idiomas online de alto nível.' },
         programs: {
@@ -1347,7 +1351,7 @@
       },
       zh: {
         brandName: 'S+ Academy',
-        nav: { home: '首页', about: '关于我们', programs: '课程', blog: '博客', book: '预约课程', apply: '申请', payments: '支付', test: '测试水平' },
+        nav: { home: '首页', about: '关于我们', programs: '课程', blog: '博客', book: '预约课程', apply: '申请', studentLogin: '学生登录', adminLogin: '管理员登录', payments: '支付', test: '测试水平' },
         hero: { eyebrow: '高端在线英语学院', title: '自信而高效地掌握英语', text: '我们是一所高端在线英语学院，专为有抱负的学生和专业人士打造，帮助他们提升英语流利度、自信心，并推动职业发展。', subtext: '我们的所有课程都通过 Zoom 直播进行，确保您无论身在何处都能获得结构化、互动化且专业的学习体验。', ctaPrimary: '立即申请', ctaSecondary: '探索课程' },
         about: { eyebrow: '关于我们的学院', title: '关于 S+ 英语学院', text: 'S+ 英语学院是一所以成果为导向的在线英语学院，专为有抱负的学生和专业人士打造，帮助他们提升英语能力，实现职业发展。', b1: '以成果为导向的英语学院', b2: '专为有抱负的学生和专业人士设计', b3: '专注提升英语流利度、自信心与职业发展', b4: '通过 Zoom 提供结构化、互动式直播课程', highlight: '可与国际顶级在线语言学院媲美。' },
         programs: {
@@ -1408,7 +1412,7 @@
       },
       ar: {
         brandName: 'أكاديمية +S',
-        nav: { home: 'الرئيسية', about: 'من نحن', programs: 'البرامج', blog: 'المدونة', book: 'احجز درسًا', apply: 'التقديم', payments: 'المدفوعات', test: 'اختبر مستواك' },
+        nav: { home: 'الرئيسية', about: 'من نحن', programs: 'البرامج', blog: 'المدونة', book: 'احجز درسًا', apply: 'التقديم', studentLogin: 'تسجيل دخول الطالب', adminLogin: 'تسجيل دخول المسؤول', payments: 'المدفوعات', test: 'اختبر مستواك' },
         hero: { eyebrow: 'أكاديمية إنجليزية راقية عبر الإنترنت', title: 'أتقن اللغة الإنجليزية بثقة وإتقان', text: 'أكاديمية إنجليزية راقية عبر الإنترنت للطلاب الطموحين والمهنيين الذين يسعون إلى الطلاقة والثقة والتقدم المهني.', subtext: 'جميع برامجنا تُقدَّم مباشرة عبر Zoom، بما يضمن تعليمًا منظمًا وتفاعليًا واحترافيًا من أي مكان.', ctaPrimary: 'سجل الآن', ctaSecondary: 'استكشف البرامج' },
         about: { eyebrow: 'عن أكاديميتنا', title: 'عن أكاديمية +S', text: 'نحن لا نعلّم الكلمات فحسب، بل نعيد صياغة علاقتك باللغة. نؤمن أن الطلاقة ليست رفاهًا، بل ضرورة، وأن الثقة تُكتسب بالتدريب والممارسة.', b1: 'أكاديمية إنجليزية تركّز على النتائج', b2: 'مصممة للطلاب الطموحين والمهنيين', b3: 'تركيز على الطلاقة والثقة والتقدم الوظيفي', b4: 'جلسات مباشرة منظمة وتفاعلية عبر Zoom', highlight: 'تُضاهي أرقى الأكاديميات الدولية لتعليم اللغات عبر الإنترنت.' },
         programs: {
