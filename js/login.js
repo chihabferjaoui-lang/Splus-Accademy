@@ -11,9 +11,6 @@ const message = document.querySelector("[data-auth-message]");
 const loginForm = document.querySelector("[data-login-form]");
 const resetForm = document.querySelector("[data-reset-form]");
 const signupForm = document.querySelector("[data-signup-form]");
-const signupDetails = signupForm?.closest("details");
-let captchaToken = "";
-let captchaWidgetId = null;
 let resetCaptchaToken = "";
 let resetCaptchaWidgetId = null;
 let captchaScriptPromise;
@@ -50,31 +47,6 @@ async function ensureTurnstile() {
     });
   }
   await captchaScriptPromise;
-}
-
-async function renderSignupCaptcha() {
-  if (!signupForm || captchaWidgetId !== null || !turnstileConfigured) return;
-  try {
-    await ensureTurnstile();
-    captchaWidgetId = window.turnstile.render("#signup-captcha", {
-      sitekey: window.SPLUS_SUPABASE_CONFIG.turnstileSiteKey,
-      callback: (token) => {
-        captchaToken = token;
-        signupForm.querySelector('button[type="submit"]').disabled = false;
-      },
-      "expired-callback": () => {
-        captchaToken = "";
-        signupForm.querySelector('button[type="submit"]').disabled = true;
-      },
-      "error-callback": () => {
-        captchaToken = "";
-        showMessage("The security check failed to load. Please refresh the page and try again.", "error");
-      }
-    });
-    signupForm.querySelector('button[type="submit"]').disabled = true;
-  } catch (error) {
-    showMessage(error.message, "error");
-  }
 }
 
 async function renderResetCaptcha() {
@@ -131,21 +103,6 @@ if (!backendConfigured) {
   showMessage("Sign-in is temporarily unavailable while the academy configures its secure account service.", "info");
   loginForm.querySelector('button[type="submit"]').disabled = true;
   if (resetForm) resetForm.querySelector('button[type="submit"]').disabled = true;
-  signupForm?.querySelector('button[type="submit"]').setAttribute("disabled", "");
-}
-
-if (signupForm && (!backendConfigured || !turnstileConfigured)) {
-  signupForm.querySelector('button[type="submit"]').disabled = true;
-  const notice = document.createElement("p");
-  notice.className = "portal-note";
-  notice.textContent = "Student registration will be available after secure account and anti-bot settings are configured.";
-  signupForm.prepend(notice);
-}
-
-if (signupDetails && turnstileConfigured && backendConfigured) {
-  signupDetails.addEventListener("toggle", () => {
-    if (signupDetails.open) renderSignupCaptcha();
-  });
 }
 
 if (resetForm && backendConfigured) {
@@ -256,10 +213,6 @@ loginForm.addEventListener("submit", async (event) => {
 
 signupForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (!captchaToken) {
-    showMessage("Complete the security check before creating an account.", "error");
-    return;
-  }
 
   const formData = new FormData(signupForm);
   setFormBusy(signupForm, true);
@@ -269,7 +222,6 @@ signupForm?.addEventListener("submit", async (event) => {
       email: String(formData.get("email")).trim(),
       password: String(formData.get("password")),
       options: {
-        captchaToken,
         data: { full_name: String(formData.get("fullName")).trim() },
         emailRedirectTo: new URL("student.html", window.location.href).href
       }
@@ -282,14 +234,9 @@ signupForm?.addEventListener("submit", async (event) => {
     }
     showMessage("Your account was created. Check your email to verify it, then sign in.", "success");
     signupForm.reset();
-    captchaToken = "";
-    if (captchaWidgetId !== null) window.turnstile.reset(captchaWidgetId);
   } catch (error) {
     showMessage(error.message, "error");
-    captchaToken = "";
-    if (captchaWidgetId !== null) window.turnstile.reset(captchaWidgetId);
   } finally {
     setFormBusy(signupForm, false);
-    if (captchaWidgetId !== null) signupForm.querySelector('button[type="submit"]').disabled = true;
   }
 });
