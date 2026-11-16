@@ -1,5 +1,6 @@
 import {
   backendConfigured,
+  checkAuthService,
   getSignedInUser,
   getSupabaseClient,
   hasAdminRole,
@@ -14,6 +15,7 @@ const signupForm = document.querySelector("[data-signup-form]");
 let resetCaptchaToken = "";
 let resetCaptchaWidgetId = null;
 let captchaScriptPromise;
+let authServiceAvailable = false;
 
 function showMessage(text, kind = "info") {
   message.textContent = text;
@@ -112,24 +114,30 @@ async function routeSignedInUser(supabase, user) {
   return true;
 }
 
+const loginSubmitButton = loginForm.querySelector('button[type="submit"]');
+const signupSubmitButton = signupForm?.querySelector('button[type="submit"]');
+const resetSubmitButton = resetForm?.querySelector('button[type="submit"]');
+loginSubmitButton.disabled = true;
+if (signupSubmitButton) signupSubmitButton.disabled = true;
+if (resetSubmitButton) resetSubmitButton.disabled = true;
+
 if (!backendConfigured) {
   showMessage("Sign-in is temporarily unavailable while the academy configures its secure account service.", "info");
-  loginForm.querySelector('button[type="submit"]').disabled = true;
-  if (resetForm) resetForm.querySelector('button[type="submit"]').disabled = true;
-}
-
-if (resetForm && backendConfigured) {
-  resetForm.querySelector('button[type="submit"]').disabled = turnstileConfigured;
+} else {
+  showMessage("Connecting to the secure account service…", "info");
 }
 
 document.querySelector("[data-show-reset]")?.addEventListener("click", async () => {
   resetForm.elements.email.value = loginForm.elements.email.value.trim();
   loginForm.hidden = true;
   resetForm.hidden = false;
-  showMessage(backendConfigured
+  showMessage(authServiceAvailable
     ? ""
-    : "Password recovery is unavailable until the academy configures its secure account service.");
-  if (backendConfigured && turnstileConfigured) await renderResetCaptcha();
+    : backendConfigured
+      ? "Password recovery is unavailable while the secure account service is being checked or is offline."
+      : "Password recovery is unavailable until the academy configures its secure account service.");
+  if (authServiceAvailable && turnstileConfigured) await renderResetCaptcha();
+  else if (authServiceAvailable) resetSubmitButton.disabled = false;
 });
 
 document.querySelector("[data-cancel-reset]")?.addEventListener("click", () => {
@@ -138,24 +146,39 @@ document.querySelector("[data-cancel-reset]")?.addEventListener("click", () => {
   loginForm.hidden = false;
   resetCaptchaToken = "";
   if (resetCaptchaWidgetId !== null) window.turnstile.reset(resetCaptchaWidgetId);
-  resetForm.querySelector('button[type="submit"]').disabled = !backendConfigured || turnstileConfigured;
+  resetSubmitButton.disabled = !authServiceAvailable || turnstileConfigured;
   showMessage("");
 });
 
 if (backendConfigured) {
-  loginForm.querySelector('button[type="submit"]').disabled = false;
-  showMessage("");
   try {
-    const supabase = getSupabaseClient();
-    const user = await getSignedInUser(supabase);
-    await routeSignedInUser(supabase, user);
+    await checkAuthService();
+    authServiceAvailable = true;
+    loginSubmitButton.disabled = false;
+    if (signupSubmitButton) signupSubmitButton.disabled = false;
+    if (resetSubmitButton) resetSubmitButton.disabled = turnstileConfigured;
+    showMessage("Secure account service connected.", "success");
   } catch (error) {
-    showMessage(`Could not check your account: ${error.message}`, "error");
+    showMessage(`Could not connect to the account service: ${error.message}`, "error");
+  }
+
+  if (authServiceAvailable) {
+    try {
+      const supabase = getSupabaseClient();
+      const user = await getSignedInUser(supabase);
+      await routeSignedInUser(supabase, user);
+    } catch (error) {
+      showMessage(`Could not check your account: ${error.message}`, "error");
+    }
   }
 }
 
 resetForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (!authServiceAvailable) {
+    showMessage("Password recovery is unavailable because the account service is not connected.", "error");
+    return;
+  }
   if (turnstileConfigured && !resetCaptchaToken) {
     showMessage("Complete the security check before requesting a password reset.", "error");
     return;
@@ -183,12 +206,16 @@ resetForm?.addEventListener("submit", async (event) => {
     resetCaptchaToken = "";
     if (resetCaptchaWidgetId !== null) window.turnstile.reset(resetCaptchaWidgetId);
     setFormBusy(resetForm, false);
-    resetForm.querySelector('button[type="submit"]').disabled = turnstileConfigured;
+    resetSubmitButton.disabled = turnstileConfigured;
   }
 });
 
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (!authServiceAvailable) {
+    showMessage("Sign-in is unavailable because the account service is not connected.", "error");
+    return;
+  }
   const formData = new FormData(loginForm);
   setFormBusy(loginForm, true);
   try {
@@ -226,6 +253,10 @@ loginForm.addEventListener("submit", async (event) => {
 
 signupForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (!authServiceAvailable) {
+    showMessage("Account creation is unavailable because the account service is not connected.", "error");
+    return;
+  }
 
   const formData = new FormData(signupForm);
   setFormBusy(signupForm, true);
