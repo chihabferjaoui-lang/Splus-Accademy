@@ -437,7 +437,7 @@
         <a href="index.html#about">About</a>
         <a href="index.html#programs">Programs</a>
         <a href="booking.html" class="active">Book a Class</a>
-        <a href="teacher-apply.html">Apply</a>
+        <a href="apply.html">Apply</a>
         <a href="test.html">Test Your Level</a>
       </nav>
       <a class="btn btn-primary" href="test.html">Test Your Level</a>
@@ -450,7 +450,7 @@
         <div class="eyebrow">Booking Assistant</div>
         <h1>Book the right English program with clarity and confidence.</h1>
         <p class="lead">No clutter. No long forms. Just a premium guided booking assistant that helps students choose the right program, pick a preferred date and time, and confirm a booking request in minutes.</p>
-        <p class="sub">Every completed booking generates a PDF confirmation with a unique reference number and clear next steps. Students are asked to email the PDF to <strong>contact.englishcourse94@gmail.com</strong> for final confirmation and Zoom access.</p>
+        <p class="sub">Every request is securely recorded with a unique reference number. S+ Academy will contact you to confirm availability and next steps.</p>
         <div class="hero-actions">
           <a href="#assistant" class="btn btn-primary">Start Booking</a>
           <a href="index.html#programs" class="btn btn-outline">View Programs</a>
@@ -499,7 +499,7 @@
       <div class="section-head">
         <div class="eyebrow">Interactive Experience</div>
         <h2>Your live booking assistant</h2>
-        <p>This assistant helps the student choose the right program, select a preferred date and time, confirm the booking, and download a PDF with a unique reference number.</p>
+        <p>This assistant securely records an unconfirmed booking request. S+ Academy will review your preferred date and time and contact you to confirm availability.</p>
       </div>
 
       <div class="assistant-shell">
@@ -545,13 +545,18 @@
     </div>
   </footer>
 
-  <script>
+  <script type="module">
+    import { submitPublicRequest } from "./js/public-submissions.js";
+
     const state = {
       program: null,
       priceMAD: null,
       priceUSD: null,
       date: null,
+      dateISO: null,
       time: null,
+      time24: null,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Africa/Casablanca',
       name: null,
       email: null,
       phone: null,
@@ -609,14 +614,6 @@
       </div>`;
     }
 
-    function generateReference(prefix = 'REF') {
-      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      let a = '', b = '';
-      for (let i = 0; i < 8; i++) a += chars[Math.floor(Math.random() * chars.length)];
-      for (let i = 0; i < 5; i++) b += chars[Math.floor(Math.random() * chars.length)];
-      return `${prefix}-${a}-${b}`;
-    }
-
     function escapeHTML(str) {
       return String(str)
         .replace(/&/g, '&amp;')
@@ -662,7 +659,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Booking Confirmation - ${escapeHTML(state.reference)}</title>
+<title>Booking Request Receipt - ${escapeHTML(state.reference)}</title>
 <style>
 body{font-family:Arial,sans-serif;background:#f5f6fb;margin:0;padding:30px;color:#1f2748}
 .card{max-width:860px;margin:0 auto;background:#fff;border:1px solid #d9deea;border-radius:20px;padding:34px;box-shadow:0 12px 30px rgba(0,0,0,.06)}
@@ -681,10 +678,10 @@ body{font-family:Arial,sans-serif;background:#f5f6fb;margin:0;padding:30px;color
 </style>
 </head>
 <body>
-<div class="watermark">WAITING CONFIRMATION • S+ ENGLISH ACADEMY</div>
+<div class="watermark">REQUEST RECEIVED • NOT YET CONFIRMED</div>
 <div class="card">
   <div class="head">
-    <h1>Booking Confirmation</h1>
+    <h1>Booking Request Receipt</h1>
     <p>S+ English Academy</p>
   </div>
   <div class="ref">
@@ -699,11 +696,11 @@ body{font-family:Arial,sans-serif;background:#f5f6fb;margin:0;padding:30px;color
     <div class="row"><strong>Program:</strong> ${escapeHTML(state.program)}</div>
     <div class="row"><strong>Price:</strong> ${escapeHTML(state.priceMAD)} ${state.priceUSD ? `(${escapeHTML(state.priceUSD)})` : ''}</div>
     <div class="row"><strong>Date:</strong> ${escapeHTML(state.date)}</div>
-    <div class="row"><strong>Time:</strong> ${escapeHTML(state.time)}</div>
-    <div class="row"><strong>Status:</strong> Waiting confirmation</div>
+    <div class="row"><strong>Time:</strong> ${escapeHTML(state.time)} (${escapeHTML(state.timezone)})</div>
+    <div class="row"><strong>Status:</strong> Request received — not yet confirmed</div>
   </div>
   <div class="note">
-    <strong>Next step:</strong> Please send this PDF with your reference number to <strong>contact.englishcourse94@gmail.com</strong> to complete your booking. Our team will confirm your request and send your Zoom access details within 24 hours.
+    <strong>Next step:</strong> Your request has been recorded. S+ Academy will contact you to confirm availability and explain the next steps. This request is not a confirmed or paid enrollment.
   </div>
   <div class="footer">Document generated on ${escapeHTML(dateText)}</div>
 </div>
@@ -711,6 +708,10 @@ body{font-family:Arial,sans-serif;background:#f5f6fb;margin:0;padding:30px;color
 </html>`;
 
       const win = window.open('', '_blank');
+      if (!win) {
+        alert('Please allow pop-ups to view or print your booking confirmation.');
+        return null;
+      }
       win.document.open();
       win.document.write(html);
       win.document.close();
@@ -720,18 +721,18 @@ body{font-family:Arial,sans-serif;background:#f5f6fb;margin:0;padding:30px;color
     function renderPDFActions() {
       resultArea.innerHTML = `
         <div class="result-box">
-          <h4>Booking PDF Ready</h4>
-          <p>Your booking confirmation has been generated with reference number <strong>${state.reference}</strong>.</p>
-          <p>Please download or print the PDF and send it to <strong>contact.englishcourse94@gmail.com</strong> to complete your booking request.</p>
+          <h4>Booking request receipt ready</h4>
+          <p>Your request is recorded with reference number <strong>${escapeHTML(state.reference)}</strong>.</p>
+          <p>You may print or save this receipt for your records. You do not need to email it to S+ Academy.</p>
           <div class="result-actions">
-            <button class="btn btn-primary" id="viewPdfBtn">View / Print PDF</button>
-            <a class="btn btn-outline" href="mailto:contact.englishcourse94@gmail.com?subject=Booking%20Confirmation%20${encodeURIComponent(state.reference)}">Email Confirmation</a>
+            <button class="btn btn-primary" id="viewPdfBtn">Print / Save receipt</button>
+            <a class="btn btn-outline" href="mailto:contact.englishcourse94@gmail.com?subject=Booking%20Request%20${encodeURIComponent(state.reference)}">Contact Academy</a>
           </div>
-          <div class="note">The PDF includes a unique reference number and a waiting confirmation watermark for tracking.</div>
+          <div class="note">The receipt includes your unique reference number. Your booking is not confirmed or paid.</div>
         </div>`;
       document.getElementById('viewPdfBtn').addEventListener('click', () => {
         const pdfWindow = createBookingPDF();
-        setTimeout(() => pdfWindow.print(), 500);
+        if (pdfWindow) setTimeout(() => pdfWindow.print(), 500);
       });
       resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -740,7 +741,8 @@ body{font-family:Arial,sans-serif;background:#f5f6fb;margin:0;padding:30px;color
       messages.innerHTML = '';
       interactiveArea.innerHTML = '';
       resultArea.innerHTML = '';
-      Object.assign(state, { program: null, priceMAD: null, priceUSD: null, date: null, time: null, name: null, email: null, phone: null, reference: null });
+      Object.assign(state, { program: null, priceMAD: null, priceUSD: null, date: null, dateISO: null, time: null, time24: null, name: null, email: null, phone: null, reference: null });
+      state.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Africa/Casablanca';
 
       bot('Welcome to S+ Academy. I am here to help you find the right session. Let’s begin by choosing the program that best matches your goal.');
       setInteractive(optionButtons(programs));
@@ -772,6 +774,7 @@ body{font-family:Arial,sans-serif;background:#f5f6fb;margin:0;padding:30px;color
       document.getElementById('dateNext').addEventListener('click', () => {
         const value = document.getElementById('dateInput').value;
         if (!value) return alert('Please choose a date.');
+        state.dateISO = value;
         state.date = formatDateForDisplay(value);
         user(state.date);
         chooseTime();
@@ -794,6 +797,7 @@ body{font-family:Arial,sans-serif;background:#f5f6fb;margin:0;padding:30px;color
       document.getElementById('timeNext').addEventListener('click', () => {
         const value = document.getElementById('timeInput').value;
         if (!value) return alert('Please choose a time.');
+        state.time24 = value;
         state.time = formatTimeForDisplay(value);
         user(state.time);
         confirmSummary();
@@ -849,7 +853,7 @@ body{font-family:Arial,sans-serif;background:#f5f6fb;margin:0;padding:30px;color
       `);
       document.getElementById('emailNext').addEventListener('click', () => {
         const value = document.getElementById('emailInput').value.trim();
-        if (!value || !value.includes('@')) return alert('Please enter a valid email address.');
+        if (!document.getElementById('emailInput').checkValidity()) return alert('Please enter a valid email address.');
         state.email = value;
         user(value);
         collectPhone();
@@ -862,18 +866,38 @@ body{font-family:Arial,sans-serif;background:#f5f6fb;margin:0;padding:30px;color
         <div class="label">Phone / WhatsApp</div>
         <input class="inline-input" id="phoneInput" placeholder="+212 ..." />
         <div style="height:14px"></div>
-        <button class="btn btn-primary" id="finishBtn">Generate Confirmation PDF</button>
+        <button class="btn btn-primary" id="finishBtn">Submit Booking Request</button>
+        <div id="bookingCaptcha"></div>
+        <p id="bookingSubmitStatus" role="status" aria-live="polite"></p>
       `);
-      document.getElementById('finishBtn').addEventListener('click', () => {
+      document.getElementById('finishBtn').addEventListener('click', async (event) => {
         const value = document.getElementById('phoneInput').value.trim();
         if (!value) return alert('Please enter your phone number.');
         state.phone = value;
-        state.reference = generateReference('REF');
         user(value);
-        bot(`Your booking request is ready. Reference number: ${state.reference}. Please use the PDF below and send it to contact.englishcourse94@gmail.com for final confirmation.`);
-        setInteractive(`<div class="summary"><strong>Status:</strong> Waiting confirmation<br><strong>Reference:</strong> ${state.reference}</div><div style="height:14px"></div><button class="btn btn-outline" id="restartFlowBtn">Start New Booking</button>`);
-        document.getElementById('restartFlowBtn').addEventListener('click', startFlow);
-        renderPDFActions();
+        const button = event.currentTarget;
+        const status = document.getElementById('bookingSubmitStatus');
+        button.disabled = true;
+        status.textContent = 'Complete the security check to submit your request.';
+        try {
+          const result = await submitPublicRequest('submit-booking-request', {
+            programSlug: state.program.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+            requestedDate: state.dateISO,
+            requestedTime: state.time24,
+            requestedTimezone: state.timezone,
+            fullName: state.name,
+            email: state.email,
+            phone: state.phone
+          }, document.getElementById('bookingCaptcha'));
+          state.reference = result.reference;
+          bot(`Your booking request was received. Reference number: ${state.reference}. S+ Academy will contact you to confirm availability.`);
+          setInteractive(`<div class="summary"><strong>Status:</strong> Request received — not yet confirmed<br><strong>Reference:</strong> ${escapeHTML(state.reference)}</div><div style="height:14px"></div><button class="btn btn-outline" id="restartFlowBtn">Start New Booking</button>`);
+          document.getElementById('restartFlowBtn').addEventListener('click', startFlow);
+          renderPDFActions();
+        } catch (error) {
+          status.textContent = error.message;
+          button.disabled = false;
+        }
       });
     }
 

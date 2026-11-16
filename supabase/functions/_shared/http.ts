@@ -37,6 +37,7 @@ export function readText(
   name: string,
   maxLength: number,
   required = true,
+  minLength = 1,
 ): string {
   const value = data[name];
   if (typeof value !== "string") {
@@ -44,7 +45,7 @@ export function readText(
     throw new InputError(`Invalid ${name}.`);
   }
   const clean = value.trim();
-  if ((required && clean.length === 0) || clean.length > maxLength) {
+  if ((required && clean.length < minLength) || clean.length > maxLength) {
     throw new InputError(`Invalid ${name}.`);
   }
   return clean;

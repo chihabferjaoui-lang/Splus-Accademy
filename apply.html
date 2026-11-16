@@ -492,19 +492,6 @@
         </div>
       </div>
 
-      <form id="studentForm" class="hidden" action="https://formsubmit.co/contact.englishcourse94@gmail.com" method="POST">
-        <input type="hidden" name="_captcha" value="false">
-        <input type="hidden" name="_subject" value="New Student Application - S+ Academy">
-        <input type="hidden" name="_template" value="table">
-
-        <input type="hidden" name="Program" id="fProgram">
-        <input type="hidden" name="Preferred Schedule" id="fSchedule">
-        <input type="hidden" name="Current Level" id="fLevel">
-        <input type="hidden" name="Learning Goals" id="fGoals">
-        <input type="hidden" name="Full Name" id="fName">
-        <input type="hidden" name="Email" id="fEmail">
-        <input type="hidden" name="Phone / WhatsApp" id="fPhone">
-      </form>
     </div>
   </section>
 
@@ -537,7 +524,9 @@
     </div>
   </footer>
 
-  <script>
+  <script type="module">
+    import { submitPublicRequest } from "./js/public-submissions.js";
+
     const state = {
       program: '',
       schedule: '',
@@ -568,7 +557,6 @@
     const messages = document.getElementById('messages');
     const interactiveArea = document.getElementById('interactiveArea');
     const resultArea = document.getElementById('resultArea');
-    const studentForm = document.getElementById('studentForm');
 
     function bot(text) {
       const div = document.createElement('div');
@@ -609,16 +597,6 @@
       const url = new URL(window.location.href);
       const p = url.searchParams.get('program');
       return p ? p.trim() : '';
-    }
-
-    function setFormValues() {
-      document.getElementById('fProgram').value = state.program;
-      document.getElementById('fSchedule').value = state.schedule;
-      document.getElementById('fLevel').value = state.level;
-      document.getElementById('fGoals').value = state.goals;
-      document.getElementById('fName').value = state.name;
-      document.getElementById('fEmail').value = state.email;
-      document.getElementById('fPhone').value = state.phone;
     }
 
     function startFlow() {
@@ -763,7 +741,7 @@
 
       document.getElementById('emailNext').addEventListener('click', () => {
         const value = document.getElementById('emailInput').value.trim();
-        if (!value || !value.includes('@')) return alert('Please enter a valid email.');
+        if (!value || !document.getElementById('emailInput').checkValidity()) return alert('Please enter a valid email.');
         state.email = value;
         user(value);
         askPhone();
@@ -816,14 +794,14 @@
 
     function submitApplication() {
       user('Submit Application');
-      bot('Your application is ready. Sending to S+ Academy email...');
-
-      setFormValues();
+      bot('Your application is ready to submit securely to S+ Academy.');
 
       resultArea.innerHTML = `
         <div class="success-card">
-          <h4>Ready to send</h4>
-          <p>Click below to send your application to <strong>contact.englishcourse94@gmail.com</strong>.</p>
+          <h4>Ready to submit</h4>
+          <p>Complete the security check to submit your application.</p>
+          <div id="studentApplicationCaptcha"></div>
+          <p id="studentApplicationStatus" role="status" aria-live="polite"></p>
           <div class="action-row">
             <button class="btn btn-primary" id="finalSendBtn">Send Application</button>
             <button class="btn btn-outline" id="newAppBtn">Start New Application</button>
@@ -832,8 +810,27 @@
         </div>
       `;
 
-      document.getElementById('finalSendBtn').addEventListener('click', () => {
-        studentForm.submit();
+      document.getElementById('finalSendBtn').addEventListener('click', async (event) => {
+        const button = event.currentTarget;
+        const status = document.getElementById('studentApplicationStatus');
+        button.disabled = true;
+        status.textContent = 'Complete the security check to continue.';
+        try {
+          await submitPublicRequest('submit-student-application', {
+            programSlug: state.program.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+            fullName: state.name,
+            email: state.email,
+            phone: state.phone,
+            preferredSchedule: state.schedule,
+            currentLevel: state.level,
+            learningGoals: state.goals
+          }, document.getElementById('studentApplicationCaptcha'));
+          status.textContent = 'Your application was submitted successfully. S+ Academy will contact you soon.';
+          button.hidden = true;
+        } catch (error) {
+          status.textContent = error.message;
+          button.disabled = false;
+        }
       });
 
       document.getElementById('newAppBtn').addEventListener('click', startFlow);

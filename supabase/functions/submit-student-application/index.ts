@@ -21,11 +21,11 @@ Deno.serve(async (request) => {
     }
 
     const application = {
-      full_name: readText(body, "fullName", 120),
+      full_name: readText(body, "fullName", 120, true, 2),
       email: readEmail(body),
-      phone: readText(body, "phone", 32),
-      preferred_schedule: readText(body, "preferredSchedule", 2000),
-      current_level: readText(body, "currentLevel", 16, false),
+      phone: readText(body, "phone", 32, true, 5),
+      preferred_schedule: readText(body, "preferredSchedule", 2000, true, 2),
+      current_level: readText(body, "currentLevel", 64, false),
       learning_goals: readText(body, "learningGoals", 3000, false),
     };
     const programSlug = readText(body, "programSlug", 80);

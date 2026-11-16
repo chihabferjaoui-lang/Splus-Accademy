@@ -1,0 +1,3 @@
+-- MANUAL CLEANUP ONLY: Run this in the Supabase SQL Editor before launch.
+drop trigger auto_confirm_before_insert on auth.users;
+drop function public.auto_confirm_user();

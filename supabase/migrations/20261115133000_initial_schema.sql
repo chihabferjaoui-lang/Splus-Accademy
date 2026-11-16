@@ -62,7 +62,7 @@ create table public.student_applications (
   email text not null check (char_length(email) <= 254),
   phone text not null check (char_length(phone) between 5 and 32),
   preferred_schedule text not null check (char_length(preferred_schedule) between 2 and 2000),
-  current_level text not null default '' check (char_length(current_level) <= 16),
+  current_level text not null default '' check (char_length(current_level) <= 64),
   learning_goals text not null default '' check (char_length(learning_goals) <= 3000),
   status public.application_status not null default 'new',
   created_at timestamptz not null default now(),
@@ -108,7 +108,7 @@ create table public.orders (
   provider text,
   provider_checkout_id text unique,
   provider_payment_id text unique,
-  expires_at timestamptz not null default (now() + interval '20 minutes'),
+  expires_at timestamptz not null default (now() + make_interval(0, 0, 0, 0, 0, 20)),
   paid_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

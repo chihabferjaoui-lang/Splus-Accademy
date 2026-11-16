@@ -39,7 +39,7 @@
       </section>
 
       <nav class="portal-tabs" aria-label="Admin data sections">
-        <button type="button" data-admin-tab="orders" aria-selected="true">Bookings</button>
+        <button type="button" data-admin-tab="booking_requests" aria-selected="true">Booking requests</button>
         <button type="button" data-admin-tab="class_sessions" aria-selected="false">Lessons</button>
         <button type="button" data-admin-tab="lesson_progress" aria-selected="false">Student progress</button>
         <button type="button" data-admin-tab="student_applications" aria-selected="false">Student applications</button>
@@ -92,10 +92,19 @@
 
       <section class="portal-card" data-admin-panel="orders" aria-labelledby="orders-title" hidden>
         <h2 class="portal-section-title" id="orders-title">Bookings and enrollment requests</h2>
-        <p class="portal-note">Booking records appear here when the booking and checkout flow is connected. A pending request is not a confirmed or paid enrollment.</p>
+        <p class="portal-note">Orders are payment records. A booking request is not a confirmed or paid enrollment.</p>
         <div class="portal-table-wrap"><table class="portal-table">
           <thead><tr><th>Student</th><th>Program</th><th>Class slot</th><th>Amount</th><th>Status</th><th>Created</th></tr></thead>
           <tbody data-table-body="orders"><tr><td colspan="6">Loading…</td></tr></tbody>
+        </table></div>
+      </section>
+
+      <section class="portal-card" data-admin-panel="booking_requests" aria-labelledby="booking-requests-title">
+        <h2 class="portal-section-title" id="booking-requests-title">Booking requests</h2>
+        <p class="portal-note">These are inquiries only. Confirm availability with the student; no payment or enrollment is created by a request.</p>
+        <div class="portal-table-wrap"><table class="portal-table">
+          <thead><tr><th>Reference</th><th>Name</th><th>Email</th><th>Phone</th><th>Program</th><th>Preferred date &amp; time</th><th>Status</th><th>Submitted</th></tr></thead>
+          <tbody data-table-body="booking_requests"><tr><td colspan="8">Loading…</td></tr></tbody>
         </table></div>
       </section>
 

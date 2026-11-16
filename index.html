@@ -559,17 +559,47 @@
 
     .newsletter-form {
       display: flex;
+      flex-wrap: wrap;
       gap: 10px;
       margin: 14px 0 10px;
     }
 
-    .newsletter-form input {
+    .newsletter-form input[type="email"] {
       flex: 1;
       min-width: 0;
       border-radius: 14px;
       border: 1px solid var(--line);
       padding: 14px 16px;
       background: #fff;
+    }
+
+    .newsletter-consent {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      width: 100%;
+      margin: 0 0 10px;
+      font-size: 13px;
+    }
+
+    .newsletter-consent input {
+      flex: 0 0 auto;
+      width: auto;
+      margin-top: 3px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      border-radius: 0;
+    }
+
+    .newsletter-form [data-newsletter-captcha] {
+      width: 100%;
+    }
+
+    .newsletter-message {
+      display: block;
+      min-height: 1.4em;
+      margin-bottom: 8px;
     }
 
     .socials {
@@ -718,7 +748,7 @@
 
       .lang-select,
       .btn,
-      .newsletter-form input {
+      .newsletter-form input[type="email"] {
         width: 100%;
       }
 
@@ -750,9 +780,8 @@
         <a href="#programs" data-i18n="nav.programs">Programs</a>
         <a href="#blog" data-i18n="nav.blog">Blog</a>
         <a href="booking.html" data-i18n="nav.book">Book a Class</a>
-        <a href="teacher-apply.html" data-i18n="nav.apply">Apply</a>
+        <a href="apply.html" data-i18n="nav.apply">Apply</a>
         <a href="student-login.html" data-i18n="nav.studentLogin">Student Login</a>
-        <a href="#payments" data-i18n="nav.payments">Payments</a>
       </nav>
 
       <div class="nav-actions">
@@ -778,7 +807,7 @@
           <p class="lead" data-i18n="hero.text">An elite online English academy for ambitious students and professionals seeking fluency, confidence, and career advancement.</p>
           <p class="sublead" data-i18n="hero.subtext">All programs are delivered live via Zoom, ensuring structured, interactive, and professional learning from anywhere.</p>
           <div class="hero-actions">
-            <a class="btn btn-primary" href="teacher-apply.html" data-i18n="hero.ctaPrimary">Apply Now</a>
+            <a class="btn btn-primary" href="booking.html" data-i18n="hero.ctaPrimary">Apply Now</a>
             <a class="btn btn-outline" href="#programs" data-i18n="hero.ctaSecondary">Explore Programs</a>
             <a class="btn btn-outline" href="student-login.html" data-i18n="nav.studentLogin">Student Login</a>
           </div>
@@ -820,7 +849,7 @@
         <div class="program-grid">
           <article class="card">
             <h3 class="card-title" data-i18n="programs.business.title">Business English</h3>
-            <div class="price">MAD 800<small>$80</small></div>
+            <div class="price">MAD 800<small>$80 <span data-i18n="common.perMonth">per month</span></small></div>
             <p data-i18n="programs.business.text">Master professional communication for executive-level impact in international business environments.</p>
             <div class="pill">✓ <span data-i18n="common.liveZoom">Live via Zoom</span></div>
             <a class="btn btn-primary" href="booking.html" data-i18n="common.enroll">Enroll Now</a>
@@ -828,7 +857,7 @@
 
           <article class="card">
             <h3 class="card-title" data-i18n="programs.exam.title">Exam Preparation</h3>
-            <div class="price">MAD 500<small>$50</small></div>
+            <div class="price">MAD 500<small>$50 <span data-i18n="common.perMonth">per month</span></small></div>
             <p data-i18n="programs.exam.text">Targeted training to excel in major English proficiency exams with proven strategies.</p>
             <div class="pill">✓ <span data-i18n="common.liveZoom">Live via Zoom</span></div>
             <a class="btn btn-primary" href="booking.html" data-i18n="common.enroll">Enroll Now</a>
@@ -836,7 +865,7 @@
 
           <article class="card">
             <h3 class="card-title" data-i18n="programs.day.title">Day-to-Day English</h3>
-            <div class="price">MAD 600<small>$60</small></div>
+            <div class="price">MAD 600<small>$60 <span data-i18n="common.perMonth">per month</span></small></div>
             <p data-i18n="programs.day.text">Build fluency and confidence in everyday conversational English for social and professional contexts.</p>
             <div class="pill">✓ <span data-i18n="common.liveZoom">Live via Zoom</span></div>
             <a class="btn btn-primary" href="booking.html" data-i18n="common.enroll">Enroll Now</a>
@@ -844,7 +873,7 @@
 
           <article class="card">
             <h3 class="card-title" data-i18n="programs.private.title">Private Tutoring</h3>
-            <div class="price">MAD 350<small>$35</small></div>
+            <div class="price">MAD 350<small>$35 <span data-i18n="common.perMonth">per month</span></small></div>
             <p data-i18n="programs.private.text">One-on-one personalized coaching tailored to your specific goals and learning pace.</p>
             <div class="pill">✓ <span data-i18n="common.liveZoom">Live via Zoom</span></div>
             <a class="btn btn-primary" href="booking.html" data-i18n="common.enroll">Enroll Now</a>
@@ -927,8 +956,8 @@
         </div>
 
         <div class="assistant-box">
-          <h3 data-i18n="booking.chatTitle">Interactive Booking Chat</h3>
-          <p data-i18n="booking.chatText">Click the chat button below to start booking with our interactive assistant. Get instant guidance on selecting the perfect program, date, and time.</p>
+          <h3 data-i18n="booking.chatTitle">Book via WhatsApp</h3>
+          <p data-i18n="booking.chatText">Message us on WhatsApp to book your English class. Tell us which program and schedule work for you, and our team will follow up.</p>
           <a class="btn btn-primary" href="https://wa.me/212718613036?text=Hello%20I%20want%20to%20book%20an%20English%20class" target="_blank" rel="noopener" data-i18n="booking.chatBtn">Start Booking Now</a>
         </div>
       </div>
@@ -1010,8 +1039,6 @@
       </div>
     </section>
 
-    <section id="test" class="hidden"></section>
-
     <section id="blog" class="blog-section">
       <div class="container blog-container">
         <div id="blogContent">
@@ -1036,7 +1063,7 @@
         <article class="blog-article-view" id="articleView" hidden></article>
       </div>
     </section>
-    <section id="payments" class="hidden"></section>
+
   </main>
 
   <section id="legalPages" class="legal-wrap hidden">
@@ -1078,10 +1105,16 @@
         <div class="newsletter-box">
           <h4 data-i18n="footer.newsletter">Newsletter</h4>
           <p data-i18n="footer.newsText">Get weekly insights on English mastery and academy updates.</p>
-          <form class="newsletter-form" onsubmit="event.preventDefault(); alert(currentLang === 'ar' ? 'تم الاشتراك بنجاح' : currentLang === 'zh' ? '订阅成功' : 'Subscribed successfully');">
-            <input type="email" required data-i18n-placeholder="footer.emailPlaceholder" placeholder="Enter your email" />
+          <form class="newsletter-form" data-newsletter-form>
+            <input type="email" name="email" required maxlength="254" data-i18n-placeholder="footer.emailPlaceholder" placeholder="Enter your email" />
             <button class="btn btn-primary" type="submit" data-i18n="footer.subscribe">Subscribe</button>
+            <label class="newsletter-consent">
+              <input type="checkbox" name="consent" required />
+              <span data-i18n="footer.newsConsent">I agree to receive S+ Academy updates by email.</span>
+            </label>
+            <div data-newsletter-captcha hidden></div>
           </form>
+          <span class="newsletter-message" data-newsletter-message role="status" aria-live="polite"></span>
           <span data-i18n="footer.newsSub">Get weekly insights on English mastery, exclusive tips, and academy updates.</span>
         </div>
       </div>
@@ -1100,7 +1133,7 @@
 
   <div class="floating-actions">
     <a class="float-btn" href="booking.html" aria-label="Booking chat">◔</a>
-    <a class="float-btn" href="teacher-apply.html" aria-label="Teacher application chat">✉</a>
+    <a class="float-btn" href="teacher-apply.html" aria-label="Apply to teach at S+ Academy">✉</a>
   </div>
 
   <script>
@@ -1118,7 +1151,7 @@
           private: { title: 'Private Tutoring', text: 'One-on-one personalized coaching tailored to your specific goals and learning pace.' },
           speaking: { title: 'Speaking Classes', price: 'Contact for pricing', text: 'Specialized focus on developing confident, articulate English speaking skills in group settings.' }
         },
-        common: { liveZoom: 'Live via Zoom', enroll: 'Enroll Now' },
+        common: { liveZoom: 'Live via Zoom', enroll: 'Enroll Now', perMonth: 'per month' },
         why: {
           eyebrow: 'Our Distinction', title: 'Why Choose S+ Academy', text: 'We combine international teaching standards with personalized coaching to deliver exceptional results.',
           f1: { title: 'Executive-level Communication Training', text: 'International standards designed for ambitious professionals seeking career advancement.' },
@@ -1133,7 +1166,7 @@
           s1: { title: 'Choose Your Program', text: 'Select from our curated courses' },
           s2: { title: 'Pick Your Time', text: 'Select your preferred date & time' },
           s3: { title: 'Get Confirmation', text: 'Receive your PDF with reference number' },
-          chatTitle: 'Interactive Booking Chat', chatText: 'Click the chat button below to start booking with our interactive assistant. Get instant guidance on selecting the perfect program, date, and time.', chatBtn: 'Start Booking Now'
+          chatTitle: 'Book via WhatsApp', chatText: 'Message us on WhatsApp to book your English class. Tell us which program and schedule work for you, and our team will follow up.', chatBtn: 'Book on WhatsApp'
         },
         apply: {
           eyebrow: 'Ready to Transform', title: 'Apply & Secure Your Seat', text: 'Limited seats per group. Submit your application to secure your spot. Our team will send you confirmation details with Zoom access information.',
@@ -1155,7 +1188,7 @@
         },
         footer: {
           about: 'An elite online English academy for ambitious students and professionals seeking fluency, confidence, and career advancement.',
-          quick: 'Quick Links', contact: 'Contact', email: 'Email:', phone: 'Phone:', newsletter: 'Newsletter', newsText: 'Get weekly insights on English mastery and academy updates.', emailPlaceholder: 'Enter your email', subscribe: 'Subscribe', newsSub: 'Get weekly insights on English mastery, exclusive tips, and academy updates.', privacy: 'Privacy Policy', terms: 'Terms & Conditions', refund: 'Refund Policy', cookies: 'Cookie Policy', copy: '© 2026 S+ Academy. All rights reserved. Live via Zoom.'
+          quick: 'Quick Links', contact: 'Contact', email: 'Email:', phone: 'Phone:', newsletter: 'Newsletter', newsText: 'Get weekly insights on English mastery and academy updates.', emailPlaceholder: 'Enter your email', subscribe: 'Subscribe', newsConsent: 'I agree to receive S+ Academy updates by email.', newsSub: 'Get weekly insights on English mastery, exclusive tips, and academy updates.', privacy: 'Privacy Policy', terms: 'Terms & Conditions', refund: 'Refund Policy', cookies: 'Cookie Policy', copy: '© 2026 S+ Academy. All rights reserved. Live via Zoom.'
         },
         test: {
           eyebrow: 'Placement Test', title: 'Test Your English Level', text: 'Take one of our 10 quiz versions to estimate your level from A1 to C2. Each attempt selects a quiz randomly and shows your final level instantly.',
@@ -1179,7 +1212,7 @@
           private: { title: 'Cours particuliers', text: 'Un accompagnement personnalisé en individuel, adapté à vos objectifs et à votre rythme.' },
           speaking: { title: 'Cours de conversation', price: 'Contactez-nous pour les tarifs', text: 'Un travail spécialisé pour développer une expression orale claire, fluide et confiante.' }
         },
-        common: { liveZoom: 'En direct via Zoom', enroll: 'S’inscrire maintenant' },
+        common: { liveZoom: 'En direct via Zoom', enroll: 'S’inscrire maintenant', perMonth: 'par mois' },
         why: {
           eyebrow: 'Notre distinction', title: 'Pourquoi choisir S+ Academy', text: 'Nous combinons des standards d’enseignement internationaux avec un accompagnement personnalisé pour offrir des résultats exceptionnels.',
           f1: { title: 'Communication professionnelle avancée', text: 'Des standards internationaux conçus pour les professionnels ambitieux qui souhaitent progresser.' },
@@ -1194,7 +1227,7 @@
           s1: { title: 'Choisir un programme', text: 'Sélectionnez parmi nos programmes premium' },
           s2: { title: 'Choisir l’horaire', text: 'Sélectionnez la date et l’heure qui vous conviennent' },
           s3: { title: 'Recevoir la confirmation', text: 'Recevez votre PDF avec numéro de référence' },
-          chatTitle: 'Assistant de réservation interactif', chatText: 'Cliquez sur le bouton ci-dessous pour commencer votre réservation avec notre assistant interactif. Recevez une aide instantanée pour choisir le bon programme, la bonne date et le bon horaire.', chatBtn: 'Réserver maintenant'
+          chatTitle: 'Réserver via WhatsApp', chatText: 'Écrivez-nous sur WhatsApp pour réserver votre cours d’anglais. Indiquez le programme et l’horaire qui vous conviennent, et notre équipe vous répondra.', chatBtn: 'Réserver sur WhatsApp'
         },
         apply: {
           eyebrow: 'Prêt à transformer votre avenir', title: 'Postulez et réservez votre place', text: 'Les places sont limitées dans chaque groupe. Envoyez votre demande pour réserver votre place. Notre équipe vous transmettra votre confirmation avec les informations d’accès Zoom.',
@@ -1216,7 +1249,7 @@
         },
         footer: {
           about: 'Une académie d’anglais en ligne premium pour les étudiants ambitieux et les professionnels qui visent l’aisance, la confiance et l’évolution de carrière.',
-          quick: 'Liens rapides', contact: 'Contact', email: 'E-mail :', phone: 'Téléphone :', newsletter: 'Newsletter', newsText: 'Recevez chaque semaine des conseils sur la maîtrise de l’anglais et les actualités de l’académie.', emailPlaceholder: 'Entrez votre e-mail', subscribe: 'S’abonner', newsSub: 'Recevez des conseils exclusifs, des mises à jour et des contenus utiles chaque semaine.', privacy: 'Politique de confidentialité', terms: 'Conditions générales', refund: 'Politique de remboursement', cookies: 'Politique de cookies', copy: '© 2026 S+ Academy. Tous droits réservés. En direct via Zoom.'
+          quick: 'Liens rapides', contact: 'Contact', email: 'E-mail :', phone: 'Téléphone :', newsletter: 'Newsletter', newsText: 'Recevez chaque semaine des conseils sur la maîtrise de l’anglais et les actualités de l’académie.', emailPlaceholder: 'Entrez votre e-mail', subscribe: 'S’abonner', newsConsent: 'J’accepte de recevoir par e-mail les actualités de S+ Academy.', newsSub: 'Recevez des conseils exclusifs, des mises à jour et des contenus utiles chaque semaine.', privacy: 'Politique de confidentialité', terms: 'Conditions générales', refund: 'Politique de remboursement', cookies: 'Politique de cookies', copy: '© 2026 S+ Academy. Tous droits réservés. En direct via Zoom.'
         },
         test: {
           eyebrow: 'Test de niveau', title: 'Testez votre niveau d’anglais', text: 'Passez l’une de nos 10 versions de quiz pour estimer votre niveau de A1 à C2. Chaque tentative sélectionne un quiz aléatoire et affiche votre résultat immédiatement.',
@@ -1240,7 +1273,7 @@
           private: { title: 'Tutoría privada', text: 'Acompañamiento personalizado uno a uno, adaptado a tus metas y ritmo de aprendizaje.' },
           speaking: { title: 'Clases de conversación', price: 'Consultar precio', text: 'Enfoque especializado para desarrollar una expresión oral segura, clara y fluida en inglés.' }
         },
-        common: { liveZoom: 'En vivo por Zoom', enroll: 'Inscribirse ahora' },
+        common: { liveZoom: 'En vivo por Zoom', enroll: 'Inscribirse ahora', perMonth: 'al mes' },
         why: {
           eyebrow: 'Nuestra diferencia', title: 'Por qué elegir S+ Academy', text: 'Combinamos estándares internacionales de enseñanza con acompañamiento personalizado para ofrecer resultados excepcionales.',
           f1: { title: 'Comunicación profesional avanzada', text: 'Estándares internacionales diseñados para profesionales ambiciosos que buscan avanzar en su carrera.' },
@@ -1255,7 +1288,7 @@
           s1: { title: 'Elegir programa', text: 'Selecciona entre nuestros programas premium' },
           s2: { title: 'Elegir horario', text: 'Selecciona la fecha y la hora que prefieras' },
           s3: { title: 'Recibir confirmación', text: 'Recibe tu PDF con número de referencia' },
-          chatTitle: 'Asistente interactivo de reservas', chatText: 'Haz clic en el botón de abajo para comenzar tu reserva con nuestro asistente interactivo. Recibe ayuda inmediata para elegir el programa, la fecha y la hora ideales.', chatBtn: 'Reservar ahora'
+          chatTitle: 'Reserva por WhatsApp', chatText: 'Escríbenos por WhatsApp para reservar tu clase de inglés. Indícanos el programa y el horario que prefieres y nuestro equipo te responderá.', chatBtn: 'Reservar por WhatsApp'
         },
         apply: {
           eyebrow: 'Listo para transformar tu futuro', title: 'Aplica y asegura tu plaza', text: 'Las plazas por grupo son limitadas. Envía tu solicitud para asegurar tu lugar. Nuestro equipo te enviará la confirmación con los detalles de acceso a Zoom.',
@@ -1277,7 +1310,7 @@
         },
         footer: {
           about: 'Una academia de inglés online premium para estudiantes ambiciosos y profesionales que buscan fluidez, confianza y crecimiento profesional.',
-          quick: 'Enlaces rápidos', contact: 'Contacto', email: 'Correo:', phone: 'Teléfono:', newsletter: 'Boletín', newsText: 'Recibe consejos semanales sobre dominio del inglés y novedades de la academia.', emailPlaceholder: 'Introduce tu correo', subscribe: 'Suscribirse', newsSub: 'Recibe consejos exclusivos, actualizaciones y contenido útil cada semana.', privacy: 'Política de privacidad', terms: 'Términos y condiciones', refund: 'Política de reembolso', cookies: 'Política de cookies', copy: '© 2026 S+ Academy. Todos los derechos reservados. En vivo por Zoom.'
+          quick: 'Enlaces rápidos', contact: 'Contacto', email: 'Correo:', phone: 'Teléfono:', newsletter: 'Boletín', newsText: 'Recibe consejos semanales sobre dominio del inglés y novedades de la academia.', emailPlaceholder: 'Introduce tu correo', subscribe: 'Suscribirse', newsConsent: 'Acepto recibir novedades de S+ Academy por correo electrónico.', newsSub: 'Recibe consejos exclusivos, actualizaciones y contenido útil cada semana.', privacy: 'Política de privacidad', terms: 'Términos y condiciones', refund: 'Política de reembolso', cookies: 'Política de cookies', copy: '© 2026 S+ Academy. Todos los derechos reservados. En vivo por Zoom.'
         },
         test: {
           eyebrow: 'Prueba de nivel', title: 'Prueba tu nivel de inglés', text: 'Haz una de nuestras 10 versiones de cuestionario para estimar tu nivel de A1 a C2. Cada intento selecciona un cuestionario aleatorio y muestra tu resultado al instante.',
@@ -1301,7 +1334,7 @@
           private: { title: 'Aulas particulares', text: 'Acompanhamento individual personalizado, ajustado aos seus objetivos e ritmo de aprendizagem.' },
           speaking: { title: 'Aulas de conversação', price: 'Preço sob consulta', text: 'Foco especializado no desenvolvimento de uma fala em inglês confiante, clara e articulada.' }
         },
-        common: { liveZoom: 'Ao vivo via Zoom', enroll: 'Matricular-se agora' },
+        common: { liveZoom: 'Ao vivo via Zoom', enroll: 'Matricular-se agora', perMonth: 'por mês' },
         why: {
           eyebrow: 'Nosso diferencial', title: 'Por que escolher a S+ Academy', text: 'Combinamos padrões internacionais de ensino com acompanhamento personalizado para entregar resultados excepcionais.',
           f1: { title: 'Treinamento avançado de comunicação', text: 'Padrões internacionais pensados para profissionais ambiciosos que buscam crescimento na carreira.' },
@@ -1316,7 +1349,7 @@
           s1: { title: 'Escolher programa', text: 'Selecione entre nossos programas premium' },
           s2: { title: 'Escolher horário', text: 'Selecione a data e o horário desejados' },
           s3: { title: 'Receber confirmação', text: 'Receba seu PDF com número de referência' },
-          chatTitle: 'Assistente interativo de reservas', chatText: 'Clique no botão abaixo para começar sua reserva com nosso assistente interativo. Receba orientação imediata para escolher o programa, a data e o horário ideais.', chatBtn: 'Reservar agora'
+          chatTitle: 'Reserve pelo WhatsApp', chatText: 'Fale conosco pelo WhatsApp para reservar sua aula de inglês. Informe o programa e o horário desejados e nossa equipe responderá.', chatBtn: 'Reservar pelo WhatsApp'
         },
         apply: {
           eyebrow: 'Pronto para transformar seu futuro', title: 'Candidate-se e garanta sua vaga', text: 'As vagas por grupo são limitadas. Envie sua candidatura para garantir seu lugar. Nossa equipe enviará sua confirmação com os detalhes de acesso ao Zoom.',
@@ -1338,7 +1371,7 @@
         },
         footer: {
           about: 'Uma academia premium de inglês online para estudantes ambiciosos e profissionais que buscam fluência, confiança e crescimento profissional.',
-          quick: 'Links rápidos', contact: 'Contato', email: 'E-mail:', phone: 'Telefone:', newsletter: 'Newsletter', newsText: 'Receba insights semanais sobre domínio do inglês e novidades da academia.', emailPlaceholder: 'Digite seu e-mail', subscribe: 'Inscrever-se', newsSub: 'Receba dicas exclusivas, atualizações e conteúdos úteis toda semana.', privacy: 'Política de Privacidade', terms: 'Termos e Condições', refund: 'Política de Reembolso', cookies: 'Política de Cookies', copy: '© 2026 S+ Academy. Todos os direitos reservados. Ao vivo via Zoom.'
+          quick: 'Links rápidos', contact: 'Contato', email: 'E-mail:', phone: 'Telefone:', newsletter: 'Newsletter', newsText: 'Receba insights semanais sobre domínio do inglês e novidades da academia.', emailPlaceholder: 'Digite seu e-mail', subscribe: 'Inscrever-se', newsConsent: 'Aceito receber atualizações da S+ Academy por e-mail.', newsSub: 'Receba dicas exclusivas, atualizações e conteúdos úteis toda semana.', privacy: 'Política de Privacidade', terms: 'Termos e Condições', refund: 'Política de Reembolso', cookies: 'Política de Cookies', copy: '© 2026 S+ Academy. Todos os direitos reservados. Ao vivo via Zoom.'
         },
         test: {
           eyebrow: 'Teste de nivelamento', title: 'Teste seu nível de inglês', text: 'Faça uma das nossas 10 versões de quiz para estimar seu nível de A1 a C2. Cada tentativa seleciona um quiz aleatório e mostra o resultado instantaneamente.',
@@ -1362,7 +1395,7 @@
           private: { title: '一对一辅导', text: '个性化的一对一英语辅导，根据您的学习目标和节奏量身定制。' },
           speaking: { title: '口语课程', price: '价格请咨询', text: '专注提升英语口语表达能力，在真实交流环境中建立自信并提高流利度。' }
         },
-        common: { liveZoom: 'Zoom 直播课程', enroll: '立即报名' },
+        common: { liveZoom: 'Zoom 直播课程', enroll: '立即报名', perMonth: '每月' },
         why: {
           eyebrow: '我们的优势', title: '为什么选择 S+ 英语学院', text: '我们将国际教学标准与个性化辅导相结合，帮助学员取得卓越的学习成果。',
           f1: { title: '高阶商务沟通培训', text: '专为希望提升职业发展的专业人士设计，符合国际教学标准。' },
@@ -1377,7 +1410,7 @@
           s1: { title: '选择课程', text: '从我们的精选课程中选择' },
           s2: { title: '选择时间', text: '选择您希望的日期和时间' },
           s3: { title: '获取确认', text: '获取包含参考编号的确认 PDF' },
-          chatTitle: '智能预约助手', chatText: '点击下方按钮，通过我们的智能助手开始预约。在轻松的对话中获得即时指导，帮助您选择最适合的课程、日期和时间。', chatBtn: '立即预约'
+          chatTitle: '通过 WhatsApp 预约', chatText: '通过 WhatsApp 联系我们预订英语课程。请告知您选择的课程和时间，我们的团队会与您联系。', chatBtn: '通过 WhatsApp 预约'
         },
         apply: {
           eyebrow: '准备开启改变', title: '申请并保留您的席位', text: '每个班级席位有限。提交申请以保留您的席位。我们的团队将发送确认详细信息和 Zoom 访问信息。',
@@ -1399,7 +1432,7 @@
         },
         footer: {
           about: '一所高端在线英语学院，专为有抱负的学生和专业人士打造，帮助他们提升流利度、自信心与职业发展。',
-          quick: '快速链接', contact: '联系方式', email: '电子邮箱：', phone: '电话：', newsletter: '订阅简报', newsText: '获取每周英语提升建议和学院最新动态。', emailPlaceholder: '输入您的邮箱', subscribe: '订阅', newsSub: '获取独家技巧、更新资讯和英语学习内容。', privacy: '隐私政策', terms: '条款与条件', refund: '退款政策', cookies: 'Cookie 政策', copy: '© 2026 S+ Academy。保留所有权利。课程通过 Zoom 直播。'
+          quick: '快速链接', contact: '联系方式', email: '电子邮箱：', phone: '电话：', newsletter: '订阅简报', newsText: '获取每周英语提升建议和学院最新动态。', emailPlaceholder: '输入您的邮箱', subscribe: '订阅', newsConsent: '我同意通过电子邮件接收 S+ Academy 的动态。', newsSub: '获取独家技巧、更新资讯和英语学习内容。', privacy: '隐私政策', terms: '条款与条件', refund: '退款政策', cookies: 'Cookie 政策', copy: '© 2026 S+ Academy。保留所有权利。课程通过 Zoom 直播。'
         },
         test: {
           eyebrow: '分级测试', title: '测试您的英语水平', text: '参加我们的 10 套随机测验之一，快速估算您的英语水平（A1 至 C2）。每次开始都会随机抽取一套题，完成后立即显示等级结果。',
@@ -1423,7 +1456,7 @@
           private: { title: 'التدريب الفردي', text: 'توجيه شخصي واحد لواحد وفق أهدافك الخاصة وسرعة تعلمك.' },
           speaking: { title: 'دروس المحادثة', price: 'تواصل معنا لمعرفة السعر', text: 'تركيز خاص على تنمية مهارات التحدث الواثق والواضح باللغة الإنجليزية في بيئة جماعية.' }
         },
-        common: { liveZoom: 'مباشر عبر Zoom', enroll: 'سجل الآن' },
+        common: { liveZoom: 'مباشر عبر Zoom', enroll: 'سجل الآن', perMonth: 'شهريًا' },
         why: {
           eyebrow: 'تميزنا', title: 'لماذا تختار أكاديمية +S؟', text: 'لأننا نزاوج بين صرامة المعايير ودفء التوجيه الشخصي لنمنحك علمًا راسخًا وصوتًا حاضرًا وخطوة أكثر ثقة في دربك المهني.',
           f1: { title: 'تدريب على التواصل المهني الرفيع', text: 'معايير دولية مصممة للمهنيين الطموحين الساعين إلى التقدم المهني.' },
@@ -1438,7 +1471,7 @@
           s1: { title: 'اختر البرنامج', text: 'اختر من بين برامجنا المتميزة' },
           s2: { title: 'اختر الوقت', text: 'حدد التاريخ والوقت المناسبين لك' },
           s3: { title: 'استلم التأكيد', text: 'احصل على ملف PDF مع رقم المرجع' },
-          chatTitle: 'مساعد الحجز التفاعلي', chatText: 'اضغط على الزر أدناه لبدء الحجز باستخدام مساعدنا التفاعلي. ستحصل على إرشاد فوري لاختيار البرنامج والتاريخ والوقت المناسبين لك.', chatBtn: 'ابدأ الحجز الآن'
+          chatTitle: 'احجز عبر واتساب', chatText: 'راسلنا عبر واتساب لحجز درسك في الإنجليزية. أخبرنا بالبرنامج والوقت المناسبين لك، وسيتواصل معك فريقنا.', chatBtn: 'احجز عبر واتساب'
         },
         apply: {
           eyebrow: 'مستعد للتحول', title: 'قدّم طلبك واحجز مقعدك', text: 'المقاعد محدودة في كل مجموعة. قدّم طلبك الآن لتأمين مكانك. سيرسل لك فريقنا تفاصيل التأكيد ومعلومات الدخول إلى Zoom.',
@@ -1460,7 +1493,7 @@
         },
         footer: {
           about: 'أكاديمية إنجليزية راقية عبر الإنترنت للطلاب الطموحين والمهنيين الساعين إلى الطلاقة والثقة والتقدم الوظيفي.',
-          quick: 'روابط سريعة', contact: 'تواصل معنا', email: 'البريد الإلكتروني:', phone: 'الهاتف:', newsletter: 'النشرة البريدية', newsText: 'احصل على نصائح أسبوعية لإتقان الإنجليزية وآخر أخبار الأكاديمية.', emailPlaceholder: 'أدخل بريدك الإلكتروني', subscribe: 'اشترك', newsSub: 'احصل على نصائح حصرية وتحديثات ومحتوى مفيد كل أسبوع.', privacy: 'سياسة الخصوصية', terms: 'الشروط والأحكام', refund: 'سياسة الاسترجاع', cookies: 'سياسة ملفات تعريف الارتباط', copy: '© 2026 أكاديمية +S. جميع الحقوق محفوظة. مباشر عبر Zoom.'
+          quick: 'روابط سريعة', contact: 'تواصل معنا', email: 'البريد الإلكتروني:', phone: 'الهاتف:', newsletter: 'النشرة البريدية', newsText: 'احصل على نصائح أسبوعية لإتقان الإنجليزية وآخر أخبار الأكاديمية.', emailPlaceholder: 'أدخل بريدك الإلكتروني', subscribe: 'اشترك', newsConsent: 'أوافق على تلقي تحديثات S+ Academy عبر البريد الإلكتروني.', newsSub: 'احصل على نصائح حصرية وتحديثات ومحتوى مفيد كل أسبوع.', privacy: 'سياسة الخصوصية', terms: 'الشروط والأحكام', refund: 'سياسة الاسترجاع', cookies: 'سياسة ملفات تعريف الارتباط', copy: '© 2026 أكاديمية +S. جميع الحقوق محفوظة. مباشر عبر Zoom.'
         },
         test: {
           eyebrow: 'اختبار تحديد المستوى', title: 'اختبر مستواك في اللغة الإنجليزية', text: 'اخضع لواحد من 10 اختبارات قصيرة لتقدير مستواك من A1 إلى C2. في كل مرة يبدأ اختبار جديد يتم اختيار نموذج عشوائي وتظهر النتيجة النهائية فورًا.',
@@ -1651,6 +1684,7 @@
     document.getElementById('languageSelect').value = savedLang;
     applyTranslations(savedLang);
   </script>
+  <script type="module" src="js/newsletter.js"></script>
   <script src="js/blog.js" defer></script>
 </body>
 </html>

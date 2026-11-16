@@ -21,15 +21,15 @@ Deno.serve(async (request) => {
     }
 
     const application = {
-      full_name: readText(body, "fullName", 120),
+      full_name: readText(body, "fullName", 120, true, 2),
       email: readEmail(body),
-      phone: readText(body, "phone", 32),
-      country: readText(body, "country", 100),
-      experience: readText(body, "experience", 3000),
-      certification: readText(body, "certification", 2000),
-      specialization: readText(body, "specialization", 1000),
-      availability: readText(body, "availability", 2000),
-      why_join: readText(body, "whyJoin", 3000),
+      phone: readText(body, "phone", 32, true, 5),
+      country: readText(body, "country", 100, true, 2),
+      experience: readText(body, "experience", 3000, true, 2),
+      certification: readText(body, "certification", 2000, true, 2),
+      specialization: readText(body, "specialization", 1000, true, 2),
+      availability: readText(body, "availability", 2000, true, 2),
+      why_join: readText(body, "whyJoin", 3000, true, 2),
     };
 
     const { error: insertError } = await createServiceClient()

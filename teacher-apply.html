@@ -526,7 +526,7 @@
       <div class="section-head">
         <div class="eyebrow">What We Need</div>
         <h2>A guided teacher application</h2>
-        <p>The assistant asks clear questions step by step, then sends the final application to your academy email.</p>
+        <p>The assistant asks clear questions step by step, then securely stores your application for the academy to review.</p>
       </div>
 
       <div class="info-grid">
@@ -567,19 +567,6 @@
         </div>
       </div>
 
-      <form id="teacherForm" class="hidden" action="https://formsubmit.co/contact.englishcourse94@gmail.com" method="POST">
-        <input type="hidden" name="_captcha" value="false">
-        <input type="hidden" name="_subject" value="New Teacher Application - S+ Academy">
-        <input type="hidden" name="Full Name" id="formFullName">
-        <input type="hidden" name="Email" id="formEmail">
-        <input type="hidden" name="Phone" id="formPhone">
-        <input type="hidden" name="Country" id="formCountry">
-        <input type="hidden" name="Teaching Experience" id="formExperience">
-        <input type="hidden" name="Certification" id="formCertification">
-        <input type="hidden" name="Specialization" id="formSpecialization">
-        <input type="hidden" name="Availability" id="formAvailability">
-        <input type="hidden" name="Why Join S+ Academy" id="formWhyJoin">
-      </form>
     </div>
   </section>
 
@@ -612,7 +599,9 @@
     </div>
   </footer>
 
-  <script>
+  <script type="module">
+    import { submitPublicRequest } from "./js/public-submissions.js";
+
     document.addEventListener('DOMContentLoaded', () => {
       const state = {
         fullName: '',
@@ -629,11 +618,9 @@
       const messages = document.getElementById('messages');
       const interactiveArea = document.getElementById('interactiveArea');
       const resultArea = document.getElementById('resultArea');
-      const teacherForm = document.getElementById('teacherForm');
-
-      if (!messages || !interactiveArea || !resultArea || !teacherForm) {
+      if (!messages || !interactiveArea || !resultArea) {
         console.error('Teacher assistant: missing required elements.', {
-          messages, interactiveArea, resultArea, teacherForm
+          messages, interactiveArea, resultArea
         });
         return;
       }
@@ -660,18 +647,6 @@
 
       function setInteractive(html) {
         interactiveArea.innerHTML = html;
-      }
-
-      function setFormValues() {
-        document.getElementById('formFullName').value = state.fullName;
-        document.getElementById('formEmail').value = state.email;
-        document.getElementById('formPhone').value = state.phone;
-        document.getElementById('formCountry').value = state.country;
-        document.getElementById('formExperience').value = state.experience;
-        document.getElementById('formCertification').value = state.certification;
-        document.getElementById('formSpecialization').value = state.specialization;
-        document.getElementById('formAvailability').value = state.availability;
-        document.getElementById('formWhyJoin').value = state.whyJoin;
       }
 
       function choiceButtons(items) {
@@ -738,7 +713,7 @@
 
         document.getElementById('emailNext').addEventListener('click', () => {
           const value = document.getElementById('emailInput').value.trim();
-          if (!value || !value.includes('@')) return alert('Please enter a valid email address.');
+          if (!value || !document.getElementById('emailInput').checkValidity()) return alert('Please enter a valid email address.');
           state.email = value;
           user(value);
           askPhone();
@@ -912,15 +887,15 @@
       }
 
       function submitApplication() {
-        setFormValues();
         user('Submit Application');
-        bot('Your application is ready and is being sent to S+ Academy.');
+        bot('Your application is ready to submit securely to S+ Academy.');
 
         setInteractive(`
           <div class="success-card">
             <h4>Application ready</h4>
-            <p>Your teacher application has been prepared for submission.</p>
-            <p>After submission, S+ Academy will receive your details by email for review.</p>
+            <p>Complete the security check to submit your application.</p>
+            <div id="teacherApplicationCaptcha"></div>
+            <p id="teacherApplicationStatus" role="status" aria-live="polite"></p>
             <div class="action-row">
               <button type="button" class="btn btn-primary" id="finalSubmitBtn">Send Application</button>
               <button type="button" class="btn btn-outline" id="restartAfterBtn">Start New Application</button>
@@ -928,7 +903,30 @@
           </div>
         `);
 
-        document.getElementById('finalSubmitBtn').addEventListener('click', () => teacherForm.submit());
+        document.getElementById('finalSubmitBtn').addEventListener('click', async (event) => {
+          const button = event.currentTarget;
+          const status = document.getElementById('teacherApplicationStatus');
+          button.disabled = true;
+          status.textContent = 'Complete the security check to continue.';
+          try {
+            await submitPublicRequest('submit-teacher-application', {
+              fullName: state.fullName,
+              email: state.email,
+              phone: state.phone,
+              country: state.country,
+              experience: state.experience,
+              certification: state.certification,
+              specialization: state.specialization,
+              availability: state.availability,
+              whyJoin: state.whyJoin
+            }, document.getElementById('teacherApplicationCaptcha'));
+            status.textContent = 'Your application was submitted successfully. S+ Academy will contact you soon.';
+            button.hidden = true;
+          } catch (error) {
+            status.textContent = error.message;
+            button.disabled = false;
+          }
+        });
         document.getElementById('restartAfterBtn').addEventListener('click', startFlow);
       }
 

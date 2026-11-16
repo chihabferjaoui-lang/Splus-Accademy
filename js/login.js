@@ -20,6 +20,19 @@ function showMessage(text, kind = "info") {
   message.dataset.kind = kind;
 }
 
+function signupErrorMessage(error) {
+  const errorMessage = error.message || "";
+  const errorCode = error.code?.toLowerCase();
+  if (
+    errorCode === "user_already_exists" ||
+    errorCode === "email_exists" ||
+    /\b(already registered|already exists)\b/i.test(errorMessage)
+  ) {
+    return "An account with this email address is already registered. Sign in or reset your password instead.";
+  }
+  return errorMessage || "We could not create your account. Please try again.";
+}
+
 function setFormBusy(form, busy) {
   form.querySelectorAll("button, input").forEach((control) => {
     control.disabled = busy;
@@ -228,14 +241,19 @@ signupForm?.addEventListener("submit", async (event) => {
     });
     if (error) throw error;
 
+    if (data.user?.identities?.length === 0) {
+      showMessage("An account with this email address is already registered. Sign in or reset your password instead.", "error");
+      return;
+    }
+
     if (data.session) {
       studentRedirect();
       return;
     }
-    showMessage("Your account was created. Check your email to verify it, then sign in.", "success");
+    showMessage("Your student account was created successfully. Check your email to verify it, then sign in.", "success");
     signupForm.reset();
   } catch (error) {
-    showMessage(error.message, "error");
+    showMessage(signupErrorMessage(error), "error");
   } finally {
     setFormBusy(signupForm, false);
   }

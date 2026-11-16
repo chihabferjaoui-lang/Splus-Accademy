@@ -12,7 +12,7 @@ const slotForm = document.querySelector("[data-slot-form]");
 const sessionForm = document.querySelector("[data-session-form]");
 const progressForm = document.querySelector("[data-progress-form]");
 const applicationStatuses = ["new", "reviewing", "accepted", "declined"];
-let activePanel = "orders";
+let activePanel = "booking_requests";
 let supabase;
 let progressMemberships = [];
 let progressSessions = [];
@@ -379,6 +379,26 @@ async function loadOrders() {
   ]), 6, "No order records yet.");
 }
 
+async function loadBookingRequests() {
+  const body = document.querySelector('[data-table-body="booking_requests"]');
+  const { data, error } = await supabase.from("booking_requests")
+    .select("id,reference,full_name,email,phone,requested_date,requested_time,requested_timezone,status,created_at,programs(name)")
+    .order("created_at", { ascending: false })
+    .limit(500);
+  if (error) throw error;
+
+  fillTable(body, data.map((request) => [
+    request.reference,
+    request.full_name,
+    request.email,
+    request.phone,
+    request.programs?.name || "Program unavailable",
+    `${request.requested_date} · ${request.requested_time} (${request.requested_timezone})`,
+    makeStatusSelect("booking_requests", request.id, request.status, request.full_name),
+    formatDate(request.created_at)
+  ]), 8, "No booking requests yet.");
+}
+
 async function loadNewsletterSubscribers() {
   const body = document.querySelector('[data-table-body="newsletter_subscribers"]');
   const { data, error } = await supabase.from("newsletter_subscribers")
@@ -398,6 +418,7 @@ const panelLoaders = {
   profiles: loadStudents,
   class_slots: loadClassSlots,
   orders: loadOrders,
+  booking_requests: loadBookingRequests,
   class_sessions: loadLessonSessions,
   lesson_progress: loadLessonProgress,
   newsletter_subscribers: loadNewsletterSubscribers
@@ -445,9 +466,9 @@ dashboard.addEventListener("change", async (event) => {
       .update({ status: select.value, updated_at: new Date().toISOString() })
       .eq("id", select.dataset.recordId);
     if (error) throw error;
-    showMessage("Application status updated.", "success");
+    showMessage("Record status updated.", "success");
   } catch (error) {
-    showMessage(`Could not update application status: ${error.message}`, "error");
+    showMessage(`Could not update record status: ${error.message}`, "error");
     await showPanel(activePanel);
   } finally {
     select.disabled = false;
