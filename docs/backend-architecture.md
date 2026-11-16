@@ -1,435 +1,156 @@
-# S+ Academy Backend Architecture
+# S+ Academy backend architecture
 
-## 1. Recommended stack
+## 1. Stack and operating model
 
-The website is currently static and uses Supabase for authentication and PostgreSQL-backed features. This design builds on that foundation:
+Keep the GitHub Pages frontend and use **Supabase only** for application backend services:
 
-- **API:** TypeScript with NestJS, split into identity, lessons, assignments, billing, scheduling, and integration modules.
-- **Database:** PostgreSQL, hosted on Supabase or another managed PostgreSQL provider.
-- **Authentication:** Retain Supabase Auth; the API validates its JWTs. Browser clients do not perform privileged mutations directly against the database.
-- **Background jobs:** Redis with BullMQ workers for integrations, notifications, and retryable jobs.
-- **API contract:** REST under `/v1`, documented with OpenAPI.
-- **File storage:** Managed object storage for lesson media and attachments; store metadata and object keys, not file contents, in PostgreSQL.
+- **Postgres** stores platform data and enforces row-level security (RLS).
+- **Supabase Auth** owns identities and sessions. `profiles` remains the app-facing profile table.
+- **The browser** uses the Supabase URL and publishable/anon key only. It never contains a service-role key, provider credentials, or other secrets. Use RLS for direct client access.
+- **Supabase Edge Functions** handle trusted operations that need a server boundary: account administration, verified payment webhooks, outbound messages, and provider callbacks. Store secrets in Supabase Function secrets, not tables or frontend files.
+- **`pg_cron`** can schedule database-only work, such as marking invoices overdue and queuing reminders. An Edge Function processes queued deliveries. The migration defines the database work function but does not enable an extension or schedule a job; confirm the current Supabase project supports the required features before enabling them.
+- **`pgmq` is optional**, not a requirement. The reminder table is a small durable work queue initially; consider `pgmq` only if volume, retry, or visibility requirements justify it and it is available on the existing project. No Redis, separate API server, paid provider, or new paid service is part of this design.
 
-NestJS and BullMQ add services to operate. If minimizing infrastructure is the priority, Supabase Edge Functions can implement the API and background work initially, using the same database and event patterns.
+The migration does not provision infrastructure, enable paid features, configure SMTP, or activate external integrations. Do not upgrade a project or enable a billed service to follow this design without separate approval.
 
-## 2. Database design
+## 2. Schema and relationships
 
-Use `auth.users` as the authentication identity source. The tables below live in the application schema. Use UUID primary keys, `timestamptz` timestamps, foreign keys, and indexes for ownership, status, and time-based queries.
+Apply `supabase/migrations/20261116100000_supabase_academy_modules.sql` after the existing migrations. It extends the existing schema; it does not edit the initial migration or replace existing application, program, order, membership, slot, and webhook tables.
 
-### Users, roles, and teacher-student ownership
+### Identity and access
 
-```text
-profiles
-  user_id       PK, FK -> auth.users.id
-  full_name
-  status        active | suspended
-  created_at
-  updated_at
+- `profiles` remains one row per `auth.users` account.
+- `profiles.preferred_locale` is constrained to the site languages (`en`, `fr`, `es`, `pt`, `zh`, `ar`) and can be changed by the account owner. Assignment notices and queued invoice reminders snapshot that locale for correct later delivery.
+- `user_roles` supports multiple `admin`, `teacher`, and `student` rows per account. Only admins can grant/revoke roles through RLS; each user can read their own roles. Never assign roles from public signup metadata.
+- `teacher_students` is the admin-controlled active/ended teacher-to-student authorization link. Teachers see only profiles and records for their active links.
+- `student_groups` and `student_group_members` are teacher-owned sets. A member must have an active teacher/student link.
+- Account creation, deletion, and Auth email changes belong in a trusted Auth Admin Edge Function; ordinary clients can edit only the profile fields already granted by the existing schema.
 
-user_roles
-  user_id       FK -> profiles.user_id
-  role          admin | teacher | student
-  granted_by    FK -> profiles.user_id, nullable
-  granted_at
-  PK (user_id, role)
+### Customers and Era (internal invoicing)
 
-teacher_students
-  teacher_id    FK -> profiles.user_id
-  student_id    FK -> profiles.user_id
-  status        active | ended
-  started_at
-  ended_at
-  PK (teacher_id, student_id)
+- `customers` has one record per linked profile and a trigger-generated sequential human number (`C-000001` …). Admins can read/write all; the linked student can read their own record.
+- `invoices` stores a unique `INV-000001`-style invoice number (generated when omitted), customer, optional existing `order_id` and `membership_id`, MAD total, issue/due dates, status, and notes.
+- `invoice_items` snapshots each description, quantity, unit price, and generated line total. The invoice total is the authoritative total; invoice creation should calculate it from item rows in one transaction/RPC.
+- `payments` records admin-entered cash/bank transfers now. Provider and provider-payment identifiers allow a later online adapter without changing the domain model. Do not store card data.
+- `reminders` records due-soon/overdue customer messages, channel, schedule, attempts, and delivery result.
+- Existing `orders` and `payment_webhook_events` remain authoritative for legacy checkout and webhook deduplication. Link each applicable order to at most one invoice using `invoices.order_id`. Historical paid orders need an admin-reviewed backfill into invoices/payments; do not treat webhook event rows as payment records. New payment processing must verify a provider webhook in an Edge Function before changing local payment/invoice state.
 
-student_groups
-  id            PK
-  teacher_id    FK -> profiles.user_id
-  name
-  created_at
+Statuses are `draft`, `sent`, `paid`, `overdue`, `cancelled`, and `refunded`. `process_invoice_due_dates()` changes sent invoices past their due date to overdue and inserts unique reminder work items for near-due/overdue invoices. Invoice/payment state changes remain admin-only in phase one.
 
-student_group_members
-  group_id      FK -> student_groups.id
-  student_id    FK -> profiles.user_id
-  added_at
-  PK (group_id, student_id)
+### Kronos (internal schedule and hours)
+
+- Existing `class_sessions` is extended with nullable `teacher_id` so earlier admin-created sessions remain valid. New sessions use the existing `class_slot_id` (therefore its program), UTC start/end, existing status and optional HTTPS meeting URL.
+- `class_session_students` explicitly records session participants. A teacher can only add their own linked students.
+- `teacher_availability` stores recurring weekly windows and timezone; instants in sessions remain UTC.
+- `teacher_timesheets` records hours per session. A teacher submits/edits their own unapproved entries; an admin approves them. This is not payroll.
+- Database triggers serialize and reject overlapping scheduled sessions for the same teacher or student, including when a session is rescheduled. Existing session progress remains in `lesson_progress` and is visible to a teacher only for their own linked student/session.
+
+### Genius and progress
+
+- `lessons` and `exercises` are the source library. Admins create and edit them; teachers can read published content, never write library rows. Exercise content must not include answer keys that should be hidden from students.
+- `assigned_lessons` and `assigned_exercises` are separate per-student assignment records with teacher, assigning user, optional source group, assigned/due dates, status, score, and feedback. Group RPCs expand a group into individual assignments, so later group changes do not change existing recipients.
+- Assignment inserts create an in-app notification containing the lesson name and estimated duration. Students use the completion RPCs to mark their own work complete; teachers/admins record scores and feedback.
+- Existing `lesson_progress` continues to provide attendance and class-session scoring. Assignment completion and teacher feedback live with the corresponding assignment.
+
+### Notifications
+
+`notifications` supports `in_app`, `email`, and `whatsapp`, plus a language locale, delivery status, and `read_at`. Phase one uses in-app records (unread when `read_at` is null); assignment notices are rendered in the student's selected site language. Email/WhatsApp dispatch is future Edge Function work; never imply an external message was sent just because a client inserted a row.
+
+## 3. RLS scope
+
+All new business tables have RLS enabled. The migration grants authenticated access only where a policy narrows it; anonymous access to these tables is not granted. The service role bypasses RLS and must remain server-side.
+
+| Tables | Admin | Teacher | Student |
+|---|---|---|---|
+| `profiles`, `user_roles` | Manage roles; read/update permitted profile fields | Read own profile/roles and linked student profiles | Read/update own profile as already allowed; read own roles |
+| `teacher_students` | Read/manage links | Read own links | Read own link |
+| `student_groups`, `student_group_members` | Read/manage all | Read/manage own groups and their linked students | Read groups/memberships that include them |
+| `customers` | Read/write all | None | Read own linked customer only |
+| `lessons`, `exercises` | Read/write library | Read published library only | Read only published content attached to own assignment |
+| `assigned_lessons`, `assigned_exercises` | Read/write all | Read/write assignments for own active linked students | Read own assignments only; completion through owner-checking RPC |
+| `notifications` | Read all and create notices; delivery workers update results | Create in-app notices for own linked students; read own | Read own and update only `read_at` |
+| `class_sessions`, `class_session_students` | Read/write all | Read/write own sessions and linked participants | Read own sessions/participant rows; no schedule writes |
+| `teacher_availability` | Read/write all | Read/write own availability | Read availability of an active assigned teacher |
+| `teacher_timesheets` | Read, approve, and manage all | Read own; create/update own unapproved timesheets | None |
+| `invoices`, `invoice_items`, `payments` | Read/write all | None | Read only rows belonging to own customer |
+| `reminders` | Read/manage all | None | Read own customer reminders |
+| `lesson_progress` | Read/write all | Read/write own linked student’s matching session progress | Read own progress |
+
+Existing policies remain in force for the original tables: active programs and upcoming class slots are publicly readable; program/slot management, applications, booking requests, and newsletter administration are admin-controlled; orders/memberships are readable by their student and admins; webhook event rows remain ungranted to browser roles. Public application/newsletter/booking submission continues through the existing Edge Functions. `class_sessions` and `lesson_progress` policies are extended to add teacher scope while preserving student access.
+
+For clarity, the existing-table scope is:
+
+| Existing table/view | Read scope | Write scope |
+|---|---|---|
+| `profiles` | Own, admin, or active teacher-linked student | Own permitted name/phone fields; admins can update permitted profile fields; Auth-only fields go through Auth Admin |
+| `user_roles` | Own roles or all for admins | Admin only |
+| `programs` | Active rows are public; admins can read all | Admin only |
+| `student_applications`, `teacher_applications`, `booking_requests` | Admin only | Admin only in table; existing public submission Edge Functions remain the intake boundary |
+| `class_slots` | Anonymous/authenticated users may read active upcoming slots | Admin only |
+| `orders`, `memberships` | Owner student or admin | Browser clients read only; trusted checkout/admin flow writes |
+| `payment_webhook_events` | No browser-role access | Trusted webhook function only |
+| `newsletter_subscribers` | Admin only | Admin only in table; existing newsletter Edge Function handles public signup/unsubscribe |
+| `available_class_slots` | Anonymous/authenticated read | Read-only view |
+| `class_sessions`, `lesson_progress` | Admin, owning student, and authorized teacher as described above | Admin/authorized teacher only |
+
+Use the RLS-backed browser client for safe CRUD, not a custom REST server. A privileged Edge Function must independently validate caller identity and authorization; a service key bypasses RLS.
+
+## 4. API structure
+
+These are Supabase calls/RPCs/Edge Functions, not a separate REST service. In browser code use the existing Supabase client and `auth.getUser()`/session. Always select only needed columns and paginate lists.
+
+| Area | Client/API contract |
+|---|---|
+| Auth / users | Supabase Auth signup/sign-in/reset; `profiles` and own `user_roles` for `/me`; admin user creation, suspension, or Auth email changes through an authenticated `admin-users` Edge Function. |
+| Customers | Admin `customers` CRUD; a student selects the row where `user_id = auth.uid()` (also enforced by RLS). |
+| Era | Admin creates invoices with `create_invoice(uuid, date, jsonb, text, uuid, uuid)` and records manual payments with `record_manual_payment(uuid, payment_method, bigint, timestamptz)`; students read their own invoice/payment views. Both RPCs validate and write transactionally. `process_invoice_due_dates()` is service-role-only. No browser operation can mark an invoice paid. |
+| Kronos | RLS-backed reads/writes for availability, sessions, participants, timesheets, and existing progress. Booking/rescheduling should use one RPC or Edge Function transaction that checks availability and participant/teacher conflicts; database triggers enforce overlap protection as a second line. |
+| Genius | Admin CRUD for `lessons`/`exercises`; teachers query published lessons and insert individual assignments or call `assign_lesson_to_group(uuid, uuid, timestamptz)` / `assign_exercise_to_group(...)`. Students read their assigned rows and call `complete_assigned_lesson(uuid)` / `complete_assigned_exercise(uuid)`. |
+| Notifications | Select own notifications ordered by `created_at`; update only `read_at`. Edge Function delivery workers claim pending email/WhatsApp rows and persist delivery results. |
+| Student dashboard | Compose own memberships, schedule, assignments, progress, invoices, and notifications using RLS-protected queries. Realtime on `notifications` is optional; polling is sufficient for phase one. |
+
+Future Edge Functions: `admin-users`, `payment-webhook`, and `notification-dispatch`. Existing form Edge Functions remain unchanged. Validate webhook signatures, deduplicate using `payment_webhook_events` or a provider/event unique key, and make processing idempotent.
+
+## 5. Async work
+
+1. A domain write creates local rows and pending work in the same database transaction.
+2. The daily `pg_cron` task calls `public.process_invoice_due_dates()`; the function only changes invoice status and queues reminders. It performs no network calls.
+3. A scheduled `notification-dispatch` Edge Function claims pending reminder/notification records, rechecks that the invoice is still payable, sends through a configured adapter, then records sent/failed status and retry information. Keep credentials in Function secrets. Do not mark messages sent before provider confirmation.
+4. For retries, use bounded attempts/backoff and retain failures for admin review. If the existing Supabase project supports `pgmq` and queue volume warrants it, it can replace table polling; otherwise the reminder table is adequate.
+
+Deployment operator steps, after confirming the current project plan includes these features, are to enable `pg_cron` in Supabase and schedule (once) a daily call such as:
+
+```sql
+select cron.schedule(
+  'splus-invoice-due-dates',
+  '15 6 * * *',
+  $$select public.process_invoice_due_dates();$$
+);
 ```
 
-Never grant `admin` through public signup. Role assignment must use a trusted administrative process. Every teacher-facing query must verify the teacher-student relationship, not merely that the requester has the `teacher` role. Enforce that a group’s teacher is authorized to manage each member.
+Schedule the dispatch Edge Function separately in Supabase. Configure SMTP/provider secrets and any required sender verification before enabling email/WhatsApp delivery. These are deployment steps, not included/enabled by the migration.
 
-### Central lesson library
+## 6. Future integrations
 
-Keep admin-authored source content separate from teacher-created student assignments. Published versions should be immutable so existing assignments continue to refer to the content the teacher selected.
+No integrations are active or required for launch.
 
-```text
-lessons
-  id            PK
-  title
-  description
-  status        draft | published | archived
-  created_by    FK -> profiles.user_id
-  created_at
-  updated_at
+- **Email / WhatsApp:** dispatch from `notifications` and `reminders`; store provider message IDs/status on delivery records. Add the provider secret only as an Edge Function secret.
+- **Online payments:** add a provider adapter behind `payment-webhook`; reuse invoice/payment provider fields, existing `orders`, and `payment_webhook_events` for legacy checkout/deduplication. Verify amount, currency, invoice reference, signature, and legal status transitions before updating the database.
+- **Analytics:** emit minimized, consent-aware events from Edge Functions; never export exercise answers, credentials, or unnecessary personal data.
+- **CRM:** synchronize opted-in customer/contact changes from `customers` using a future integration mapping/outbox table. Do not make CRM the source of truth for users, invoices, or lessons.
 
-lesson_versions
-  id            PK
-  lesson_id     FK -> lessons.id
-  version_no
-  content       JSONB
-  published_at
-  created_by    FK -> profiles.user_id
-  UNIQUE (lesson_id, version_no)
+## 7. Build order
 
-exercises
-  id            PK
-  title
-  status        draft | published | archived
-  created_by    FK -> profiles.user_id
+1. **Roles and customers:** deploy the migration; assign roles through a trusted admin process; establish teacher/student links; create customer records and verify RLS with admin, teacher, and student test accounts.
+2. **Genius and notifications:** publish the admin library, push individual/group assignments, verify generated notices and student completion/progress.
+3. **Kronos:** migrate/create teacher-owned sessions, participants, availability, and timesheets; test concurrent and reschedule overlap rejection.
+4. **Era:** admin invoice/item/payment workflows, reviewed legacy order reconciliation, then daily overdue/reminder scheduling. Keep manual payments only until a separate provider integration is approved.
+5. **Integrations:** only when requested and approved, configure email/WhatsApp, analytics, CRM, or online payments and test idempotency, retries, and secret handling.
 
-exercise_versions
-  id            PK
-  exercise_id   FK -> exercises.id
-  version_no
-  exercise_type
-  content       JSONB
-  answer_key    JSONB, restricted to grading services/authorized roles
-  published_at
-  UNIQUE (exercise_id, version_no)
+## 8. Assumptions and rollout notes
 
-lesson_version_exercises
-  lesson_version_id   FK -> lesson_versions.id
-  exercise_version_id FK -> exercise_versions.id
-  position
-  PK (lesson_version_id, exercise_version_id)
-  UNIQUE (lesson_version_id, position)
-```
-
-Use `JSONB` for versioned, type-specific exercise payloads; keep searchable and relational fields in normal columns. Do not return answer keys in student content responses.
-
-### Teacher assignments and student progress
-
-A group assignment expands into per-student assignment rows in one database transaction. This freezes the recipient list and gives each student independent progress, even if group membership changes later.
-
-```text
-assignment_batches
-  id              PK
-  teacher_id      FK -> profiles.user_id
-  source_group_id FK -> student_groups.id, nullable
-  created_at
-
-assigned_lessons
-  id                  PK
-  batch_id            FK -> assignment_batches.id, nullable
-  teacher_id          FK -> profiles.user_id
-  student_id          FK -> profiles.user_id
-  lesson_version_id   FK -> lesson_versions.id
-  assigned_at
-  due_at              nullable
-  status              assigned | in_progress | completed | cancelled
-  UNIQUE (batch_id, student_id, lesson_version_id)
-
-assigned_exercises
-  id                    PK
-  assigned_lesson_id    FK -> assigned_lessons.id, nullable
-  teacher_id            FK -> profiles.user_id
-  student_id             FK -> profiles.user_id
-  exercise_version_id    FK -> exercise_versions.id
-  assigned_at
-  due_at                 nullable
-  status                 assigned | in_progress | completed | cancelled
-
-exercise_attempts
-  id                    PK
-  assigned_exercise_id  FK -> assigned_exercises.id
-  student_id             FK -> profiles.user_id
-  attempt_no
-  response               JSONB
-  score                  nullable
-  feedback               nullable
-  started_at
-  submitted_at           nullable
-  graded_at              nullable
-  UNIQUE (assigned_exercise_id, attempt_no)
-
-progress_events
-  id                    PK
-  student_id             FK -> profiles.user_id
-  assigned_lesson_id    FK -> assigned_lessons.id, nullable
-  assigned_exercise_id  FK -> assigned_exercises.id, nullable
-  event_type             -- opened, submitted, completed, etc.
-  payload                JSONB
-  occurred_at
-```
-
-`assigned_exercises` supports standalone exercise assignments as well as exercises under an assigned lesson. Validate that the selected library version is published and that the teacher owns the student relationship before creating assignments. Store progress as attempts and events; derive dashboard summaries from those records or maintain a rebuildable aggregate if query volume warrants it.
-
-### Enrollments, packages, invoices, and payment status
-
-```text
-packages
-  id              PK
-  name
-  price_minor     -- integer in currency minor units
-  currency        -- ISO currency code
-  duration_days
-  status          active | inactive
-
-enrollments
-  id              PK
-  student_id      FK -> profiles.user_id
-  package_id      FK -> packages.id, nullable
-  status          pending_payment | active | expired | cancelled
-  starts_at       nullable
-  ends_at         nullable
-  created_at
-
-invoices
-  id                PK
-  student_id        FK -> profiles.user_id
-  enrollment_id     FK -> enrollments.id, nullable
-  package_id        FK -> packages.id, nullable
-  provider          -- era
-  provider_invoice_id nullable
-  idempotency_key   UNIQUE
-  amount_minor
-  currency
-  status            pending | issued | paid | failed | void | refunded
-  due_at            nullable
-  issued_at         nullable
-  paid_at           nullable
-  created_at
-
-payments
-  id                   PK
-  invoice_id           FK -> invoices.id
-  provider_payment_id  nullable
-  amount_minor
-  currency
-  status               pending | succeeded | failed | refunded
-  occurred_at          nullable
-```
-
-Use a unique invoice idempotency key based on the source event, such as `enrollment:<id>` or `package_purchase:<id>`. A confirmed enrollment or package purchase creates the local invoice/payment intent and an outbox event in the same transaction. The Era worker issues the invoice and records its external ID. A verified Era webhook updates payment status; only the backend’s payment state transition should activate an enrollment.
-
-### Scheduling
-
-```text
-availability_rules
-  id              PK
-  user_id         FK -> profiles.user_id
-  weekday
-  start_time
-  end_time
-  timezone
-  effective_from
-  effective_until nullable
-
-availability_exceptions
-  id              PK
-  user_id         FK -> profiles.user_id
-  starts_at
-  ends_at
-  available       boolean
-
-live_sessions
-  id                  PK
-  teacher_id          FK -> profiles.user_id
-  student_id          FK -> profiles.user_id
-  starts_at
-  ends_at
-  timezone
-  status              proposed | confirmed | cancelled | completed
-  meeting_url         nullable
-  kronos_event_id     nullable
-  created_by          FK -> profiles.user_id
-  created_at
-  updated_at
-```
-
-Store instants as `timestamptz`, retain the user’s timezone for availability interpretation and display, and enforce no-overlap rules for confirmed sessions (for example, PostgreSQL exclusion constraints over time ranges for each teacher and student). Finalized schedules are persisted locally; dashboards should read local `live_sessions`, not make a synchronous Kronos request.
-
-### Integration and delivery tables
-
-```text
-integration_connections
-  id               PK
-  provider         era | kronos | twilio | sendgrid | mixpanel | hubspot
-  status           active | disabled | error
-  credentials_ref  -- secret-manager reference; never the secret itself
-  settings         JSONB
-  created_at
-  updated_at
-  UNIQUE (provider)
-
-integration_mappings
-  id                PK
-  provider          FK/logical reference to integration_connections
-  local_type        -- invoice, live_session, contact, etc.
-  local_id
-  external_id
-  UNIQUE (provider, local_type, local_id)
-  UNIQUE (provider, local_type, external_id)
-
-outbox_events
-  id              PK
-  event_type
-  aggregate_type
-  aggregate_id
-  payload         JSONB
-  created_at
-  published_at    nullable
-
-webhook_inbox
-  id               PK
-  provider
-  provider_event_id
-  received_at
-  processed_at     nullable
-  status           received | processed | failed
-  payload          JSONB
-  UNIQUE (provider, provider_event_id)
-
-integration_deliveries
-  id              PK
-  provider
-  event_type
-  aggregate_id
-  status          pending | succeeded | retrying | failed
-  attempts
-  next_attempt_at nullable
-  last_error      nullable
-  created_at
-  updated_at
-```
-
-Restrict access to webhook payloads and integration credentials. Encrypt provider secrets in a secret manager and store only a reference in the database.
-
-## 3. REST API structure
-
-All application routes are under `/v1`. Require bearer authentication except for intentionally public registration or provider webhooks. Perform server-side authorization on every resource; UUIDs are identifiers, not authorization.
-
-### Auth and users
-
-Authentication and password recovery remain with Supabase Auth.
-
-- `GET /me` — current profile and roles
-- `PATCH /me` — update permitted profile fields
-- `GET /users?role=student&query=...` — admin-only user search
-- `GET /teachers/me/students` — teacher’s authorized students
-- `POST /teachers/me/students` — link an existing student, subject to the product’s approval workflow
-- `GET /teachers/me/groups`
-- `POST /teachers/me/groups`
-- `POST /teachers/me/groups/{groupId}/members`
-- `DELETE /teachers/me/groups/{groupId}/members/{studentId}`
-
-### Lesson library (admin)
-
-- `GET /admin/lessons`
-- `POST /admin/lessons`
-- `GET /admin/lessons/{lessonId}`
-- `PATCH /admin/lessons/{lessonId}`
-- `POST /admin/lessons/{lessonId}/versions` — create a draft version
-- `POST /admin/lessons/{lessonId}/publish` — publish a version
-- `POST /admin/lessons/{lessonId}/archive`
-- `POST /admin/exercises`
-- `PATCH /admin/exercises/{exerciseId}`
-- `POST /admin/exercises/{exerciseId}/versions`
-- `POST /admin/exercises/{exerciseId}/publish`
-- `GET /library/lessons` — published content visible for assignment
-- `GET /library/exercises`
-
-Prefer archive over hard deletion once content is referenced by assignments.
-
-### Assignments (teacher)
-
-- `POST /teachers/me/assignments/lessons` — assign a published lesson version to students
-- `POST /teachers/me/assignments/exercises` — assign published exercises
-- `GET /teachers/me/assignments?studentId=...`
-- `PATCH /teachers/me/assignments/{assignmentId}` — update permitted due-date/status fields
-- `POST /teachers/me/assignments/{assignmentId}/cancel`
-- `GET /teachers/me/students/{studentId}/progress`
-
-The API validates every recipient against the teacher’s student/group membership and creates group members’ assignment rows transactionally.
-
-### Student dashboard
-
-- `GET /students/me/dashboard` — next session, active enrollment, assignment summaries
-- `GET /students/me/assignments`
-- `GET /students/me/assignments/{assignmentId}`
-- `POST /students/me/exercises/{assignedExerciseId}/attempts`
-- `POST /students/me/attempts/{attemptId}/submit`
-- `GET /students/me/schedule`
-- `GET /students/me/progress`
-
-Students may access only their own assignments, attempts, invoices, and schedule.
-
-### Era integration (billing)
-
-- `POST /billing/package-purchases` — create a purchase/enrollment request; the server determines price and currency
-- `GET /billing/invoices`
-- `GET /billing/invoices/{invoiceId}`
-- `POST /webhooks/era` — verify signature, persist inbox event, enqueue processing, return promptly
-
-Do not expose an endpoint that allows a browser to mark an invoice paid. Never trust a browser redirect as proof of payment.
-
-### Kronos integration (scheduling)
-
-- `GET /teachers/me/availability`
-- `PUT /teachers/me/availability`
-- `GET /students/me/availability`
-- `PUT /students/me/availability`
-- `POST /scheduling/sessions` — request/book a session after authorization and conflict checks
-- `GET /scheduling/sessions/{sessionId}`
-- `PATCH /scheduling/sessions/{sessionId}` — permitted reschedule/cancel operations
-- `GET /students/me/schedule`
-- `GET /teachers/me/schedule`
-- `POST /webhooks/kronos` — verify and enqueue provider event processing
-
-Do not assume Era or Kronos API shapes, signature schemes, or capabilities before obtaining their vendor documentation. Implement those details inside provider adapters.
-
-## 4. Async integration architecture
-
-### Request and event flow
-
-1. The API authenticates and authorizes the caller.
-2. It commits the local business change and an `outbox_events` row in one database transaction.
-3. An outbox publisher enqueues the event in BullMQ.
-4. A provider-specific worker loads the event, calls the Era/Kronos adapter, and records the external ID and delivery status.
-5. Retries use exponential backoff with jitter. Permanent failures go to a dead-letter queue and raise an operational alert.
-6. Webhook handlers verify provider authenticity, store a deduplicated `webhook_inbox` row, enqueue processing, and return without waiting for downstream work.
-7. Workers process webhooks idempotently and apply valid state transitions.
-
-BullMQ alone does not make database writes and queue publication atomic. The transactional outbox closes this gap: if the process fails after database commit but before publishing, an outbox poller can still enqueue the event.
-
-### Era workflow
-
-- On enrollment or package purchase, create the local invoice record and outbox event with a stable idempotency key.
-- The Era adapter creates the external invoice; store the returned provider ID in `integration_mappings`.
-- On webhook receipt, validate the signature and provider event ID, then process idempotently.
-- Reconcile amount, currency, invoice reference, and allowed status transitions before updating payment and enrollment state.
-- Run a scheduled reconciliation job for invoices whose state has not received a timely webhook.
-
-### Kronos workflow
-
-- Store availability locally and sync changes asynchronously if Kronos requires an external availability mirror.
-- Check teacher/student conflicts locally before booking, then send a booking request through the Kronos worker.
-- Persist the finalized local session and provider mapping. If external booking fails, keep an explicit failed/pending state and surface it to the caller; do not show it as confirmed.
-- Process reschedules and cancellations as state transitions with idempotent provider requests.
-- Update the dashboard from the local schedule after successful confirmation, with webhooks and periodic reconciliation correcting drift.
-
-### Future integrations
-
-Use the same connection, outbox, inbox, mapping, and delivery patterns rather than embedding provider-specific calls in domain services.
-
-- **Twilio/SendGrid:** Notification workers subscribe to events such as `assignment.created`, `session.confirmed`, and `invoice.paid`. Track delivery attempts and provider message IDs; keep templates and user notification preferences separate from provider credentials.
-- **Mixpanel:** Emit selected product events asynchronously from the outbox. Exclude credentials, exercise answers, and unnecessary personal data; apply consent and retention policies.
-- **HubSpot:** Sync opted-in leads and lifecycle changes using `integration_mappings`. Keep CRM contact IDs and sync status separate from core student identity, and make inbound updates pass through explicit reconciliation rules.
-
-## 5. Production safeguards
-
-- Enforce RBAC and ownership checks in the API; use PostgreSQL row-level security as defense in depth where applicable.
-- Validate request bodies and paginate list endpoints. Add indexes for ownership, status, and time filters.
-- Rate-limit authentication-adjacent and webhook endpoints; verify webhook signatures before enqueueing.
-- Use audit logs for role changes, content publication, assignment changes, payments, and schedule changes.
-- Monitor queue age, retry counts, webhook failures, and provider reconciliation drift.
-- Store secrets outside the frontend and database plaintext. Keep payment card data out of the platform unless a compliant provider-hosted flow specifically requires otherwise.
+- MAD is the only invoice/payment currency. Invoice due-date comparison uses the `Africa/Casablanca` business date; session instants are UTC and availability stores an IANA timezone.
+- Customer records link one-to-one to student profiles. The admin creates/updates a customer from the profile; historical orders are not auto-converted because the migration cannot infer invoicing/customer details safely.
+- Existing `class_sessions` can lack `teacher_id` for legacy rows; newly scheduled teacher sessions require a teacher role and explicit student links.
+- The repository includes a testing-only migration that auto-confirms Auth signups. This architecture does not depend on it. Before production, remove/disable that testing trigger as part of the SMTP/signup launch checklist; no email setup or trigger deployment is performed here.
+- This migration and documentation do not change frontend behavior. Validate RLS and migration application against a disposable/local Supabase database before production rollout; apply the migration and configure cron/Edge Function schedules only after reviewing the target project and its plan.
