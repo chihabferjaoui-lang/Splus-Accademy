@@ -15,6 +15,9 @@
       <span>S+ Academy</span>
     </a>
     <nav class="portal-header-links" aria-label="Account navigation">
+      <a href="#schedule">Schedule</a>
+      <a href="#assignments">My work</a>
+      <a href="#notifications">Notifications <span class="portal-count" data-unread-count hidden>0</span></a>
       <span class="portal-user-email" data-user-email></span>
       <button type="button" class="portal-button-secondary" data-sign-out>Sign out</button>
     </nav>
@@ -27,25 +30,71 @@
     <p class="portal-loading" data-loading>Loading your account…</p>
 
     <div class="portal-dashboard" data-student-dashboard hidden>
-      <div class="portal-dashboard-grid">
+      <section class="portal-dashboard-grid" id="schedule" aria-label="Your schedule">
         <section class="portal-card" aria-labelledby="next-lesson-title">
           <h2 id="next-lesson-title">Next lesson</h2>
           <div data-next-lesson><p class="portal-note">Checking your schedule…</p></div>
         </section>
-
-        <section class="portal-card" aria-labelledby="teacher-contact-title">
-          <h2 id="teacher-contact-title">Contact your teacher</h2>
-          <p data-teacher-contact-text>Contact the academy and we’ll connect you with your teacher.</p>
-          <a class="portal-button" data-teacher-contact href="https://wa.me/212718613036" target="_blank" rel="noopener">Message your teacher</a>
+        <section class="portal-card" aria-labelledby="schedule-title">
+          <h2 id="schedule-title">Upcoming schedule</h2>
+          <div class="portal-table-wrap">
+            <table class="portal-table">
+              <thead><tr><th>Lesson</th><th>Program</th><th>Date and time</th><th>Meeting</th></tr></thead>
+              <tbody data-schedule-body><tr><td colspan="4">Loading…</td></tr></tbody>
+            </table>
+          </div>
         </section>
-      </div>
+      </section>
 
-      <section class="portal-card" aria-labelledby="progress-title" style="margin-top:20px">
+      <section class="portal-card portal-section" id="assignments" aria-labelledby="assignments-title">
+        <div class="portal-section-heading">
+          <div>
+            <h2 id="assignments-title">My assigned learning</h2>
+            <p class="portal-note">Lessons and exercises assigned by your teacher.</p>
+          </div>
+          <span class="portal-feature-status" data-learning-status></span>
+        </div>
+        <div class="portal-dashboard-grid portal-dashboard-grid-tight">
+          <section aria-labelledby="assigned-lessons-title">
+            <h3 id="assigned-lessons-title">Lessons</h3>
+            <div class="portal-work-list" data-assigned-lessons>
+              <p class="portal-note">Loading lessons…</p>
+            </div>
+          </section>
+          <section aria-labelledby="assigned-exercises-title">
+            <h3 id="assigned-exercises-title">Exercises</h3>
+            <div class="portal-work-list" data-assigned-exercises>
+              <p class="portal-note">Loading exercises…</p>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="portal-card portal-section" id="notifications" aria-labelledby="notifications-title">
+        <div class="portal-section-heading">
+          <div>
+            <h2 id="notifications-title">Notifications</h2>
+            <p class="portal-note">Updates about lessons and your account.</p>
+          </div>
+          <button type="button" class="portal-button-secondary" data-refresh-notifications>Refresh</button>
+        </div>
+        <div class="portal-notification-list" data-notifications>
+          <p class="portal-note">Loading notifications…</p>
+        </div>
+      </section>
+
+      <section class="portal-card portal-section" aria-labelledby="teacher-contact-title">
+        <h2 id="teacher-contact-title">Contact your teacher</h2>
+        <p data-teacher-contact-text>Contact the academy and we’ll connect you with your teacher.</p>
+        <a class="portal-button" data-teacher-contact href="https://wa.me/212718613036" target="_blank" rel="noopener">Message your teacher</a>
+      </section>
+
+      <section class="portal-card portal-section" aria-labelledby="progress-title">
         <h2 id="progress-title">My learning progress</h2>
         <div class="portal-stats" aria-label="Learning progress summary">
-          <div class="portal-stat"><strong data-progress-stat="attended">0</strong><span>Lessons attended</span></div>
+          <div class="portal-stat"><strong data-progress-stat="attended">0</strong><span>Sessions attended</span></div>
           <div class="portal-stat"><strong data-progress-stat="average">—</strong><span>Average assessment score</span></div>
-          <div class="portal-stat"><strong data-progress-stat="marked">0</strong><span>Lessons marked by teacher</span></div>
+          <div class="portal-stat"><strong data-progress-stat="marked">0</strong><span>Sessions marked by teacher</span></div>
         </div>
         <div class="portal-table-wrap">
           <table class="portal-table">
@@ -55,7 +104,7 @@
         </div>
       </section>
 
-      <div class="portal-dashboard-grid">
+      <section class="portal-dashboard-grid portal-section" aria-label="Profile and course access">
         <section class="portal-card" aria-labelledby="profile-title">
           <h2 id="profile-title">My profile</h2>
           <form class="auth-form" data-profile-form>
@@ -63,10 +112,20 @@
               <input name="fullName" type="text" autocomplete="name" maxlength="120" required>
             </label>
             <label>Email address
-              <input name="email" type="email" readonly>
+              <input name="email" type="email" autocomplete="email" readonly>
             </label>
             <label>Phone
               <input name="phone" type="tel" autocomplete="tel" maxlength="32">
+            </label>
+            <label>Notification language
+              <select name="locale" data-notification-locale disabled>
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="es">Español</option>
+                <option value="pt">Português</option>
+                <option value="zh">中文</option>
+                <option value="ar">العربية</option>
+              </select>
             </label>
             <button type="submit">Save profile</button>
           </form>
@@ -81,9 +140,20 @@
             </table>
           </div>
         </section>
-      </div>
+      </section>
 
-      <section class="portal-card" aria-labelledby="orders-title" style="margin-top:20px">
+      <section class="portal-card portal-section" aria-labelledby="invoices-title">
+        <h2 id="invoices-title">My invoices</h2>
+        <p class="portal-note">Your recorded invoices and payments. No payment is collected on this page.</p>
+        <div class="portal-table-wrap">
+          <table class="portal-table">
+            <thead><tr><th>Invoice</th><th>Issued</th><th>Due</th><th>Total</th><th>Paid</th><th>Status</th></tr></thead>
+            <tbody data-invoices-body><tr><td colspan="6">Loading invoices…</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="portal-card portal-section" aria-labelledby="orders-title">
         <h2 id="orders-title">My enrollment and payment records</h2>
         <p class="portal-note">This page shows recorded status only. It does not accept or process payments.</p>
         <div class="portal-table-wrap">
