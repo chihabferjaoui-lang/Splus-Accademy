@@ -86,6 +86,7 @@
                     <th>Student</th>
                     <th>Teacher</th>
                     <th>Status</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody data-tbody="overview_sessions">
@@ -106,6 +107,7 @@
                     <th>Customer</th>
                     <th>MAD</th>
                     <th>Status</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody data-tbody="overview_invoices">
@@ -138,26 +140,31 @@
               <div class="kronos-day-col">
                 <div class="kronos-day-header">Mon 16</div>
                 <div class="kronos-day-sessions" data-kronos-day="mon"></div>
+                <button type="button" class="btn-add-session-day" data-add-to-day="mon">+ Add Session</button>
               </div>
               <!-- Tuesday (Today) -->
               <div class="kronos-day-col col-today">
                 <div class="kronos-day-header">Tue 17 <span class="today-badge">(today)</span></div>
                 <div class="kronos-day-sessions" data-kronos-day="tue"></div>
+                <button type="button" class="btn-add-session-day" data-add-to-day="tue">+ Add Session</button>
               </div>
               <!-- Wednesday -->
               <div class="kronos-day-col">
                 <div class="kronos-day-header">Wed 18</div>
                 <div class="kronos-day-sessions" data-kronos-day="wed"></div>
+                <button type="button" class="btn-add-session-day" data-add-to-day="wed">+ Add Session</button>
               </div>
               <!-- Thursday -->
               <div class="kronos-day-col">
                 <div class="kronos-day-header">Thu 19</div>
                 <div class="kronos-day-sessions" data-kronos-day="thu"></div>
+                <button type="button" class="btn-add-session-day" data-add-to-day="thu">+ Add Session</button>
               </div>
               <!-- Friday -->
               <div class="kronos-day-col">
                 <div class="kronos-day-header">Fri 20</div>
                 <div class="kronos-day-sessions" data-kronos-day="fri"></div>
+                <button type="button" class="btn-add-session-day" data-add-to-day="fri">+ Add Session</button>
               </div>
             </div>
           </div>
@@ -204,6 +211,7 @@
                     <th>Level</th>
                     <th>Program</th>
                     <th>Duration</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody data-tbody="genius_lessons">
@@ -297,6 +305,7 @@
                     <th>MAD</th>
                     <th>Due</th>
                     <th>Status</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody data-tbody="era_invoices">
@@ -520,6 +529,53 @@
   </div>
 
   <!-- MODALS -->
+  <!-- Modal: Edit Session -->
+  <div class="admin-modal-backdrop" id="modalEditSession" hidden>
+    <div class="admin-modal-card">
+      <div class="admin-modal-header">
+        <h2>Edit / Approve Session (Kronos)</h2>
+        <button type="button" class="admin-modal-close" data-modal-close>&times;</button>
+      </div>
+      <form id="formEditSession">
+        <input type="hidden" id="editSessionId">
+        <input type="hidden" id="editSessionDay">
+        <div class="admin-field-group">
+          <label>Student / Group Name</label>
+          <input type="text" id="editSessionStudent" class="admin-input" required>
+        </div>
+        <div class="admin-field-group">
+          <label>Program / Subject</label>
+          <input type="text" id="editSessionProgram" class="admin-input" required>
+        </div>
+        <div class="admin-field-group">
+          <label>Day of Week</label>
+          <select id="editSessionDaySelect" class="admin-select" required>
+            <option value="mon">Monday 16</option>
+            <option value="tue">Tuesday 17 (today)</option>
+            <option value="wed">Wednesday 18</option>
+            <option value="thu">Thursday 19</option>
+            <option value="fri">Friday 20</option>
+          </select>
+        </div>
+        <div class="admin-field-group">
+          <label>Time</label>
+          <input type="text" id="editSessionTime" class="admin-input" required>
+        </div>
+        <div class="admin-field-group">
+          <label>Status</label>
+          <select id="editSessionStatus" class="admin-select">
+            <option value="Confirmed">Confirmed</option>
+            <option value="Pending">Pending Approval</option>
+          </select>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 14px;">
+          <button type="submit" class="btn-admin-primary" style="flex: 1;">Save Changes</button>
+          <button type="button" class="btn-admin-danger" id="btnModalDeleteSession" style="flex: 1;">Delete Session</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Modal: Book Session -->
   <div class="admin-modal-backdrop" id="modalBookSession" hidden>
     <div class="admin-modal-card">
@@ -634,7 +690,8 @@
           <span style="font-size: 12px; color: #64748b;">(انقر على أي نص أو رقم لتعديله مباشرة)</span>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
-          <button type="button" class="btn-admin-primary" style="padding: 7px 16px; font-size: 13px;" onclick="window.print()">طباعة / Print PDF</button>
+          <button type="button" class="btn-admin-primary" style="padding: 7px 16px; font-size: 13px; background: #107548;" id="btnSaveArabicInvoice">حفظ في Era (Save Changes)</button>
+          <button type="button" class="btn-admin-outline" style="padding: 7px 16px; font-size: 13px;" onclick="window.print()">طباعة / Print PDF</button>
           <button type="button" class="admin-modal-close" data-modal-close style="font-size: 24px;">&times;</button>
         </div>
       </div>

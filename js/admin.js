@@ -14,64 +14,39 @@ try {
   console.warn("Supabase init warning:", e);
 }
 
-// Sample State
-let useSampleData = true;
-let activeNav = "overview";
-let currentAdminUser = null;
-
-// Mock / Sample Data matching the user's screenshots
-const SAMPLE_DATA = {
-  stats: {
-    active_students: 42,
-    overdue_invoices: 3,
-    sessions_today: 6,
-    lessons_week: 28,
-    era_outstanding: "1,900",
-    era_paid_month: "12,350",
-    era_overdue: 1,
-    era_reminders: 5
-  },
-  overview_sessions: [
-    { time: "09:00", student: "Sara B.", teacher: "Chihab", status: "Confirmed", statusClass: "confirmed" },
-    { time: "11:30", student: "Exam Prep group", teacher: "Chihab", status: "Confirmed", statusClass: "confirmed" },
-    { time: "14:00", student: "Omar K.", teacher: "Chihab", status: "Pending", statusClass: "pending" },
-    { time: "17:00", student: "Lina M.", teacher: "Chihab", status: "Confirmed", statusClass: "confirmed" }
-  ],
-  overview_invoices: [
-    { id: "INV-0042", customer: "Sara B.", mad: 800, status: "Overdue", statusClass: "overdue" },
-    { id: "INV-0045", customer: "Omar K.", mad: 500, status: "Due in 2 days", statusClass: "due" },
-    { id: "INV-0047", customer: "Lina M.", mad: 600, status: "Due in 5 days", statusClass: "due" }
-  ],
+// Default Seed Data
+const DEFAULT_WORKSPACE_DATA = {
+  active_nav: "overview",
   kronos_week: {
     mon: [
-      { time: "09:00", desc: "Sara B. · Business", pending: false },
-      { time: "14:00", desc: "Omar K. · Exam prep", pending: false }
+      { id: "sess-1", time: "09:00", student: "Sara B.", program: "Business English", teacher: "Chihab", status: "Confirmed" },
+      { id: "sess-2", time: "14:00", student: "Omar K.", program: "Exam Preparation", teacher: "Chihab", status: "Confirmed" }
     ],
     tue: [
-      { time: "09:00", desc: "Sara B. · Business", pending: false },
-      { time: "11:30", desc: "Exam Prep group", pending: false },
-      { time: "14:00", desc: "Omar K. · Pending", pending: true },
-      { time: "17:00", desc: "Lina M. · Day-to-day", pending: false }
+      { id: "sess-3", time: "09:00", student: "Sara B.", program: "Business English", teacher: "Chihab", status: "Confirmed" },
+      { id: "sess-4", time: "11:30", student: "Exam Prep group", program: "Exam Preparation", teacher: "Chihab", status: "Confirmed" },
+      { id: "sess-5", time: "14:00", student: "Omar K.", program: "Private Tutoring", teacher: "Chihab", status: "Pending" },
+      { id: "sess-6", time: "17:00", student: "Lina M.", program: "Day-to-Day English", teacher: "Chihab", status: "Confirmed" }
     ],
     wed: [
-      { time: "09:00", desc: "Sara B. · Business", pending: false },
-      { time: "15:00", desc: "Youssef A. · Tutoring", pending: false }
+      { id: "sess-7", time: "09:00", student: "Sara B.", program: "Business English", teacher: "Chihab", status: "Confirmed" },
+      { id: "sess-8", time: "15:00", student: "Youssef A.", program: "Private Tutoring", teacher: "Chihab", status: "Confirmed" }
     ],
     thu: [
-      { time: "11:30", desc: "Exam Prep group", pending: false },
-      { time: "17:00", desc: "Lina M. · Day-to-day", pending: false }
+      { id: "sess-9", time: "11:30", student: "Exam Prep group", program: "Exam Preparation", teacher: "Chihab", status: "Confirmed" },
+      { id: "sess-10", time: "17:00", student: "Lina M.", program: "Day-to-Day English", teacher: "Chihab", status: "Confirmed" }
     ],
     fri: [
-      { time: "10:00", desc: "Hana R. · Business", pending: false },
-      { time: "16:00", desc: "Adam A. · Exam prep", pending: false }
+      { id: "sess-11", time: "10:00", student: "Hana R.", program: "Business English", teacher: "Chihab", status: "Confirmed" },
+      { id: "sess-12", time: "16:00", student: "Adam A.", program: "Exam Preparation", teacher: "Chihab", status: "Confirmed" }
     ]
   },
   genius_lessons: [
-    { title: "Writing Business Emails", level: "B1", program: "Business English", duration: "45 min" },
-    { title: "Meeting Vocabulary", level: "B2", program: "Business English", duration: "30 min" },
-    { title: "IELTS Speaking Part 2", level: "B2", program: "Exam Preparation", duration: "60 min" },
-    { title: "Ordering at a Café", level: "A2", program: "Day-to-Day English", duration: "25 min" },
-    { title: "Past Simple Practice", level: "A2", program: "Day-to-Day English", duration: "20 min" }
+    { id: "les-1", title: "Writing Business Emails", level: "B1", program: "Business English", duration: "45 min" },
+    { id: "les-2", title: "Meeting Vocabulary", level: "B2", program: "Business English", duration: "30 min" },
+    { id: "les-3", title: "IELTS Speaking Part 2", level: "B2", program: "Exam Preparation", duration: "60 min" },
+    { id: "les-4", title: "Ordering at a Café", level: "A2", program: "Day-to-Day English", duration: "25 min" },
+    { id: "les-5", title: "Past Simple Practice", level: "A2", program: "Day-to-Day English", duration: "20 min" }
   ],
   era_invoices: [
     {
@@ -170,8 +145,7 @@ const SAMPLE_DATA = {
   notifications: [
     { target: "Sara B.", channel: "Email", topic: "Invoice INV-0042 Overdue", scheduled: "13 Nov 2026, 09:00", attempts: 1, status: "Sent" },
     { target: "Omar K.", channel: "WhatsApp", topic: "Session Reminder (14:00)", scheduled: "17 Nov 2026, 08:30", attempts: 1, status: "Sent" },
-    { target: "Lina M.", channel: "In-app", topic: "New Lesson: Writing Business Emails", scheduled: "17 Nov 2026, 10:00", attempts: 1, status: "Delivered" },
-    { target: "Exam Prep Group", channel: "WhatsApp", topic: "Mock Exam Schedule update", scheduled: "16 Nov 2026, 18:00", attempts: 1, status: "Sent" }
+    { target: "Lina M.", channel: "In-app", topic: "New Lesson: Writing Business Emails", scheduled: "17 Nov 2026, 10:00", attempts: 1, status: "Delivered" }
   ],
   student_applications: [
     { name: "Fatima E.", email: "fatima@example.com", phone: "+212 670 123 456", program: "Business English", level: "B1", status: "Under Review", submitted: "15 Nov 2026" },
@@ -189,16 +163,44 @@ const SAMPLE_DATA = {
   ],
   newsletter_subscribers: [
     { email: "subscriber.one@example.com", date: "16 Nov 2026", status: "Active" },
-    { email: "learning.pro@example.com", date: "14 Nov 2026", status: "Active" },
-    { email: "student.casablanca@example.com", date: "11 Nov 2026", status: "Active" }
+    { email: "learning.pro@example.com", date: "14 Nov 2026", status: "Active" }
   ]
 };
 
-// Selected elements in views
-let selectedGeniusLesson = SAMPLE_DATA.genius_lessons[0];
-let selectedEraInvoice = SAMPLE_DATA.era_invoices[0];
+// State Store loaded from localStorage
+const STORAGE_KEY = "splus_workspace_store_v1";
 
-// DOM references
+function loadWorkspaceState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.kronos_week && parsed.era_invoices) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn("Storage parse error:", e);
+  }
+  return JSON.parse(JSON.stringify(DEFAULT_WORKSPACE_DATA));
+}
+
+let APP_STATE = loadWorkspaceState();
+
+function saveWorkspaceState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_STATE));
+  } catch (e) {
+    console.error("Save state error:", e);
+  }
+}
+
+// Global Selections
+let selectedGeniusLesson = APP_STATE.genius_lessons[0] || null;
+let selectedEraInvoice = APP_STATE.era_invoices[0] || null;
+let editingSessionContext = null;
+
+// DOM References
 const toastEl = document.querySelector("[data-portal-message]");
 const navButtons = document.querySelectorAll("[data-nav-target]");
 const viewPanels = document.querySelectorAll("[data-admin-panel]");
@@ -216,9 +218,10 @@ function showToast(message, type = "success") {
   }, 4000);
 }
 
-// Switch Navigation Views
+// View Switching
 function switchView(targetView) {
-  activeNav = targetView;
+  APP_STATE.active_nav = targetView;
+  saveWorkspaceState();
   navButtons.forEach(btn => {
     btn.classList.toggle("active", btn.dataset.navTarget === targetView);
   });
@@ -228,8 +231,8 @@ function switchView(targetView) {
   renderCurrentView();
 }
 
-// Render data for current view
 function renderCurrentView() {
+  calculateStats();
   renderOverview();
   renderKronos();
   renderGenius();
@@ -241,90 +244,173 @@ function renderCurrentView() {
   renderNewsletter();
 }
 
-// Render Overview View
+// Calculate dynamic stats
+function calculateStats() {
+  const allSessions = Object.values(APP_STATE.kronos_week).flat();
+  const todaySessions = APP_STATE.kronos_week["tue"] || [];
+  const overdueInvoices = APP_STATE.era_invoices.filter(i => (i.status || "").toLowerCase() === "overdue");
+  const uniqueStudents = new Set([
+    ...allSessions.map(s => s.student),
+    ...APP_STATE.era_invoices.map(i => i.name)
+  ]).size;
+
+  const outstandingMAD = APP_STATE.era_invoices
+    .filter(i => (i.status || "").toLowerCase() !== "paid")
+    .reduce((sum, i) => sum + (Number(i.mad) || 0), 0);
+
+  const paidThisMonthMAD = APP_STATE.era_invoices
+    .filter(i => (i.status || "").toLowerCase() === "paid")
+    .reduce((sum, i) => sum + (Number(i.mad) || 0), 0);
+
+  // Update Overview stats
+  const statStudents = document.querySelector('[data-stat="active_students"]');
+  const statOverdue = document.querySelector('[data-stat="overdue_invoices"]');
+  const statToday = document.querySelector('[data-stat="sessions_today"]');
+  const statLessons = document.querySelector('[data-stat="lessons_week"]');
+
+  if (statStudents) statStudents.textContent = uniqueStudents;
+  if (statOverdue) statOverdue.textContent = overdueInvoices.length;
+  if (statToday) statToday.textContent = todaySessions.length;
+  if (statLessons) statLessons.textContent = APP_STATE.genius_lessons.length;
+
+  // Update Era stats
+  const eraOut = document.querySelector('[data-stat="era_outstanding"]');
+  const eraPaid = document.querySelector('[data-stat="era_paid_month"]');
+  const eraOver = document.querySelector('[data-stat="era_overdue"]');
+  const eraRem = document.querySelector('[data-stat="era_reminders"]');
+
+  if (eraOut) eraOut.textContent = outstandingMAD.toLocaleString();
+  if (eraPaid) eraPaid.textContent = paidThisMonthMAD.toLocaleString();
+  if (eraOver) eraOver.textContent = overdueInvoices.length;
+  if (eraRem) eraRem.textContent = APP_STATE.era_invoices.reduce((acc, i) => acc + (i.reminders ? i.reminders.length : 0), 0);
+}
+
+// RENDER: OVERVIEW
 function renderOverview() {
   const sessionsTbody = document.querySelector('[data-tbody="overview_sessions"]');
   if (sessionsTbody) {
-    sessionsTbody.innerHTML = SAMPLE_DATA.overview_sessions.map(s => `
-      <tr>
-        <td style="font-weight: 700;">${s.time}</td>
-        <td>${s.student}</td>
-        <td style="color: var(--admin-muted);">${s.teacher}</td>
-        <td><span class="badge-pill ${s.statusClass}">${s.status}</span></td>
-      </tr>
-    `).join("");
+    const todaySessions = APP_STATE.kronos_week["tue"] || [];
+    if (todaySessions.length === 0) {
+      sessionsTbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--admin-muted); padding: 18px;">No sessions scheduled for today.</td></tr>`;
+    } else {
+      sessionsTbody.innerHTML = todaySessions.map(s => {
+        const isPending = (s.status || "").toLowerCase() === "pending";
+        return `
+          <tr>
+            <td style="font-weight: 700;">${s.time}</td>
+            <td>${s.student}</td>
+            <td style="color: var(--admin-muted);">${s.teacher || "Chihab"}</td>
+            <td><span class="badge-pill ${isPending ? 'pending' : 'confirmed'}">${s.status}</span></td>
+            <td>
+              <div class="table-actions-cell">
+                ${isPending ? `<button type="button" class="btn-xs btn-xs-success" data-action="approve-session" data-id="${s.id}" data-day="tue">Approve</button>` : ''}
+                <button type="button" class="btn-xs btn-xs-danger" data-action="delete-session" data-id="${s.id}" data-day="tue">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
   }
 
   const invoicesTbody = document.querySelector('[data-tbody="overview_invoices"]');
   if (invoicesTbody) {
-    invoicesTbody.innerHTML = SAMPLE_DATA.overview_invoices.map(inv => `
-      <tr>
-        <td style="font-weight: 650; color: var(--admin-primary);">${inv.id}</td>
-        <td>${inv.customer}</td>
-        <td style="font-weight: 600;">${inv.mad}</td>
-        <td><span class="badge-pill ${inv.statusClass}">${inv.status}</span></td>
-      </tr>
-    `).join("");
+    const attentionInvoices = APP_STATE.era_invoices.filter(i => (i.status || "").toLowerCase() !== "paid");
+    if (attentionInvoices.length === 0) {
+      invoicesTbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--admin-muted); padding: 18px;">All invoices are settled!</td></tr>`;
+    } else {
+      invoicesTbody.innerHTML = attentionInvoices.map(inv => {
+        const isOverdue = (inv.status || "").toLowerCase() === "overdue";
+        return `
+          <tr>
+            <td style="font-weight: 650; color: var(--admin-primary);">${inv.id}</td>
+            <td>${inv.name}</td>
+            <td style="font-weight: 650;">${inv.mad}</td>
+            <td><span class="badge-pill ${isOverdue ? 'overdue' : 'due'}">${inv.status}</span></td>
+            <td>
+              <div class="table-actions-cell">
+                <button type="button" class="btn-xs btn-xs-success" data-action="pay-invoice" data-id="${inv.id}">Pay</button>
+                <button type="button" class="btn-xs btn-xs-danger" data-action="delete-invoice" data-id="${inv.id}">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
   }
 }
 
-// Render Kronos Schedule View
+// RENDER: KRONOS SCHEDULE
 function renderKronos() {
   const days = ["mon", "tue", "wed", "thu", "fri"];
+  let pendingCount = 0;
+  let totalHours = 0;
+
   days.forEach(day => {
     const container = document.querySelector(`[data-kronos-day="${day}"]`);
     if (!container) return;
-    const items = SAMPLE_DATA.kronos_week[day] || [];
-    container.innerHTML = items.map((item, idx) => `
-      <div class="kronos-session-card ${item.pending ? 'is-pending' : ''}">
-        <button type="button" class="session-chip-delete" data-delete-day="${day}" data-delete-idx="${idx}" title="Delete session">&times;</button>
-        <div class="kronos-session-time">${item.time}</div>
-        <div class="kronos-session-info">${item.desc}</div>
-      </div>
-    `).join("");
+    const items = APP_STATE.kronos_week[day] || [];
+
+    if (items.length === 0) {
+      container.innerHTML = `<div style="font-size: 11.5px; color: #94a3b8; text-align: center; padding: 24px 0;">No sessions</div>`;
+    } else {
+      container.innerHTML = items.map(item => {
+        const isPending = (item.status || "").toLowerCase() === "pending";
+        if (isPending) pendingCount++;
+        totalHours += 1;
+        return `
+          <div class="kronos-session-card ${isPending ? 'is-pending' : ''}" data-session-click="${item.id}" data-day="${day}">
+            <div class="kronos-card-header">
+              <span class="kronos-session-time">${item.time}</span>
+              <span class="badge-pill ${isPending ? 'pending' : 'confirmed'}" style="font-size: 10px; padding: 2px 7px;">${item.status}</span>
+            </div>
+            <div class="kronos-session-info">${item.student} · ${item.program}</div>
+            <div class="kronos-card-actions">
+              ${isPending ? `<button type="button" class="btn-xs btn-xs-success" data-action="approve-session" data-id="${item.id}" data-day="${day}">Approve</button>` : ''}
+              <button type="button" class="btn-xs btn-xs-danger" data-action="delete-session" data-id="${item.id}" data-day="${day}">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
   });
 
-  // Attach delete session listeners
-  document.querySelectorAll("[data-delete-day]").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const d = btn.dataset.deleteDay;
-      const i = Number(btn.dataset.deleteIdx);
-      if (SAMPLE_DATA.kronos_week[d]) {
-        const removed = SAMPLE_DATA.kronos_week[d].splice(i, 1)[0];
-        renderKronos();
-        showToast(`Session (${removed.time} - ${removed.desc}) deleted from schedule.`, "success");
-      }
-    });
-  });
+  // Update teacher hours & pending approval indicators
+  const hoursEl = document.querySelector("#btnApproveTimesheet")?.previousElementSibling?.previousElementSibling?.previousElementSibling?.previousElementSibling;
+  const pendingTextEl = document.querySelector("#btnApproveTimesheet")?.previousElementSibling?.previousElementSibling?.previousElementSibling;
+  if (hoursEl) hoursEl.textContent = `Chihab · ${(totalHours * 1.5).toFixed(1)} h this week`;
+  if (pendingTextEl) pendingTextEl.textContent = `${pendingCount} sessions waiting for approval`;
 }
 
-// Render Genius · Lessons View
+// RENDER: GENIUS LESSONS
 function renderGenius() {
   const tbody = document.querySelector('[data-tbody="genius_lessons"]');
   if (!tbody) return;
 
-  tbody.innerHTML = SAMPLE_DATA.genius_lessons.map((lesson, idx) => {
-    const isSelected = selectedGeniusLesson && selectedGeniusLesson.title === lesson.title;
+  if (APP_STATE.genius_lessons.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--admin-muted); padding: 20px;">No lessons created yet. Click "New lesson" to add one.</td></tr>`;
+    selectedGeniusLesson = null;
+    updateGeniusSelection();
+    return;
+  }
+
+  tbody.innerHTML = APP_STATE.genius_lessons.map((lesson) => {
+    const isSelected = selectedGeniusLesson && selectedGeniusLesson.id === lesson.id;
     return `
-      <tr class="clickable ${isSelected ? 'row-selected' : ''}" data-lesson-idx="${idx}">
+      <tr class="clickable ${isSelected ? 'row-selected' : ''}" data-lesson-id="${lesson.id}">
         <td style="font-weight: 650;">${lesson.title}</td>
         <td><span class="badge-pill sent">${lesson.level}</span></td>
         <td>${lesson.program}</td>
         <td style="color: var(--admin-muted);">${lesson.duration}</td>
+        <td>
+          <div class="table-actions-cell">
+            <button type="button" class="btn-xs btn-xs-primary" data-action="select-lesson" data-id="${lesson.id}">Select</button>
+            <button type="button" class="btn-xs btn-xs-danger" data-action="delete-lesson" data-id="${lesson.id}">Delete</button>
+          </div>
+        </td>
       </tr>
     `;
   }).join("");
-
-  // Attach row click listeners
-  tbody.querySelectorAll("tr").forEach(tr => {
-    tr.addEventListener("click", () => {
-      const idx = Number(tr.dataset.lessonIdx);
-      selectedGeniusLesson = SAMPLE_DATA.genius_lessons[idx];
-      updateGeniusSelection();
-      renderGenius();
-    });
-  });
 
   updateGeniusSelection();
 }
@@ -340,55 +426,70 @@ function updateGeniusSelection() {
     if (previewTitle) previewTitle.textContent = `New lesson: ${selectedGeniusLesson.title}`;
     const dueVal = dueDateInput ? dueDateInput.value : "Fri 20 Nov";
     if (previewMeta) previewMeta.textContent = `About ${selectedGeniusLesson.duration} · due ${dueVal}`;
+  } else {
+    if (titleEl) titleEl.textContent = `No lesson selected`;
+    if (previewTitle) previewTitle.textContent = `No lesson`;
+    if (previewMeta) previewMeta.textContent = ``;
   }
 }
 
-// Render Era View
+// RENDER: ERA INVOICES
 function renderEra() {
   const tbody = document.querySelector('[data-tbody="era_invoices"]');
   if (!tbody) return;
 
-  tbody.innerHTML = SAMPLE_DATA.era_invoices.map((inv, idx) => {
+  if (APP_STATE.era_invoices.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--admin-muted); padding: 24px;">No invoices found. Click "New invoice" to create one.</td></tr>`;
+    selectedEraInvoice = null;
+    updateEraCustomerCard();
+    return;
+  }
+
+  tbody.innerHTML = APP_STATE.era_invoices.map((inv) => {
     const isSelected = selectedEraInvoice && selectedEraInvoice.id === inv.id;
     return `
-      <tr class="clickable ${isSelected ? 'row-selected' : ''}" data-inv-idx="${idx}">
+      <tr class="clickable ${isSelected ? 'row-selected' : ''}" data-invoice-id="${inv.id}">
         <td style="font-weight: 650; color: var(--admin-primary);">${inv.id}</td>
         <td style="color: var(--admin-muted);">${inv.custNo}</td>
         <td style="font-weight: 600;">${inv.name}</td>
         <td>${inv.program}</td>
         <td style="font-weight: 700;">${inv.mad}</td>
         <td style="color: var(--admin-muted);">${inv.due}</td>
-        <td><span class="badge-pill ${inv.statusClass}">${inv.status}</span></td>
+        <td><span class="badge-pill ${inv.statusClass || (inv.status === 'Paid' ? 'paid' : (inv.status === 'Overdue' ? 'overdue' : 'sent'))}">${inv.status}</span></td>
+        <td>
+          <div class="table-actions-cell">
+            <button type="button" class="btn-xs btn-xs-primary" data-action="view-arabic-invoice" data-id="${inv.id}">فاتورة</button>
+            <button type="button" class="btn-xs btn-xs-danger" data-action="delete-invoice" data-id="${inv.id}">Delete</button>
+          </div>
+        </td>
       </tr>
     `;
   }).join("");
-
-  tbody.querySelectorAll("tr").forEach(tr => {
-    tr.addEventListener("click", () => {
-      const idx = Number(tr.dataset.invIdx);
-      selectedEraInvoice = SAMPLE_DATA.era_invoices[idx];
-      updateEraCustomerCard();
-      renderEra();
-    });
-  });
 
   updateEraCustomerCard();
 }
 
 function updateEraCustomerCard() {
-  if (!selectedEraInvoice) return;
   const numEl = document.getElementById("eraCustNumber");
   const nameEl = document.getElementById("eraCustName");
   const metaEl = document.getElementById("eraCustMeta");
   const remindersEl = document.getElementById("eraCustReminders");
 
+  if (!selectedEraInvoice) {
+    if (numEl) numEl.textContent = "No invoice selected";
+    if (nameEl) nameEl.textContent = "—";
+    if (metaEl) metaEl.textContent = "Select an invoice to view customer details.";
+    if (remindersEl) remindersEl.innerHTML = "";
+    return;
+  }
+
   if (numEl) numEl.textContent = `Customer ${selectedEraInvoice.custNo}`;
   if (nameEl) nameEl.textContent = selectedEraInvoice.name;
   if (metaEl) {
     metaEl.innerHTML = `
-      ${selectedEraInvoice.address}<br>
-      ${selectedEraInvoice.phone}<br>
-      ${selectedEraInvoice.email}
+      ${selectedEraInvoice.address || "Casablanca, Morocco"}<br>
+      ${selectedEraInvoice.phone || "+212 600 000 000"}<br>
+      ${selectedEraInvoice.email || "student@example.com"}
     `;
   }
   if (remindersEl) {
@@ -396,11 +497,11 @@ function updateEraCustomerCard() {
   }
 }
 
-// Render Customers View
+// RENDER: CUSTOMERS
 function renderCustomers() {
   const tbody = document.querySelector('[data-tbody="customers_list"]');
   if (!tbody) return;
-  tbody.innerHTML = SAMPLE_DATA.customers.map(c => `
+  tbody.innerHTML = APP_STATE.customers.map(c => `
     <tr>
       <td style="font-weight: 650; color: var(--admin-primary);">${c.custNo}</td>
       <td style="font-weight: 600;">${c.name}</td>
@@ -412,11 +513,11 @@ function renderCustomers() {
   `).join("");
 }
 
-// Render Notifications View
+// RENDER: NOTIFICATIONS
 function renderNotifications() {
   const tbody = document.querySelector('[data-tbody="notifications_list"]');
   if (!tbody) return;
-  tbody.innerHTML = SAMPLE_DATA.notifications.map(n => `
+  tbody.innerHTML = APP_STATE.notifications.map(n => `
     <tr>
       <td style="font-weight: 600;">${n.target}</td>
       <td><span class="badge-pill sent">${n.channel}</span></td>
@@ -428,11 +529,11 @@ function renderNotifications() {
   `).join("");
 }
 
-// Render Applications View
+// RENDER: APPLICATIONS
 function renderApplications() {
   const sTbody = document.querySelector('[data-tbody="student_applications"]');
   if (sTbody) {
-    sTbody.innerHTML = SAMPLE_DATA.student_applications.map(app => `
+    sTbody.innerHTML = APP_STATE.student_applications.map(app => `
       <tr>
         <td style="font-weight: 600;">${app.name}</td>
         <td>${app.email}</td>
@@ -447,7 +548,7 @@ function renderApplications() {
 
   const tTbody = document.querySelector('[data-tbody="teacher_applications"]');
   if (tTbody) {
-    tTbody.innerHTML = SAMPLE_DATA.teacher_applications.map(app => `
+    tTbody.innerHTML = APP_STATE.teacher_applications.map(app => `
       <tr>
         <td style="font-weight: 600;">${app.name}</td>
         <td>${app.email}</td>
@@ -461,11 +562,11 @@ function renderApplications() {
   }
 }
 
-// Render Class Slots View
+// RENDER: CLASS SLOTS
 function renderClassSlots() {
   const tbody = document.querySelector('[data-tbody="class_slots"]');
   if (!tbody) return;
-  tbody.innerHTML = SAMPLE_DATA.class_slots.map(slot => `
+  tbody.innerHTML = APP_STATE.class_slots.map(slot => `
     <tr>
       <td style="font-weight: 600;">${slot.program}</td>
       <td>${slot.starts}</td>
@@ -476,11 +577,11 @@ function renderClassSlots() {
   `).join("");
 }
 
-// Render Newsletter View
+// RENDER: NEWSLETTER
 function renderNewsletter() {
   const tbody = document.querySelector('[data-tbody="newsletter_subscribers"]');
   if (!tbody) return;
-  tbody.innerHTML = SAMPLE_DATA.newsletter_subscribers.map(sub => `
+  tbody.innerHTML = APP_STATE.newsletter_subscribers.map(sub => `
     <tr>
       <td style="font-weight: 600;">${sub.email}</td>
       <td style="color: var(--admin-muted);">${sub.date}</td>
@@ -489,124 +590,321 @@ function renderNewsletter() {
   `).join("");
 }
 
-// Setup Event Listeners
+// Populate Arabic Invoice Modal
+function populateArabicInvoiceModal(inv) {
+  const modalId = document.getElementById("invModalId");
+  const modalDate = document.getElementById("invModalDate");
+  const modalDueDate = document.getElementById("invModalDueDate");
+  const modalBalance = document.getElementById("invModalBalance");
+  const modalAmountDue = document.getElementById("invModalAmountDue");
+  const modalStudent = document.getElementById("invModalStudent");
+  const modalProgName = document.getElementById("invModalProgName");
+  const itemQty = document.getElementById("invItemQty");
+  const itemRate = document.getElementById("invItemRate");
+  const itemTotal = document.getElementById("invItemTotal");
+  const summarySubtotal = document.getElementById("invSummarySubtotal");
+  const summaryPaid = document.getElementById("invSummaryPaid");
+
+  const todayStr = new Date().toLocaleDateString('fr-FR');
+  if (modalId) modalId.textContent = inv.id;
+  if (modalDate) modalDate.textContent = todayStr;
+  if (modalDueDate) modalDueDate.textContent = inv.due || "25/11/2026";
+  if (modalBalance) modalBalance.textContent = (inv.status === 'Paid') ? "0,00 MAD" : `${inv.mad},00 MAD`;
+  if (modalAmountDue) modalAmountDue.textContent = `${inv.mad},00`;
+  if (modalStudent) modalStudent.textContent = inv.name;
+  if (modalProgName) modalProgName.textContent = `دورة اللغة الإنجليزية (${inv.program})`;
+
+  const sessions = 8;
+  const rate = (inv.mad / sessions).toFixed(2).replace(/\./g, ",");
+  if (itemQty) itemQty.textContent = sessions;
+  if (itemRate) itemRate.textContent = rate;
+  if (itemTotal) itemTotal.textContent = `${inv.mad},00`;
+  if (summarySubtotal) summarySubtotal.textContent = `${inv.mad},00`;
+  if (summaryPaid) summaryPaid.textContent = (inv.status === 'Paid') ? `${inv.mad},00` : `0,00`;
+}
+
+// SETUP ALL EVENT LISTENERS
 function setupEvents() {
-  // Navigation button clicks
+  // Navigation Tabs
   navButtons.forEach(btn => {
     btn.addEventListener("click", () => {
       switchView(btn.dataset.navTarget);
     });
   });
 
-  // Sample data toggle button clicks
+  // Sample data toggle / Clear data toggle
   sampleToggles.forEach(toggle => {
     toggle.addEventListener("click", () => {
-      useSampleData = !useSampleData;
-      sampleToggles.forEach(t => t.classList.toggle("active", useSampleData));
-      showToast(useSampleData ? "Displaying sample demo data." : "Connected to live database mode.");
-      if (!useSampleData) {
-        tryFetchLiveSupabaseData();
-      } else {
+      const confirmClear = confirm("Do you want to clear fictitious demo data and start with an empty real workspace? (Cancel will reset back to sample demonstration data)");
+      if (confirmClear) {
+        APP_STATE.kronos_week = { mon: [], tue: [], wed: [], thu: [], fri: [] };
+        APP_STATE.era_invoices = [];
+        APP_STATE.genius_lessons = [];
+        selectedGeniusLesson = null;
+        selectedEraInvoice = null;
+        saveWorkspaceState();
         renderCurrentView();
+        showToast("Cleared fictitious data! You now have an empty, real workspace ready for your entries.", "success");
+      } else {
+        APP_STATE = JSON.parse(JSON.stringify(DEFAULT_WORKSPACE_DATA));
+        selectedGeniusLesson = APP_STATE.genius_lessons[0];
+        selectedEraInvoice = APP_STATE.era_invoices[0];
+        saveWorkspaceState();
+        renderCurrentView();
+        showToast("Reset to sample demonstration data.", "success");
       }
     });
   });
 
-  // Genius due date live input update
-  const geniusDueDate = document.getElementById("geniusDueDate");
-  if (geniusDueDate) {
-    geniusDueDate.addEventListener("input", updateGeniusSelection);
-  }
-
-  // Push lesson button action
-  const btnPushLesson = document.getElementById("btnPushLesson");
-  if (btnPushLesson) {
-    btnPushLesson.addEventListener("click", () => {
-      const student = document.getElementById("geniusStudentSelect")?.value || "Sara B.";
-      const lessonTitle = selectedGeniusLesson?.title || "Lesson";
-      showToast(`Lesson "${lessonTitle}" successfully pushed to ${student}!`, "success");
-    });
-  }
-
-  // Approve timesheet action
-  const btnApproveTimesheet = document.getElementById("btnApproveTimesheet");
-  if (btnApproveTimesheet) {
-    btnApproveTimesheet.addEventListener("click", () => {
-      showToast("Timesheet approved for Chihab (14.5 hours confirmed).", "success");
-    });
-  }
-
-  // Record payment action
-  const btnRecordPayment = document.getElementById("btnRecordPayment");
-  if (btnRecordPayment) {
-    btnRecordPayment.addEventListener("click", () => {
-      if (selectedEraInvoice) {
-        selectedEraInvoice.status = "Paid";
-        selectedEraInvoice.statusClass = "paid";
-        selectedEraInvoice.reminders.unshift("Payment recorded manually (MAD " + selectedEraInvoice.mad + ")");
-        renderEra();
-        renderOverview();
-        showToast(`Payment of MAD ${selectedEraInvoice.mad} recorded for ${selectedEraInvoice.id}.`, "success");
+  // Global Delegated Click Handler for all dynamic Action Buttons
+  document.addEventListener("click", (e) => {
+    // 1. Delete Session
+    const btnDelSession = e.target.closest('[data-action="delete-session"]');
+    if (btnDelSession) {
+      e.stopPropagation();
+      const id = btnDelSession.dataset.id;
+      const day = btnDelSession.dataset.day;
+      if (APP_STATE.kronos_week[day]) {
+        const idx = APP_STATE.kronos_week[day].findIndex(s => s.id === id);
+        if (idx !== -1) {
+          const removed = APP_STATE.kronos_week[day].splice(idx, 1)[0];
+          saveWorkspaceState();
+          renderCurrentView();
+          showToast(`Session for ${removed.student} (${removed.time}) deleted successfully!`, "success");
+        }
       }
-    });
-  }
+      return;
+    }
 
-  // Send reminder action
-  const btnSendReminder = document.getElementById("btnSendReminder");
-  if (btnSendReminder) {
-    btnSendReminder.addEventListener("click", () => {
-      if (selectedEraInvoice) {
-        selectedEraInvoice.reminders.unshift(`Reminder sent today to ${selectedEraInvoice.email}`);
-        updateEraCustomerCard();
-        showToast(`Payment reminder dispatched to ${selectedEraInvoice.name} (${selectedEraInvoice.email}).`, "success");
+    // 2. Approve Session
+    const btnApproveSession = e.target.closest('[data-action="approve-session"]');
+    if (btnApproveSession) {
+      e.stopPropagation();
+      const id = btnApproveSession.dataset.id;
+      const day = btnApproveSession.dataset.day;
+      if (APP_STATE.kronos_week[day]) {
+        const session = APP_STATE.kronos_week[day].find(s => s.id === id);
+        if (session) {
+          session.status = "Confirmed";
+          saveWorkspaceState();
+          renderCurrentView();
+          showToast(`Session for ${session.student} on ${day.toUpperCase()} is now Confirmed!`, "success");
+        }
       }
-    });
-  }
+      return;
+    }
 
-  // Delete invoice action
-  const btnDeleteInvoice = document.getElementById("btnDeleteInvoice");
-  if (btnDeleteInvoice) {
-    btnDeleteInvoice.addEventListener("click", () => {
+    // 3. Click Session Card to Edit
+    const sessionCard = e.target.closest('[data-session-click]');
+    if (sessionCard && !e.target.closest('.kronos-card-actions')) {
+      const id = sessionCard.dataset.sessionClick;
+      const day = sessionCard.dataset.day;
+      const session = APP_STATE.kronos_week[day]?.find(s => s.id === id);
+      if (session) {
+        editingSessionContext = { id, day };
+        document.getElementById("editSessionId").value = session.id;
+        document.getElementById("editSessionDay").value = day;
+        document.getElementById("editSessionStudent").value = session.student;
+        document.getElementById("editSessionProgram").value = session.program;
+        document.getElementById("editSessionDaySelect").value = day;
+        document.getElementById("editSessionTime").value = session.time;
+        document.getElementById("editSessionStatus").value = session.status;
+        openModal("modalEditSession");
+      }
+      return;
+    }
+
+    // 4. Quick Add Session to specific day
+    const btnAddDay = e.target.closest('[data-add-to-day]');
+    if (btnAddDay) {
+      const day = btnAddDay.dataset.addToDay;
+      document.getElementById("sessionDay").value = day;
+      openModal("modalBookSession");
+      return;
+    }
+
+    // 5. Delete Invoice
+    const btnDelInvoice = e.target.closest('[data-action="delete-invoice"]');
+    if (btnDelInvoice) {
+      e.stopPropagation();
+      const id = btnDelInvoice.dataset.id;
+      const idx = APP_STATE.era_invoices.findIndex(i => i.id === id);
+      if (idx !== -1) {
+        APP_STATE.era_invoices.splice(idx, 1);
+        if (selectedEraInvoice && selectedEraInvoice.id === id) {
+          selectedEraInvoice = APP_STATE.era_invoices[0] || null;
+        }
+        saveWorkspaceState();
+        renderCurrentView();
+        showToast(`Invoice ${id} has been deleted.`, "success");
+      }
+      return;
+    }
+
+    // 6. Pay Invoice
+    const btnPayInvoice = e.target.closest('[data-action="pay-invoice"]');
+    if (btnPayInvoice) {
+      e.stopPropagation();
+      const id = btnPayInvoice.dataset.id;
+      const inv = APP_STATE.era_invoices.find(i => i.id === id);
+      if (inv) {
+        inv.status = "Paid";
+        inv.statusClass = "paid";
+        inv.reminders = inv.reminders || [];
+        inv.reminders.unshift(`Payment of MAD ${inv.mad} received on ${new Date().toLocaleDateString('fr-FR')}`);
+        saveWorkspaceState();
+        renderCurrentView();
+        showToast(`Invoice ${id} marked as Paid!`, "success");
+      }
+      return;
+    }
+
+    // 7. Select Invoice Row
+    const invoiceRow = e.target.closest('[data-invoice-id]');
+    if (invoiceRow && !e.target.closest('.table-actions-cell')) {
+      const id = invoiceRow.dataset.invoiceId;
+      selectedEraInvoice = APP_STATE.era_invoices.find(i => i.id === id) || null;
+      renderEra();
+      return;
+    }
+
+    // 8. View / Edit Arabic Invoice
+    const btnViewAr = e.target.closest('[data-action="view-arabic-invoice"]');
+    if (btnViewAr) {
+      e.stopPropagation();
+      const id = btnViewAr.dataset.id;
+      const inv = APP_STATE.era_invoices.find(i => i.id === id);
+      if (inv) {
+        selectedEraInvoice = inv;
+        populateArabicInvoiceModal(inv);
+        openModal("modalArabicInvoice");
+      }
+      return;
+    }
+
+    // 9. Select Lesson Row
+    const lessonRow = e.target.closest('[data-lesson-id]');
+    if (lessonRow && !e.target.closest('.table-actions-cell')) {
+      const id = lessonRow.dataset.lessonId;
+      selectedGeniusLesson = APP_STATE.genius_lessons.find(l => l.id === id) || null;
+      renderGenius();
+      return;
+    }
+
+    // 10. Delete Lesson
+    const btnDelLesson = e.target.closest('[data-action="delete-lesson"]');
+    if (btnDelLesson) {
+      e.stopPropagation();
+      const id = btnDelLesson.dataset.id;
+      const idx = APP_STATE.genius_lessons.findIndex(l => l.id === id);
+      if (idx !== -1) {
+        const removed = APP_STATE.genius_lessons.splice(idx, 1)[0];
+        if (selectedGeniusLesson && selectedGeniusLesson.id === id) {
+          selectedGeniusLesson = APP_STATE.genius_lessons[0] || null;
+        }
+        saveWorkspaceState();
+        renderCurrentView();
+        showToast(`Lesson "${removed.title}" deleted.`, "success");
+      }
+      return;
+    }
+
+    // 11. Modal open buttons (data-modal-open)
+    const btnModalOpen = e.target.closest('[data-modal-open]');
+    if (btnModalOpen) {
+      const modalTarget = btnModalOpen.dataset.modalOpen;
+      if (modalTarget === "book_session") openModal("modalBookSession");
+      if (modalTarget === "new_lesson") openModal("modalNewLesson");
+      if (modalTarget === "new_invoice") openModal("modalNewInvoice");
+      return;
+    }
+
+    // 12. Modal close buttons
+    const btnModalClose = e.target.closest('[data-modal-close]');
+    if (btnModalClose) {
+      btnModalClose.closest('.admin-modal-backdrop').hidden = true;
+      return;
+    }
+
+    // 13. Click backdrop to close
+    if (e.target.classList.contains('admin-modal-backdrop')) {
+      e.target.hidden = true;
+    }
+  });
+
+  // Customer Card Actions in Era
+  const btnDeleteInvoiceCard = document.getElementById("btnDeleteInvoice");
+  if (btnDeleteInvoiceCard) {
+    btnDeleteInvoiceCard.addEventListener("click", () => {
       if (!selectedEraInvoice) return;
       const id = selectedEraInvoice.id;
-      const idx = SAMPLE_DATA.era_invoices.findIndex(inv => inv.id === id);
+      const idx = APP_STATE.era_invoices.findIndex(i => i.id === id);
       if (idx !== -1) {
-        SAMPLE_DATA.era_invoices.splice(idx, 1);
-        selectedEraInvoice = SAMPLE_DATA.era_invoices[0] || null;
-        renderEra();
-        renderOverview();
+        APP_STATE.era_invoices.splice(idx, 1);
+        selectedEraInvoice = APP_STATE.era_invoices[0] || null;
+        saveWorkspaceState();
+        renderCurrentView();
         showToast(`Invoice ${id} has been deleted.`, "success");
       }
     });
   }
 
-  // Delete lesson action
-  const btnDeleteLesson = document.getElementById("btnDeleteLesson");
-  if (btnDeleteLesson) {
-    btnDeleteLesson.addEventListener("click", () => {
-      if (!selectedGeniusLesson) return;
-      const title = selectedGeniusLesson.title;
-      const idx = SAMPLE_DATA.genius_lessons.findIndex(l => l.title === title);
-      if (idx !== -1) {
-        SAMPLE_DATA.genius_lessons.splice(idx, 1);
-        selectedGeniusLesson = SAMPLE_DATA.genius_lessons[0] || null;
-        renderGenius();
-        showToast(`Lesson "${title}" has been deleted.`, "success");
-      }
+  const btnRecordPaymentCard = document.getElementById("btnRecordPayment");
+  if (btnRecordPaymentCard) {
+    btnRecordPaymentCard.addEventListener("click", () => {
+      if (!selectedEraInvoice) return;
+      selectedEraInvoice.status = "Paid";
+      selectedEraInvoice.statusClass = "paid";
+      selectedEraInvoice.reminders = selectedEraInvoice.reminders || [];
+      selectedEraInvoice.reminders.unshift(`Payment of MAD ${selectedEraInvoice.mad} recorded on ${new Date().toLocaleDateString('fr-FR')}`);
+      saveWorkspaceState();
+      renderCurrentView();
+      showToast(`Payment recorded for invoice ${selectedEraInvoice.id}.`, "success");
     });
   }
 
-  // View / Edit Official Arabic Invoice (فاتورة)
-  const btnViewArabicInvoice = document.getElementById("btnViewArabicInvoice");
-  if (btnViewArabicInvoice) {
-    btnViewArabicInvoice.addEventListener("click", () => {
+  const btnSendReminderCard = document.getElementById("btnSendReminder");
+  if (btnSendReminderCard) {
+    btnSendReminderCard.addEventListener("click", () => {
+      if (!selectedEraInvoice) return;
+      selectedEraInvoice.reminders = selectedEraInvoice.reminders || [];
+      selectedEraInvoice.reminders.unshift(`Reminder sent today to ${selectedEraInvoice.email}`);
+      updateEraCustomerCard();
+      saveWorkspaceState();
+      showToast(`Reminder dispatched to ${selectedEraInvoice.name} (${selectedEraInvoice.email}).`, "success");
+    });
+  }
+
+  const btnViewArabicInvoiceCard = document.getElementById("btnViewArabicInvoice");
+  if (btnViewArabicInvoiceCard) {
+    btnViewArabicInvoiceCard.addEventListener("click", () => {
       if (!selectedEraInvoice) return;
       populateArabicInvoiceModal(selectedEraInvoice);
       openModal("modalArabicInvoice");
     });
   }
 
-  // Auto-calculation listeners for editable Arabic invoice
+  // Save Edits from Arabic Invoice back to Era State
+  const btnSaveArabicInvoice = document.getElementById("btnSaveArabicInvoice");
+  if (btnSaveArabicInvoice) {
+    btnSaveArabicInvoice.addEventListener("click", () => {
+      if (!selectedEraInvoice) return;
+      const newStudent = document.getElementById("invModalStudent")?.textContent.trim();
+      const newAmountRaw = document.getElementById("invItemTotal")?.textContent.replace(/[^0-9]/g, '');
+      const newDue = document.getElementById("invModalDueDate")?.textContent.trim();
+
+      if (newStudent) selectedEraInvoice.name = newStudent;
+      if (newAmountRaw) selectedEraInvoice.mad = Number(newAmountRaw) || selectedEraInvoice.mad;
+      if (newDue) selectedEraInvoice.due = newDue;
+
+      saveWorkspaceState();
+      renderCurrentView();
+      closeModal("modalArabicInvoice");
+      showToast(`Changes saved directly to invoice ${selectedEraInvoice.id}!`, "success");
+    });
+  }
+
+  // Recalculate Arabic Invoice fields live on edit
   const itemQty = document.getElementById("invItemQty");
   const itemRate = document.getElementById("invItemRate");
   const itemTotal = document.getElementById("invItemTotal");
@@ -626,83 +924,169 @@ function setupEvents() {
   if (itemQty) itemQty.addEventListener("input", recalcInvoice);
   if (itemRate) itemRate.addEventListener("input", recalcInvoice);
 
-  // Modal open buttons
-  document.querySelectorAll("[data-modal-open]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const modalId = btn.dataset.modalOpen;
-      if (modalId === "book_session") openModal("modalBookSession");
-      if (modalId === "new_lesson") openModal("modalNewLesson");
-      if (modalId === "new_invoice") openModal("modalNewInvoice");
+  // Lesson actions
+  const btnPushLesson = document.getElementById("btnPushLesson");
+  if (btnPushLesson) {
+    btnPushLesson.addEventListener("click", () => {
+      if (!selectedGeniusLesson) return;
+      const student = document.getElementById("geniusStudentSelect")?.value || "Sara B.";
+      showToast(`Lesson "${selectedGeniusLesson.title}" pushed to ${student}!`, "success");
     });
-  });
+  }
 
-  // Modal close buttons
-  document.querySelectorAll("[data-modal-close]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      btn.closest(".admin-modal-backdrop").hidden = true;
+  const btnDeleteLessonCard = document.getElementById("btnDeleteLesson");
+  if (btnDeleteLessonCard) {
+    btnDeleteLessonCard.addEventListener("click", () => {
+      if (!selectedGeniusLesson) return;
+      const id = selectedGeniusLesson.id;
+      const idx = APP_STATE.genius_lessons.findIndex(l => l.id === id);
+      if (idx !== -1) {
+        const removed = APP_STATE.genius_lessons.splice(idx, 1)[0];
+        selectedGeniusLesson = APP_STATE.genius_lessons[0] || null;
+        saveWorkspaceState();
+        renderCurrentView();
+        showToast(`Lesson "${removed.title}" deleted.`, "success");
+      }
     });
-  });
+  }
 
-  // Modal backdrop click to close
-  document.querySelectorAll(".admin-modal-backdrop").forEach(backdrop => {
-    backdrop.addEventListener("click", (e) => {
-      if (e.target === backdrop) backdrop.hidden = true;
+  // Approve All Timesheets
+  const btnApproveTimesheet = document.getElementById("btnApproveTimesheet");
+  if (btnApproveTimesheet) {
+    btnApproveTimesheet.addEventListener("click", () => {
+      let approvedCount = 0;
+      Object.keys(APP_STATE.kronos_week).forEach(day => {
+        APP_STATE.kronos_week[day].forEach(s => {
+          if (s.status === "Pending") {
+            s.status = "Confirmed";
+            approvedCount++;
+          }
+        });
+      });
+      saveWorkspaceState();
+      renderCurrentView();
+      showToast(`Approved ${approvedCount} pending session(s). Timesheet is fully confirmed!`, "success");
     });
-  });
+  }
 
-  // Book session form submission
+  // Submit Book Session
   const formBookSession = document.getElementById("formBookSession");
   if (formBookSession) {
     formBookSession.addEventListener("submit", (e) => {
       e.preventDefault();
-      const student = document.getElementById("sessionStudentName").value;
-      const prog = document.getElementById("sessionProgram").value;
+      const student = document.getElementById("sessionStudentName").value.trim();
+      const prog = document.getElementById("sessionProgram").value.trim();
       const day = document.getElementById("sessionDay").value;
-      const time = document.getElementById("sessionTime").value;
+      const time = document.getElementById("sessionTime").value.trim();
+      const teacher = document.getElementById("sessionTeacher").value.trim() || "Chihab";
 
-      SAMPLE_DATA.kronos_week[day] = SAMPLE_DATA.kronos_week[day] || [];
-      SAMPLE_DATA.kronos_week[day].push({
+      const newSession = {
+        id: `sess-${Date.now()}`,
         time: time,
-        desc: `${student} · ${prog}`,
-        pending: false
-      });
+        student: student,
+        program: prog,
+        teacher: teacher,
+        status: "Confirmed"
+      };
 
-      renderKronos();
+      APP_STATE.kronos_week[day] = APP_STATE.kronos_week[day] || [];
+      APP_STATE.kronos_week[day].push(newSession);
+      saveWorkspaceState();
+      renderCurrentView();
       closeModal("modalBookSession");
       formBookSession.reset();
-      showToast(`New session scheduled for ${student} on ${day.toUpperCase()} at ${time}.`, "success");
+      showToast(`Session booked for ${student} on ${day.toUpperCase()} at ${time}.`, "success");
     });
   }
 
-  // New lesson form submission
+  // Submit Edit Session
+  const formEditSession = document.getElementById("formEditSession");
+  if (formEditSession) {
+    formEditSession.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (!editingSessionContext) return;
+      const { id, day: origDay } = editingSessionContext;
+      const newDay = document.getElementById("editSessionDaySelect").value;
+      const newStudent = document.getElementById("editSessionStudent").value.trim();
+      const newProg = document.getElementById("editSessionProgram").value.trim();
+      const newTime = document.getElementById("editSessionTime").value.trim();
+      const newStatus = document.getElementById("editSessionStatus").value;
+
+      // Remove from origDay
+      const idx = APP_STATE.kronos_week[origDay]?.findIndex(s => s.id === id);
+      if (idx !== -1) {
+        const [session] = APP_STATE.kronos_week[origDay].splice(idx, 1);
+        session.student = newStudent;
+        session.program = newProg;
+        session.time = newTime;
+        session.status = newStatus;
+
+        // Add to newDay
+        APP_STATE.kronos_week[newDay] = APP_STATE.kronos_week[newDay] || [];
+        APP_STATE.kronos_week[newDay].push(session);
+
+        saveWorkspaceState();
+        renderCurrentView();
+        closeModal("modalEditSession");
+        showToast(`Session updated successfully!`, "success");
+      }
+    });
+  }
+
+  // Modal Delete Session from Edit Dialog
+  const btnModalDeleteSession = document.getElementById("btnModalDeleteSession");
+  if (btnModalDeleteSession) {
+    btnModalDeleteSession.addEventListener("click", () => {
+      if (!editingSessionContext) return;
+      const { id, day } = editingSessionContext;
+      const idx = APP_STATE.kronos_week[day]?.findIndex(s => s.id === id);
+      if (idx !== -1) {
+        APP_STATE.kronos_week[day].splice(idx, 1);
+        saveWorkspaceState();
+        renderCurrentView();
+        closeModal("modalEditSession");
+        showToast("Session deleted from schedule.", "success");
+      }
+    });
+  }
+
+  // Submit New Lesson
   const formNewLesson = document.getElementById("formNewLesson");
   if (formNewLesson) {
     formNewLesson.addEventListener("submit", (e) => {
       e.preventDefault();
-      const title = document.getElementById("newLessonTitle").value;
+      const title = document.getElementById("newLessonTitle").value.trim();
       const level = document.getElementById("newLessonLevel").value;
-      const prog = document.getElementById("newLessonProgram").value;
-      const duration = document.getElementById("newLessonDuration").value;
+      const prog = document.getElementById("newLessonProgram").value.trim();
+      const duration = document.getElementById("newLessonDuration").value.trim();
 
-      const newLesson = { title, level, program: prog, duration };
-      SAMPLE_DATA.genius_lessons.unshift(newLesson);
+      const newLesson = {
+        id: `les-${Date.now()}`,
+        title,
+        level,
+        program: prog,
+        duration
+      };
+
+      APP_STATE.genius_lessons.unshift(newLesson);
       selectedGeniusLesson = newLesson;
-      renderGenius();
+      saveWorkspaceState();
+      renderCurrentView();
       closeModal("modalNewLesson");
       formNewLesson.reset();
-      showToast(`Lesson "${title}" added to Genius library.`, "success");
+      showToast(`Lesson "${title}" added to library.`, "success");
     });
   }
 
-  // New invoice form submission
+  // Submit New Invoice
   const formNewInvoice = document.getElementById("formNewInvoice");
   if (formNewInvoice) {
     formNewInvoice.addEventListener("submit", (e) => {
       e.preventDefault();
-      const name = document.getElementById("invStudentName").value;
-      const program = document.getElementById("invProgram").value;
-      const mad = Number(document.getElementById("invAmount").value);
-      const due = document.getElementById("invDueDate").value;
+      const name = document.getElementById("invStudentName").value.trim();
+      const program = document.getElementById("invProgram").value.trim();
+      const mad = Number(document.getElementById("invAmount").value) || 500;
+      const due = document.getElementById("invDueDate").value.trim();
 
       const newInvId = `INV-00${Math.floor(48 + Math.random() * 50)}`;
       const newCustNo = `C-0000${Math.floor(25 + Math.random() * 30)}`;
@@ -719,15 +1103,16 @@ function setupEvents() {
         address: "Casablanca, Morocco",
         phone: "+212 600 000 000",
         email: `${name.toLowerCase().replace(/\s+/g, '')}@example.com`,
-        reminders: [`Invoice generated and sent`]
+        reminders: [`Invoice generated on ${new Date().toLocaleDateString('fr-FR')}`]
       };
 
-      SAMPLE_DATA.era_invoices.unshift(newInv);
+      APP_STATE.era_invoices.unshift(newInv);
       selectedEraInvoice = newInv;
-      renderEra();
+      saveWorkspaceState();
+      renderCurrentView();
       closeModal("modalNewInvoice");
       formNewInvoice.reset();
-      showToast(`Invoice ${newInvId} created for ${name} (MAD ${mad}).`, "success");
+      showToast(`Invoice ${newInvId} generated for ${name} (MAD ${mad})!`, "success");
     });
   }
 
@@ -752,104 +1137,18 @@ function closeModal(id) {
   if (el) el.hidden = true;
 }
 
-function populateArabicInvoiceModal(inv) {
-  const modalId = document.getElementById("invModalId");
-  const modalDate = document.getElementById("invModalDate");
-  const modalDueDate = document.getElementById("invModalDueDate");
-  const modalBalance = document.getElementById("invModalBalance");
-  const modalAmountDue = document.getElementById("invModalAmountDue");
-  const modalStudent = document.getElementById("invModalStudent");
-  const modalProgName = document.getElementById("invModalProgName");
-  const itemQty = document.getElementById("invItemQty");
-  const itemRate = document.getElementById("invItemRate");
-  const itemTotal = document.getElementById("invItemTotal");
-  const summarySubtotal = document.getElementById("invSummarySubtotal");
-  const summaryPaid = document.getElementById("invSummaryPaid");
-
-  const todayStr = new Date().toLocaleDateString('fr-FR');
-  if (modalId) modalId.textContent = inv.id;
-  if (modalDate) modalDate.textContent = todayStr;
-  if (modalDueDate) modalDueDate.textContent = inv.due || "25/11/2026";
-  if (modalBalance) modalBalance.textContent = inv.status === 'Paid' ? "0,00 MAD" : `${inv.mad},00 MAD`;
-  if (modalAmountDue) modalAmountDue.textContent = `${inv.mad},00`;
-  if (modalStudent) modalStudent.textContent = inv.name;
-  if (modalProgName) modalProgName.textContent = `دورة اللغة الإنجليزية (${inv.program})`;
-
-  const sessions = 8;
-  const rate = (inv.mad / sessions).toFixed(2).replace(/\./g, ",");
-  if (itemQty) itemQty.textContent = sessions;
-  if (itemRate) itemRate.textContent = rate;
-  if (itemTotal) itemTotal.textContent = `${inv.mad},00`;
-  if (summarySubtotal) summarySubtotal.textContent = `${inv.mad},00`;
-  if (summaryPaid) summaryPaid.textContent = inv.status === 'Paid' ? `${inv.mad},00` : `0,00`;
-}
-
-// Try connecting to live Supabase backend if user is authenticated
+// Check Supabase Auth
 async function checkSupabaseAuth() {
   if (!supabase) return;
   try {
-    const { data: userRes, error } = await supabase.auth.getUser();
+    const { data: userRes } = await supabase.auth.getUser();
     if (userRes && userRes.user) {
-      currentAdminUser = userRes.user;
-      if (userEmailEl) userEmailEl.textContent = currentAdminUser.email;
-      // Fetch live data in background
-      tryFetchLiveSupabaseData();
+      if (userEmailEl) userEmailEl.textContent = userRes.user.email;
     } else {
-      if (userEmailEl) userEmailEl.textContent = "admin@splusacademy.com (demo)";
+      if (userEmailEl) userEmailEl.textContent = "admin@splusacademy.com";
     }
   } catch (err) {
     console.log("Supabase session check:", err);
-  }
-}
-
-async function tryFetchLiveSupabaseData() {
-  if (!supabase || !currentAdminUser) return;
-  try {
-    // Attempt to load live invoices
-    const { data: invoices, error: invErr } = await supabase
-      .from("invoices")
-      .select("id, invoice_number, total_amount_mad, status, due_date, customer:customers(customer_number, full_name, email)")
-      .order("created_at", { ascending: false })
-      .limit(10);
-
-    if (!invErr && invoices && invoices.length > 0) {
-      SAMPLE_DATA.era_invoices = invoices.map(inv => ({
-        id: inv.invoice_number || `INV-${inv.id.slice(0, 4)}`,
-        custNo: inv.customer?.customer_number || "C-000001",
-        name: inv.customer?.full_name || "Student",
-        program: "Academy Program",
-        mad: inv.total_amount_mad || 0,
-        due: inv.due_date || "Upcoming",
-        status: inv.status.charAt(0).toUpperCase() + inv.status.slice(1),
-        statusClass: inv.status === 'paid' ? 'paid' : (inv.status === 'overdue' ? 'overdue' : 'sent'),
-        address: "Casablanca, Morocco",
-        phone: "+212 600 000 000",
-        email: inv.customer?.email || "student@example.com",
-        reminders: [`Status: ${inv.status}`]
-      }));
-      selectedEraInvoice = SAMPLE_DATA.era_invoices[0];
-      renderEra();
-    }
-
-    // Attempt to load live lessons
-    const { data: lessons, error: lessErr } = await supabase
-      .from("lessons")
-      .select("id, title, level, estimated_minutes, program:programs(name)")
-      .order("created_at", { ascending: false })
-      .limit(10);
-
-    if (!lessErr && lessons && lessons.length > 0) {
-      SAMPLE_DATA.genius_lessons = lessons.map(l => ({
-        title: l.title,
-        level: l.level || "B1",
-        program: l.program?.name || "Business English",
-        duration: `${l.estimated_minutes || 45} min`
-      }));
-      selectedGeniusLesson = SAMPLE_DATA.genius_lessons[0];
-      renderGenius();
-    }
-  } catch (err) {
-    console.warn("Could not query live Supabase tables, falling back to sample data:", err);
   }
 }
 

@@ -453,39 +453,108 @@ body.admin-body {
   color: var(--admin-muted);
 }
 
+/* Action buttons in tables and cards */
+.btn-xs {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.12s ease;
+  line-height: 1.2;
+}
+
+.btn-xs-primary {
+  background: var(--admin-primary);
+  color: #ffffff;
+}
+.btn-xs-primary:hover {
+  background: var(--admin-primary-hover);
+}
+
+.btn-xs-success {
+  background: #107548;
+  color: #ffffff;
+}
+.btn-xs-success:hover {
+  background: #0d5f3a;
+}
+
+.btn-xs-danger {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+.btn-xs-danger:hover {
+  background: #fca5a5;
+  color: #7f1d1d;
+}
+
+.btn-add-session-day {
+  width: 100%;
+  padding: 8px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--admin-primary);
+  background: #ffffff;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.btn-add-session-day:hover {
+  background: var(--admin-primary-light);
+  border-color: var(--admin-primary);
+}
+
+.table-actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
 .kronos-session-card {
   background: #ffffff;
   border: 1px solid #e1e7f0;
-  border-radius: 8px;
-  padding: 10px 10px;
+  border-radius: 10px;
+  padding: 10px 12px;
   margin-bottom: 10px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.02);
   transition: transform 0.1s, box-shadow 0.1s;
-  position: relative;
-}
-
-.session-chip-delete {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  background: transparent;
-  border: none;
-  color: #94a3b8;
-  font-size: 16px;
-  line-height: 1;
   cursor: pointer;
-  padding: 2px 5px;
-  border-radius: 4px;
-  display: none;
 }
 
-.kronos-session-card:hover .session-chip-delete {
-  display: block;
+.kronos-session-card:hover {
+  border-color: var(--admin-primary);
+  box-shadow: 0 3px 10px rgba(47, 43, 150, 0.08);
 }
 
-.session-chip-delete:hover {
-  color: var(--admin-danger);
-  background: #fee2e2;
+.kronos-session-card.is-pending {
+  background: #fefce8;
+  border-color: #fde047;
+}
+
+.kronos-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.kronos-card-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed #e2e8f0;
 }
 
 .kronos-session-card:hover {
