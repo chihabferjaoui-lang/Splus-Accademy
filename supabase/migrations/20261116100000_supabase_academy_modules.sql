@@ -1092,7 +1092,8 @@ revoke all on public.teacher_students, public.student_groups, public.student_gro
   public.class_session_students, public.teacher_timesheets
   from anon, authenticated;
 
-grant select on public.teacher_students, public.student_groups, public.student_group_members
+grant select, insert, update, delete on public.teacher_students to authenticated;
+grant select on public.student_groups, public.student_group_members
   to authenticated;
 grant insert, update, delete on public.student_groups, public.student_group_members
   to authenticated;
@@ -1145,6 +1146,10 @@ drop policy if exists "Admins read roles" on public.user_roles;
 create policy "Admins and users read roles"
   on public.user_roles for select to authenticated
   using ((select public.is_admin()) or user_id = (select auth.uid()));
+create policy "Admins manage roles"
+  on public.user_roles for insert, delete to authenticated
+  using ((select public.is_admin()))
+  with check ((select public.is_admin()));
 
 create policy "Admins manage profile fields"
   on public.profiles for all to authenticated

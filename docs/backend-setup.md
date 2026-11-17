@@ -41,13 +41,25 @@ CMI's current e-commerce overview describes local and international card accepta
      TURNSTILE_SECRET_KEY=YOUR_TURNSTILE_SECRET
    ```
 
-4. Deploy the application, booking-request, and newsletter functions:
+4. Deploy the application, booking-request, newsletter, and admin/webhook functions:
 
    ```sh
    supabase functions deploy submit-student-application
    supabase functions deploy submit-teacher-application
    supabase functions deploy submit-booking-request
    supabase functions deploy subscribe-newsletter
+   supabase functions deploy admin-users
+   supabase functions deploy payment-webhook
+   supabase functions deploy notification-dispatch
+   ```
+
+   Then configure the provider secrets used by the trusted server-side functions:
+
+   ```sh
+   supabase secrets set \
+     EMAIL_PROVIDER_SECRET=YOUR_EMAIL_PROVIDER_SECRET \
+     WHATSAPP_PROVIDER_SECRET=YOUR_WHATSAPP_PROVIDER_SECRET \
+     PAYMENT_WEBHOOK_SECRET=YOUR_PAYMENT_WEBHOOK_SECRET
    ```
 
 5. Create the first admin user using Supabase Auth. As the project owner, grant that exact account the admin role in the Supabase SQL Editor:

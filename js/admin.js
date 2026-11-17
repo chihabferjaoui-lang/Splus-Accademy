@@ -10,7 +10,17 @@ const loading = document.querySelector("[data-loading]");
 const dashboard = document.querySelector("[data-admin-dashboard]");
 const slotForm = document.querySelector("[data-slot-form]");
 const sessionForm = document.querySelector("[data-session-form]");
+const sessionStudentForm = document.querySelector("[data-session-student-form]");
+const timesheetForm = document.querySelector("[data-timesheet-form]");
 const progressForm = document.querySelector("[data-progress-form]");
+const teacherLinkForm = document.querySelector("[data-teacher-link-form]");
+const teacherAvailabilityForm = document.querySelector("[data-teacher-availability-form]");
+const lessonForm = document.querySelector("[data-lesson-form]");
+const exerciseForm = document.querySelector("[data-exercise-form]");
+const assignmentForm = document.querySelector("[data-assignment-form]");
+const studentGroupForm = document.querySelector("[data-student-group-form]");
+const groupMemberForm = document.querySelector("[data-group-member-form]");
+const adminAccessForm = document.querySelector("[data-admin-access-form]");
 const applicationStatuses = ["new", "reviewing", "accepted", "declined"];
 let activePanel = "booking_requests";
 let supabase;
@@ -152,14 +162,18 @@ async function loadStudents() {
 
 async function loadClassSlots() {
   const programSelect = slotForm.elements.programId;
-  const [programResult, slotsResult] = await Promise.all([
+  const [programResult, slotsResult, teachersResult] = await Promise.all([
     supabase.from("programs").select("id,name,active").order("name"),
     supabase.from("class_slots")
       .select("id,program_id,starts_at,ends_at,capacity,active")
-      .order("starts_at", { ascending: false })
+      .order("starts_at", { ascending: false }),
+    supabase.from("user_roles")
+      .select("user_id, profiles(full_name, email)")
+      .eq("role", "teacher")
   ]);
   if (programResult.error) throw programResult.error;
   if (slotsResult.error) throw slotsResult.error;
+  if (teachersResult.error) throw teachersResult.error;
 
   programSelect.replaceChildren();
   const placeholder = document.createElement("option");
@@ -221,18 +235,22 @@ function optionPlaceholder(select, text) {
 }
 
 async function loadLessonSessions() {
-  const [slotsResult, sessionsResult] = await Promise.all([
+  const [slotsResult, sessionsResult, teachersResult] = await Promise.all([
     supabase.from("class_slots")
       .select("id,program_id,starts_at,ends_at,active,programs(name)")
       .order("starts_at", { ascending: true })
       .limit(500),
     supabase.from("class_sessions")
-      .select("id,class_slot_id,title,description,starts_at,ends_at,meeting_url,status,class_slots(program_id,programs(name))")
+      .select("id,class_slot_id,title,description,starts_at,ends_at,meeting_url,status,teacher_id,class_slots(program_id,programs(name)),teacher_profile:teacher_id(full_name,email)")
       .order("starts_at", { ascending: false })
-      .limit(500)
+      .limit(500),
+    supabase.from("user_roles")
+      .select("user_id, profiles(full_name, email)")
+      .eq("role", "teacher")
   ]);
   if (slotsResult.error) throw slotsResult.error;
   if (sessionsResult.error) throw sessionsResult.error;
+  if (teachersResult.error) throw teachersResult.error;
 
   const slotSelect = sessionForm.elements.classSlotId;
   optionPlaceholder(slotSelect, slotsResult.data.length ? "Select a class slot" : "Create a class slot first");
@@ -247,6 +265,44 @@ async function loadLessonSessions() {
 
   progressSessions = sessionsResult.data;
   const programName = (session) => session.class_slots?.programs?.name || "Program";
+  const sessionsByTeacher = new Map();
+  sessionsResult.data.forEach((session) => {
+    if (!session.teacher_id) return;
+    const list = sessionsByTeacher.get(session.teacher_id) || [];
+    list.push(session);
+    sessionsByTeacher.set(session.teacher_id, list);
+  });
+
+  populateTeacherSelect(sessionForm.elements.teacherId, teachersResult.data);
+  populateTeacherSelect(sessionStudentForm.elements.teacherId, teachersResult.data);
+  populateTeacherSelect(timesheetForm.elements.teacherId, teachersResult.data);
+
+  const updateSessionSelect = (teacherId, select) => {
+    select.replaceChildren();
+    select.append(new Option(teacherId ? "Select a session" : "Select a teacher first", ""));
+    if (!teacherId) return;
+    (sessionsByTeacher.get(teacherId) || []).forEach((session) => {
+      select.append(new Option(`${session.title || "Lesson"} · ${formatDate(session.starts_at)}`, session.id));
+    });
+  };
+  sessionStudentForm.elements.teacherId.addEventListener("change", () => {
+    updateSessionSelect(sessionStudentForm.elements.teacherId.value, sessionStudentForm.elements.sessionId);
+  });
+  timesheetForm.elements.teacherId.addEventListener("change", () => {
+    updateSessionSelect(timesheetForm.elements.teacherId.value, timesheetForm.elements.sessionId);
+  });
+  updateSessionSelect(sessionStudentForm.elements.teacherId.value, sessionStudentForm.elements.sessionId);
+  updateSessionSelect(timesheetForm.elements.teacherId.value, timesheetForm.elements.sessionId);
+
+  const studentResults = await supabase.from("profiles").select("id,full_name,email").order("full_name", { ascending: true });
+  if (studentResults.error) throw studentResults.error;
+  const studentSelect = sessionStudentForm.elements.studentId;
+  studentSelect.replaceChildren();
+  studentSelect.append(new Option("Select a student", ""));
+  studentResults.data.forEach((profile) => {
+    studentSelect.append(new Option(`${profile.full_name || profile.email} (${profile.email})`, profile.id));
+  });
+
   fillTable(
     document.querySelector('[data-table-body="class_sessions"]'),
     sessionsResult.data.map((session) => {
@@ -263,13 +319,14 @@ async function loadLessonSessions() {
       }
       return [
         session.title,
+        session.teacher_profile?.full_name || session.teacher_profile?.email || session.teacher_id || "Unassigned",
         programName(session),
         `${formatDate(session.starts_at)} – ${formatDate(session.ends_at)}`,
         meetingLink,
         statusSelect(session.id, session.status)
       ];
     }),
-    5,
+    6,
     "No lessons scheduled yet. Add a lesson after creating a class slot."
   );
 }
@@ -412,6 +469,342 @@ async function loadNewsletterSubscribers() {
   ]), 3, "No newsletter subscribers yet.");
 }
 
+async function loadTeacherLinks() {
+  const body = document.querySelector('[data-table-body="teacher_students"]');
+  const [teachersResult, studentsResult, linksResult] = await Promise.all([
+    supabase.from("user_roles")
+      .select("user_id, profiles(full_name, email)")
+      .eq("role", "teacher"),
+    supabase.from("profiles")
+      .select("id, full_name, email")
+      .order("full_name", { ascending: true }),
+    supabase.from("teacher_students")
+      .select("teacher_id, student_id, status, started_at, ended_at, teacher_profile:teacher_id(full_name,email), student_profile:student_id(full_name,email)")
+      .order("started_at", { ascending: false })
+  ]);
+  if (teachersResult.error) throw teachersResult.error;
+  if (studentsResult.error) throw studentsResult.error;
+  if (linksResult.error) throw linksResult.error;
+
+  const teacherOptions = teachersResult.data;
+  const studentOptions = studentsResult.data;
+  const teacherSelect = teacherLinkForm.elements.teacherId;
+  const studentSelect = teacherLinkForm.elements.studentId;
+  teacherSelect.replaceChildren();
+  teacherSelect.append(new Option("Select a teacher", ""));
+  teacherOptions.forEach((row) => {
+    const profile = row.profiles;
+    if (!profile) return;
+    teacherSelect.append(new Option(`${profile.full_name || profile.email} (${profile.email || "teacher"})`, row.user_id));
+  });
+
+  studentSelect.replaceChildren();
+  studentSelect.append(new Option("Select a student", ""));
+  studentOptions.forEach((profile) => {
+    studentSelect.append(new Option(`${profile.full_name || profile.email} (${profile.email})`, profile.id));
+  });
+
+  fillTable(body, linksResult.data.map((link) => [
+    link.teacher_profile?.full_name || link.teacher_profile?.email || link.teacher_id,
+    link.student_profile?.full_name || link.student_profile?.email || link.student_id,
+    link.status,
+    formatDate(link.started_at),
+    link.ended_at ? formatDate(link.ended_at) : "—"
+  ]), 5, "No teacher and student links yet.");
+}
+
+async function loadTeacherAvailability() {
+  const body = document.querySelector('[data-table-body="teacher_availability"]');
+  const [teachersResult, availabilityResult] = await Promise.all([
+    supabase.from("user_roles")
+      .select("user_id, profiles(full_name, email)")
+      .eq("role", "teacher"),
+    supabase.from("teacher_availability")
+      .select("id, teacher_id, weekday, starts_at, ends_at, timezone, effective_from, effective_until, teacher_profile:teacher_id(full_name,email)")
+      .order("effective_from", { ascending: false })
+      .limit(500)
+  ]);
+  if (teachersResult.error) throw teachersResult.error;
+  if (availabilityResult.error) throw availabilityResult.error;
+
+  const weekdayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const teacherSelect = teacherAvailabilityForm.elements.teacherId;
+  teacherSelect.replaceChildren();
+  teacherSelect.append(new Option("Select a teacher", ""));
+  teachersResult.data.forEach((row) => {
+    const profile = row.profiles;
+    if (!profile) return;
+    teacherSelect.append(new Option(`${profile.full_name || profile.email} (${profile.email || "teacher"})`, row.user_id));
+  });
+
+  fillTable(body, availabilityResult.data.map((slot) => [
+    slot.teacher_profile?.full_name || slot.teacher_profile?.email || slot.teacher_id,
+    weekdayNames[Number(slot.weekday)] || `Day ${slot.weekday}`,
+    slot.starts_at,
+    slot.ends_at,
+    slot.timezone || "Africa/Casablanca",
+    `${formatDate(slot.effective_from)}${slot.effective_until ? ` → ${formatDate(slot.effective_until)}` : " onward"}`
+  ]), 6, "No teacher availability has been set yet.");
+}
+
+function populateTeacherSelect(select, data, label = "teacher") {
+  select.replaceChildren();
+  select.append(new Option(`Select a ${label}`, ""));
+  data.forEach((row) => {
+    const profile = row.profiles;
+    if (!profile) return;
+    select.append(new Option(`${profile.full_name || profile.email} (${profile.email || label})`, row.user_id));
+  });
+}
+
+function populateSessionSelectForTeacher(select, sessions, teacherId) {
+  select.replaceChildren();
+  select.append(new Option(teacherId ? "Select a session" : "Select a teacher first", ""));
+  sessions.forEach((session) => {
+    const label = `${session.title || "Lesson"} · ${formatDate(session.starts_at)}`;
+    select.append(new Option(label, session.id));
+  });
+}
+
+async function loadLessonLibrary() {
+  const [programsResult, lessonsResult, exercisesResult, teachersResult] = await Promise.all([
+    supabase.from("programs").select("id,name").order("name"),
+    supabase.from("lessons")
+      .select("id,name,level,program_id,estimated_duration_minutes,status,programs(name),created_by")
+      .order("created_at", { ascending: false }),
+    supabase.from("exercises")
+      .select("id,name,lesson_id,status,created_at,lessons(name)")
+      .order("created_at", { ascending: false }),
+    supabase.from("user_roles")
+      .select("user_id, profiles(full_name, email)")
+      .eq("role", "teacher")
+  ]);
+  if (programsResult.error) throw programsResult.error;
+  if (lessonsResult.error) throw lessonsResult.error;
+  if (exercisesResult.error) throw exercisesResult.error;
+  if (teachersResult.error) throw teachersResult.error;
+
+  const lessonSelect = lessonForm.elements.programId;
+  lessonSelect.replaceChildren();
+  lessonSelect.append(new Option("Select a program", ""));
+  programsResult.data.forEach((program) => {
+    const option = document.createElement("option");
+    option.value = program.id;
+    option.textContent = program.name;
+    lessonSelect.append(option);
+  });
+
+  const lessonItems = lessonsResult.data;
+  const lessonOptions = exerciseForm.elements.lessonId;
+  const assignmentItemSelect = assignmentForm.elements.itemId;
+  const assignmentTeacherSelect = assignmentForm.elements.teacherId;
+  const assignmentStudentSelect = assignmentForm.elements.studentId;
+  const assignmentGroupSelect = assignmentForm.elements.groupId;
+
+  lessonOptions.replaceChildren();
+  lessonOptions.append(new Option("Select a lesson", ""));
+  lessonItems.forEach((lesson) => {
+    lessonOptions.append(new Option(`${lesson.name} · ${lesson.level}`, lesson.id));
+  });
+
+  populateTeacherSelect(assignmentTeacherSelect, teachersResult.data);
+  assignmentTeacherSelect.addEventListener("change", async () => {
+    const teacherId = assignmentTeacherSelect.value;
+    assignmentStudentSelect.replaceChildren();
+    assignmentStudentSelect.append(new Option("Optional: direct student assignment", ""));
+    assignmentGroupSelect.replaceChildren();
+    assignmentGroupSelect.append(new Option("Optional: assign to a group", ""));
+    if (!teacherId) return;
+
+    const [studentsResult, groupsResult] = await Promise.all([
+      supabase.from("teacher_students")
+        .select("student_id, student_profile:student_id(full_name,email)")
+        .eq("teacher_id", teacherId)
+        .eq("status", "active"),
+      supabase.from("student_groups")
+        .select("id, name")
+        .eq("teacher_id", teacherId)
+        .order("name", { ascending: true })
+    ]);
+    if (studentsResult.error) throw studentsResult.error;
+    if (groupsResult.error) throw groupsResult.error;
+
+    studentsResult.data.forEach((link) => {
+      const profile = link.student_profile;
+      assignmentStudentSelect.append(new Option(`${profile?.full_name || profile?.email || link.student_id} (${profile?.email || link.student_id})`, link.student_id));
+    });
+    groupsResult.data.forEach((group) => {
+      assignmentGroupSelect.append(new Option(group.name, group.id));
+    });
+  });
+
+  const allLessons = document.querySelector('[data-table-body="lessons"]');
+  fillTable(allLessons, lessonItems.map((lesson) => [
+    lesson.name,
+    lesson.level,
+    lesson.programs?.name || lesson.program_id,
+    `${lesson.estimated_duration_minutes} min`,
+    lesson.status
+  ]), 5, "No lessons have been created yet.");
+
+  const allExercises = document.querySelector('[data-table-body="exercises"]');
+  fillTable(allExercises, exercisesResult.data.map((exercise) => [
+    exercise.lessons?.name || exercise.lesson_id,
+    exercise.name,
+    exercise.status,
+    formatDate(exercise.created_at)
+  ]), 4, "No exercises have been created yet.");
+
+  const assignmentType = assignmentForm.elements.assignmentType.value;
+  const assignmentOptions = assignmentType === "exercise"
+    ? exercisesResult.data.map((exercise) => ({ id: exercise.id, label: `${exercise.lessons?.name || "Lesson"} · ${exercise.name}` }))
+    : lessonItems.map((lesson) => ({ id: lesson.id, label: `${lesson.name} · ${lesson.level}` }));
+  assignmentItemSelect.replaceChildren();
+  assignmentItemSelect.append(new Option("Select an item", ""));
+  assignmentOptions.forEach((option) => assignmentItemSelect.append(new Option(option.label, option.id)));
+  assignmentForm.elements.assignmentType.onchange = () => {
+    const nextType = assignmentForm.elements.assignmentType.value;
+    const items = nextType === "exercise"
+      ? exercisesResult.data.map((exercise) => ({ id: exercise.id, label: `${exercise.lessons?.name || "Lesson"} · ${exercise.name}` }))
+      : lessonItems.map((lesson) => ({ id: lesson.id, label: `${lesson.name} · ${lesson.level}` }));
+    assignmentItemSelect.replaceChildren();
+    assignmentItemSelect.append(new Option("Select an item", ""));
+    items.forEach((item) => assignmentItemSelect.append(new Option(item.label, item.id)));
+  };
+
+  const [lessonAssignmentsResult, exerciseAssignmentsResult] = await Promise.all([
+    supabase.from("assigned_lessons")
+      .select("teacher_id,student_id,lesson_id,status,due_at,teacher_profile:teacher_id(full_name,email),student_profile:student_id(full_name,email),lessons(name)")
+      .order("assigned_at", { ascending: false })
+      .limit(200),
+    supabase.from("assigned_exercises")
+      .select("teacher_id,student_id,exercise_id,status,due_at,teacher_profile:teacher_id(full_name,email),student_profile:student_id(full_name,email),exercises(name)")
+      .order("assigned_at", { ascending: false })
+      .limit(200)
+  ]);
+  if (lessonAssignmentsResult.error) throw lessonAssignmentsResult.error;
+  if (exerciseAssignmentsResult.error) throw exerciseAssignmentsResult.error;
+
+  const assignmentsBody = document.querySelector('[data-table-body="assignments"]');
+  const assignmentRows = [
+    ...lessonAssignmentsResult.data.map((assignment) => [
+      assignment.teacher_profile?.full_name || assignment.teacher_profile?.email || assignment.teacher_id,
+      assignment.student_profile?.full_name || assignment.student_profile?.email || assignment.student_id,
+      "Lesson",
+      assignment.lessons?.name || assignment.lesson_id,
+      assignment.status,
+      assignment.due_at ? formatDate(assignment.due_at) : "—"
+    ]),
+    ...exerciseAssignmentsResult.data.map((assignment) => [
+      assignment.teacher_profile?.full_name || assignment.teacher_profile?.email || assignment.teacher_id,
+      assignment.student_profile?.full_name || assignment.student_profile?.email || assignment.student_id,
+      "Exercise",
+      assignment.exercises?.name || assignment.exercise_id,
+      assignment.status,
+      assignment.due_at ? formatDate(assignment.due_at) : "—"
+    ])
+  ];
+  fillTable(assignmentsBody, assignmentRows, 6, "No assignments have been created yet.");
+}
+
+async function loadStudentGroups() {
+  const body = document.querySelector('[data-table-body="student_groups"]');
+  const [teachersResult, studentsResult, groupsResult, membersResult] = await Promise.all([
+    supabase.from("user_roles")
+      .select("user_id, profiles(full_name, email)")
+      .eq("role", "teacher"),
+    supabase.from("profiles")
+      .select("id, full_name, email")
+      .order("full_name", { ascending: true }),
+    supabase.from("student_groups")
+      .select("id, name, teacher_id, created_at, teacher_profile:teacher_id(full_name,email)")
+      .order("created_at", { ascending: false }),
+    supabase.from("student_group_members")
+      .select("group_id, student_id, student_profile:student_id(full_name,email)")
+  ]);
+  if (teachersResult.error) throw teachersResult.error;
+  if (studentsResult.error) throw studentsResult.error;
+  if (groupsResult.error) throw groupsResult.error;
+  if (membersResult.error) throw membersResult.error;
+
+  const teacherOptions = teachersResult.data;
+  const studentOptions = studentsResult.data;
+  const groupTeacherMap = new Map();
+  teacherOptions.forEach((row) => {
+    if (row.profiles) groupTeacherMap.set(row.user_id, row.profiles);
+  });
+
+  const groupMemberCounts = new Map();
+  membersResult.data.forEach((member) => {
+    groupMemberCounts.set(member.group_id, (groupMemberCounts.get(member.group_id) ?? 0) + 1);
+  });
+
+  const teacherSelects = [studentGroupForm.elements.teacherId, groupMemberForm.elements.teacherId];
+  teacherSelects.forEach((select) => {
+    select.replaceChildren();
+    select.append(new Option("Select a teacher", ""));
+    teacherOptions.forEach((row) => {
+      const profile = row.profiles;
+      if (!profile) return;
+      select.append(new Option(`${profile.full_name || profile.email} (${profile.email || "teacher"})`, row.user_id));
+    });
+  });
+
+  const studentSelect = groupMemberForm.elements.studentId;
+  studentSelect.replaceChildren();
+  studentSelect.append(new Option("Select a student", ""));
+  studentOptions.forEach((profile) => {
+    studentSelect.append(new Option(`${profile.full_name || profile.email} (${profile.email})`, profile.id));
+  });
+
+  const groupSelect = groupMemberForm.elements.groupId;
+  groupSelect.replaceChildren();
+  groupSelect.append(new Option("Select a group", ""));
+  groupsResult.data.forEach((group) => {
+    const label = `${group.name} — ${group.teacher_profile?.full_name || group.teacher_profile?.email || group.teacher_id}`;
+    groupSelect.append(new Option(label, group.id));
+  });
+
+  fillTable(body, groupsResult.data.map((group) => [
+    group.name,
+    group.teacher_profile?.full_name || group.teacher_profile?.email || group.teacher_id,
+    `${groupMemberCounts.get(group.id) ?? 0}`,
+    formatDate(group.created_at)
+  ]), 4, "No student groups yet.");
+}
+
+async function loadAdminAccounts() {
+  const body = document.querySelector('[data-table-body="admin_accounts"]');
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("user_id, role, profiles(full_name, email)")
+    .eq("role", "admin")
+    .order("user_id", { ascending: true });
+  if (error) throw error;
+
+  fillTable(body, data.map((item) => [
+    item.profiles?.full_name || "Administrator",
+    item.profiles?.email || item.user_id,
+    item.role
+  ]), 3, "No administrator accounts yet.");
+
+  const select = adminAccessForm.elements.userId;
+  if (data.length) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "Select a current admin for email updates";
+    select.replaceChildren(option);
+    data.forEach((item) => {
+      const optionNode = document.createElement("option");
+      optionNode.value = item.user_id;
+      optionNode.textContent = item.profiles?.email || item.user_id;
+      select.append(optionNode);
+    });
+  } else {
+    select.replaceChildren();
+  }
+}
+
 const panelLoaders = {
   student_applications: loadStudentApplications,
   teacher_applications: loadTeacherApplications,
@@ -421,7 +814,13 @@ const panelLoaders = {
   booking_requests: loadBookingRequests,
   class_sessions: loadLessonSessions,
   lesson_progress: loadLessonProgress,
-  newsletter_subscribers: loadNewsletterSubscribers
+  newsletter_subscribers: loadNewsletterSubscribers,
+  teacher_students: loadTeacherLinks,
+  teacher_availability: loadTeacherAvailability,
+  lesson_library: loadLessonLibrary,
+  assignments: async () => loadLessonLibrary(),
+  student_groups: loadStudentGroups,
+  admin_access: loadAdminAccounts
 };
 
 async function showPanel(panelName) {
@@ -565,6 +964,7 @@ sessionForm.addEventListener("submit", async (event) => {
 
     const { error } = await supabase.from("class_sessions").insert({
       class_slot_id: sessionForm.elements.classSlotId.value,
+      teacher_id: sessionForm.elements.teacherId.value,
       title: sessionForm.elements.title.value.trim(),
       description: sessionForm.elements.description.value.trim(),
       starts_at: startsAt.toISOString(),
@@ -614,6 +1014,407 @@ progressForm.addEventListener("submit", async (event) => {
     button.disabled = false;
   }
 });
+
+teacherLinkForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = teacherLinkForm.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try {
+    const teacherId = teacherLinkForm.elements.teacherId.value;
+    const studentId = teacherLinkForm.elements.studentId.value;
+    const status = teacherLinkForm.elements.status.value;
+    const endedAtRaw = teacherLinkForm.elements.endedAt.value;
+    const endedAt = status === "ended" && endedAtRaw ? new Date(`${endedAtRaw}T12:00:00Z`).toISOString() : null;
+
+    if (!teacherId || !studentId) throw new Error("Choose both a teacher and a student.");
+
+    const { error } = await supabase.from("teacher_students").upsert({
+      teacher_id: teacherId,
+      student_id: studentId,
+      status,
+      ended_at: endedAt,
+      started_at: new Date().toISOString()
+    }, { onConflict: "teacher_id,student_id" });
+
+    if (error) throw error;
+    teacherLinkForm.reset();
+    teacherLinkForm.elements.status.value = "active";
+    showMessage("Teacher link saved.", "success");
+    await loadTeacherLinks();
+  } catch (error) {
+    showMessage(`Could not save the teacher link: ${error.message}`, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+teacherAvailabilityForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = teacherAvailabilityForm.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try {
+    const teacherId = teacherAvailabilityForm.elements.teacherId.value;
+    const weekday = Number(teacherAvailabilityForm.elements.weekday.value);
+    const startsAt = teacherAvailabilityForm.elements.startsAt.value;
+    const endsAt = teacherAvailabilityForm.elements.endsAt.value;
+    const timezone = teacherAvailabilityForm.elements.timezone.value.trim();
+    const effectiveFrom = teacherAvailabilityForm.elements.effectiveFrom.value;
+    const effectiveUntil = teacherAvailabilityForm.elements.effectiveUntil.value || null;
+
+    if (!teacherId) throw new Error("Choose a teacher.");
+    if (!Number.isInteger(weekday) || weekday < 0 || weekday > 6) throw new Error("Choose a valid weekday.");
+    if (!startsAt || !endsAt) throw new Error("Choose both start and end times.");
+    if (startsAt >= endsAt) throw new Error("The availability end time must be later than the start time.");
+    if (!effectiveFrom) throw new Error("Choose an effective start date.");
+    if (!timezone) throw new Error("Enter a timezone for this availability window.");
+
+    const { error } = await supabase.from("teacher_availability").insert({
+      teacher_id: teacherId,
+      weekday,
+      starts_at: startsAt,
+      ends_at: endsAt,
+      timezone,
+      effective_from: effectiveFrom,
+      effective_until: effectiveUntil
+    });
+
+    if (error) throw error;
+    teacherAvailabilityForm.reset();
+    teacherAvailabilityForm.elements.timezone.value = "Africa/Casablanca";
+    showMessage("Teacher availability saved.", "success");
+    await loadTeacherAvailability();
+  } catch (error) {
+    showMessage(`Could not save teacher availability: ${error.message}`, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+sessionStudentForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = sessionStudentForm.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try {
+    const teacherId = sessionStudentForm.elements.teacherId.value;
+    const sessionId = sessionStudentForm.elements.sessionId.value;
+    const studentId = sessionStudentForm.elements.studentId.value;
+    if (!teacherId || !sessionId || !studentId) throw new Error("Choose a teacher, a session, and a student.");
+
+    const { error } = await supabase.from("class_session_students").upsert({
+      class_session_id: sessionId,
+      student_id: studentId
+    }, { onConflict: "class_session_id,student_id" });
+    if (error) throw error;
+
+    sessionStudentForm.reset();
+    showMessage("Session participant saved.", "success");
+    await loadLessonSessions();
+  } catch (error) {
+    showMessage(`Could not save session participant: ${error.message}`, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+timesheetForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = timesheetForm.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try {
+    const teacherId = timesheetForm.elements.teacherId.value;
+    const sessionId = timesheetForm.elements.sessionId.value;
+    const hoursWorked = Number(timesheetForm.elements.hoursWorked.value);
+    const notes = timesheetForm.elements.notes.value.trim();
+
+    if (!teacherId || !sessionId) throw new Error("Choose a teacher and a session.");
+    if (!Number.isFinite(hoursWorked) || hoursWorked <= 0 || hoursWorked > 24) {
+      throw new Error("Hours worked must be between 0.25 and 24.");
+    }
+
+    const { error } = await supabase.from("teacher_timesheets").insert({
+      teacher_id: teacherId,
+      class_session_id: sessionId,
+      hours_worked: hoursWorked,
+      notes
+    });
+    if (error) throw error;
+
+    timesheetForm.reset();
+    timesheetForm.elements.hoursWorked.value = "1";
+    showMessage("Teacher timesheet saved.", "success");
+  } catch (error) {
+    showMessage(`Could not save teacher timesheet: ${error.message}`, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+lessonForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = lessonForm.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try {
+    const name = lessonForm.elements.name.value.trim();
+    const level = lessonForm.elements.level.value.trim();
+    const programId = lessonForm.elements.programId.value;
+    const description = lessonForm.elements.description.value.trim();
+    const duration = Number(lessonForm.elements.duration.value);
+    if (!name || !level || !programId) throw new Error("Choose a program and fill out the lesson details.");
+    if (!Number.isInteger(duration) || duration < 1 || duration > 1440) {
+      throw new Error("Duration must be between 1 and 1440 minutes.");
+    }
+
+    const user = await supabase.auth.getUser();
+    if (!user.data.user) throw new Error("You must be signed in to create lessons.");
+    const { error } = await supabase.from("lessons").insert({
+      name,
+      level,
+      description,
+      program_id: programId,
+      estimated_duration_minutes: duration,
+      status: "draft",
+      created_by: user.data.user.id
+    });
+    if (error) throw error;
+    lessonForm.reset();
+    lessonForm.elements.duration.value = "45";
+    showMessage("Lesson created.", "success");
+    await loadLessonLibrary();
+  } catch (error) {
+    showMessage(`Could not create the lesson: ${error.message}`, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+exerciseForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = exerciseForm.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try {
+    const lessonId = exerciseForm.elements.lessonId.value;
+    const name = exerciseForm.elements.name.value.trim();
+    const description = exerciseForm.elements.description.value.trim();
+    const contentText = exerciseForm.elements.content.value.trim();
+    if (!lessonId || !name || !contentText) {
+      throw new Error("Choose a lesson, name the exercise, and provide JSON content.");
+    }
+
+    let content;
+    try {
+      content = JSON.parse(contentText);
+    } catch {
+      throw new Error("Exercise content must be valid JSON.");
+    }
+
+    const user = await supabase.auth.getUser();
+    if (!user.data.user) throw new Error("You must be signed in to create exercises.");
+    const { error } = await supabase.from("exercises").insert({
+      lesson_id: lessonId,
+      name,
+      description,
+      content,
+      status: "draft",
+      created_by: user.data.user.id
+    });
+    if (error) throw error;
+    exerciseForm.reset();
+    showMessage("Exercise created.", "success");
+    await loadLessonLibrary();
+  } catch (error) {
+    showMessage(`Could not create the exercise: ${error.message}`, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+assignmentForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = assignmentForm.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try {
+    const teacherId = assignmentForm.elements.teacherId.value;
+    const assignmentType = assignmentForm.elements.assignmentType.value;
+    const itemId = assignmentForm.elements.itemId.value;
+    const studentId = assignmentForm.elements.studentId.value || null;
+    const groupId = assignmentForm.elements.groupId.value || null;
+    const dueAtRaw = assignmentForm.elements.dueAt.value;
+    const dueAt = dueAtRaw ? new Date(`${dueAtRaw}T12:00:00Z`).toISOString() : null;
+
+    if (!teacherId || !itemId) throw new Error("Choose a teacher and an item to assign.");
+    if (!studentId && !groupId) throw new Error("Choose either a student or a group for this assignment.");
+    if (studentId && groupId) throw new Error("Choose either a student or a group, not both.");
+
+    const user = await supabase.auth.getUser();
+    if (!user.data.user) throw new Error("You must be signed in to assign work.");
+
+    if (groupId) {
+      const rpcName = assignmentType === "exercise" ? "assign_exercise_to_group" : "assign_lesson_to_group";
+      const rpcPayload = assignmentType === "exercise"
+        ? { _exercise_id: itemId, _group_id: groupId, _due_at: dueAt }
+        : { _lesson_id: itemId, _group_id: groupId, _due_at: dueAt };
+      const { data, error } = await supabase.rpc(rpcName, rpcPayload);
+      if (error) throw error;
+      assignmentForm.reset();
+      showMessage(`${assignmentType === "exercise" ? "Exercise" : "Lesson"} assigned to group (${data ?? 0} students).`, "success");
+    } else {
+      const payload = assignmentType === "exercise"
+        ? {
+            exercise_id: itemId,
+            teacher_id: teacherId,
+            student_id: studentId,
+            assigned_by: user.data.user.id,
+            due_at: dueAt,
+            status: "assigned"
+          }
+        : {
+            lesson_id: itemId,
+            teacher_id: teacherId,
+            student_id: studentId,
+            assigned_by: user.data.user.id,
+            due_at: dueAt,
+            status: "assigned"
+          };
+      const { error } = await supabase.from(assignmentType === "exercise" ? "assigned_exercises" : "assigned_lessons").insert(payload);
+      if (error) throw error;
+      assignmentForm.reset();
+      showMessage(`${assignmentType === "exercise" ? "Exercise" : "Lesson"} assigned to student.`, "success");
+    }
+
+    await loadLessonLibrary();
+  } catch (error) {
+    showMessage(`Could not assign the item: ${error.message}`, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+studentGroupForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = studentGroupForm.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try {
+    const teacherId = studentGroupForm.elements.teacherId.value;
+    const groupName = studentGroupForm.elements.groupName.value.trim();
+    if (!teacherId || !groupName) throw new Error("Choose a teacher and enter a group name.");
+
+    const { error } = await supabase.from("student_groups").insert({
+      teacher_id: teacherId,
+      name: groupName
+    });
+    if (error) throw error;
+
+    studentGroupForm.reset();
+    showMessage("Student group created.", "success");
+    await loadStudentGroups();
+  } catch (error) {
+    showMessage(`Could not create the student group: ${error.message}`, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+groupMemberForm.elements.teacherId.addEventListener("change", async () => {
+  const teacherId = groupMemberForm.elements.teacherId.value;
+  const groupSelect = groupMemberForm.elements.groupId;
+  groupSelect.replaceChildren();
+  groupSelect.append(new Option("Select a group", ""));
+  if (!teacherId) return;
+
+  const { data, error } = await supabase
+    .from("student_groups")
+    .select("id, name")
+    .eq("teacher_id", teacherId)
+    .order("name", { ascending: true });
+
+  if (error) {
+    showMessage(`Could not load student groups: ${error.message}`, "error");
+    return;
+  }
+
+  data.forEach((group) => groupSelect.append(new Option(group.name, group.id)));
+});
+
+groupMemberForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = groupMemberForm.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try {
+    const teacherId = groupMemberForm.elements.teacherId.value;
+    const groupId = groupMemberForm.elements.groupId.value;
+    const studentId = groupMemberForm.elements.studentId.value;
+    if (!teacherId || !groupId || !studentId) throw new Error("Choose a teacher, group, and student.");
+
+    const { error } = await supabase.from("student_group_members").upsert({
+      group_id: groupId,
+      teacher_id: teacherId,
+      student_id: studentId
+    }, { onConflict: "group_id,student_id" });
+
+    if (error) throw error;
+    groupMemberForm.reset();
+    showMessage("Student added to the group.", "success");
+    await loadStudentGroups();
+  } catch (error) {
+    showMessage(`Could not add the student to the group: ${error.message}`, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+adminAccessForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = adminAccessForm.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try {
+    const action = adminAccessForm.elements.action.value;
+    const payload = {
+      action,
+      email: adminAccessForm.elements.email.value.trim(),
+      userId: adminAccessForm.elements.userId.value.trim(),
+      password: adminAccessForm.elements.password.value.trim(),
+      fullName: adminAccessForm.elements.fullName.value.trim()
+    };
+
+    if (!payload.email) throw new Error("Enter an email address.");
+    if (action === "create-user") {
+      if (payload.password.length < 8) throw new Error("Create a password with at least 8 characters.");
+    } else {
+      if (!payload.userId) throw new Error("Select or enter an admin user ID before updating the email.");
+      delete payload.password;
+    }
+
+    const { data, error } = await supabase.functions.invoke("admin-users", { body: payload });
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+
+    adminAccessForm.reset();
+    showMessage(`Admin account update succeeded for ${data?.user?.email || payload.email}.`, "success");
+    await loadAdminAccounts();
+  } catch (error) {
+    showMessage(`Could not update admin access: ${error.message}`, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+adminAccessForm.elements.action.addEventListener("change", () => {
+  const action = adminAccessForm.elements.action.value;
+  const passwordField = adminAccessForm.elements.password;
+  const userIdField = adminAccessForm.elements.userId;
+  const isCreate = action === "create-user";
+  passwordField.required = isCreate;
+  passwordField.hidden = !isCreate;
+  passwordField.closest("label").hidden = !isCreate;
+  userIdField.required = !isCreate;
+  userIdField.hidden = isCreate;
+  userIdField.closest("label").hidden = isCreate;
+  if (isCreate) {
+    userIdField.value = "";
+  }
+});
+
+adminAccessForm.elements.action.dispatchEvent(new Event("change"));
 
 document.querySelector("[data-sign-out]").addEventListener("click", async (event) => {
   event.currentTarget.disabled = true;

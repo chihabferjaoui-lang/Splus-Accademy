@@ -48,6 +48,12 @@
         <button type="button" data-admin-tab="class_slots" aria-selected="false">Class slots</button>
         <button type="button" data-admin-tab="orders" aria-selected="false">Orders</button>
         <button type="button" data-admin-tab="newsletter_subscribers" aria-selected="false">Newsletter</button>
+        <button type="button" data-admin-tab="teacher_students" aria-selected="false">Teacher links</button>
+        <button type="button" data-admin-tab="teacher_availability" aria-selected="false">Teacher availability</button>
+        <button type="button" data-admin-tab="lesson_library" aria-selected="false">Lesson library</button>
+        <button type="button" data-admin-tab="assignments" aria-selected="false">Assignments</button>
+        <button type="button" data-admin-tab="student_groups" aria-selected="false">Student groups</button>
+        <button type="button" data-admin-tab="admin_access" aria-selected="false">Admin access</button>
       </nav>
 
       <section class="portal-card" data-admin-panel="student_applications" aria-labelledby="student-apps-title">
@@ -112,6 +118,7 @@
         <h2 class="portal-section-title" id="sessions-title">Lessons and schedule</h2>
         <form class="portal-form-grid" data-session-form>
           <label>Class slot<select name="classSlotId" required><option value="">Loading class slots…</option></select></label>
+          <label>Teacher<select name="teacherId" required><option value="">Loading teachers…</option></select></label>
           <label>Lesson title<input name="title" type="text" minlength="2" maxlength="120" required></label>
           <label>Starts at<input name="startsAt" type="datetime-local" required></label>
           <label>Ends at<input name="endsAt" type="datetime-local" required></label>
@@ -119,9 +126,27 @@
           <label>Description<input name="description" type="text" maxlength="2000"></label>
           <button type="submit">Add lesson</button>
         </form>
+
+        <h3 class="portal-section-title">Session roster</h3>
+        <form class="portal-form-grid" data-session-student-form>
+          <label>Teacher<select name="teacherId" required><option value="">Loading teachers…</option></select></label>
+          <label>Session<select name="sessionId" required><option value="">Select a teacher first</option></select></label>
+          <label>Student<select name="studentId" required><option value="">Loading students…</option></select></label>
+          <button type="submit">Add participant</button>
+        </form>
+
+        <h3 class="portal-section-title">Timesheets</h3>
+        <form class="portal-form-grid" data-timesheet-form>
+          <label>Teacher<select name="teacherId" required><option value="">Loading teachers…</option></select></label>
+          <label>Session<select name="sessionId" required><option value="">Select a teacher first</option></select></label>
+          <label>Hours worked<input name="hoursWorked" type="number" min="0.25" max="24" step="0.25" value="1" required></label>
+          <label>Notes<input name="notes" type="text" maxlength="2000" placeholder="Session summary or notes"></label>
+          <button type="submit">Save timesheet</button>
+        </form>
+
         <div class="portal-table-wrap"><table class="portal-table">
-          <thead><tr><th>Lesson</th><th>Program</th><th>Class time</th><th>Meeting link</th><th>Status</th></tr></thead>
-          <tbody data-table-body="class_sessions"><tr><td colspan="5">Loading…</td></tr></tbody>
+          <thead><tr><th>Lesson</th><th>Teacher</th><th>Program</th><th>Class time</th><th>Meeting link</th><th>Status</th></tr></thead>
+          <tbody data-table-body="class_sessions"><tr><td colspan="6">Loading…</td></tr></tbody>
         </table></div>
       </section>
 
@@ -151,6 +176,137 @@
         <div class="portal-table-wrap"><table class="portal-table">
           <thead><tr><th>Email</th><th>Consent recorded</th><th>Unsubscribed</th></tr></thead>
           <tbody data-table-body="newsletter_subscribers"><tr><td colspan="3">Loading…</td></tr></tbody>
+        </table></div>
+      </section>
+
+      <section class="portal-card" data-admin-panel="teacher_students" aria-labelledby="teacher-students-title" hidden>
+        <h2 class="portal-section-title" id="teacher-students-title">Teacher and student links</h2>
+        <form class="portal-form-grid" data-teacher-link-form>
+          <label>Teacher<select name="teacherId" required><option value="">Loading teachers…</option></select></label>
+          <label>Student<select name="studentId" required><option value="">Loading students…</option></select></label>
+          <label>Status<select name="status" required>
+            <option value="active">Active</option>
+            <option value="ended">Ended</option>
+          </select></label>
+          <label>Ended at<input name="endedAt" type="date"></label>
+          <button type="submit">Save teacher link</button>
+        </form>
+        <div class="portal-table-wrap"><table class="portal-table">
+          <thead><tr><th>Teacher</th><th>Student</th><th>Status</th><th>Started</th><th>Ended</th></tr></thead>
+          <tbody data-table-body="teacher_students"><tr><td colspan="5">Loading…</td></tr></tbody>
+        </table></div>
+      </section>
+
+      <section class="portal-card" data-admin-panel="teacher_availability" aria-labelledby="teacher-availability-title" hidden>
+        <h2 class="portal-section-title" id="teacher-availability-title">Teacher availability</h2>
+        <form class="portal-form-grid" data-teacher-availability-form>
+          <label>Teacher<select name="teacherId" required><option value="">Loading teachers…</option></select></label>
+          <label>Weekday<select name="weekday" required>
+            <option value="0">Monday</option>
+            <option value="1">Tuesday</option>
+            <option value="2">Wednesday</option>
+            <option value="3">Thursday</option>
+            <option value="4">Friday</option>
+            <option value="5">Saturday</option>
+            <option value="6">Sunday</option>
+          </select></label>
+          <label>Starts at<input name="startsAt" type="time" required></label>
+          <label>Ends at<input name="endsAt" type="time" required></label>
+          <label>Timezone<input name="timezone" type="text" value="Africa/Casablanca" required></label>
+          <label>Effective from<input name="effectiveFrom" type="date" required></label>
+          <label>Effective until<input name="effectiveUntil" type="date"></label>
+          <button type="submit">Save teacher availability</button>
+        </form>
+        <div class="portal-table-wrap"><table class="portal-table">
+          <thead><tr><th>Teacher</th><th>Weekday</th><th>Starts</th><th>Ends</th><th>Timezone</th><th>Dates</th></tr></thead>
+          <tbody data-table-body="teacher_availability"><tr><td colspan="6">Loading…</td></tr></tbody>
+        </table></div>
+      </section>
+
+      <section class="portal-card" data-admin-panel="lesson_library" aria-labelledby="lesson-library-title" hidden>
+        <h2 class="portal-section-title" id="lesson-library-title">Lesson library</h2>
+        <form class="portal-form-grid" data-lesson-form>
+          <label>Lesson name<input name="name" type="text" maxlength="160" required></label>
+          <label>Level<input name="level" type="text" maxlength="64" required></label>
+          <label>Program<select name="programId" required><option value="">Loading programs…</option></select></label>
+          <label>Estimated duration (minutes)<input name="duration" type="number" min="1" max="1440" value="45" required></label>
+          <label>Description<textarea name="description" rows="4" maxlength="5000"></textarea></label>
+          <button type="submit">Create lesson</button>
+        </form>
+        <div class="portal-table-wrap"><table class="portal-table">
+          <thead><tr><th>Lesson</th><th>Level</th><th>Program</th><th>Duration</th><th>Status</th></tr></thead>
+          <tbody data-table-body="lessons"><tr><td colspan="5">Loading…</td></tr></tbody>
+        </table></div>
+
+        <form class="portal-form-grid" data-exercise-form>
+          <label>Lesson<select name="lessonId" required><option value="">Loading lessons…</option></select></label>
+          <label>Exercise name<input name="name" type="text" maxlength="160" required></label>
+          <label>Exercise content JSON<textarea name="content" rows="6" placeholder='{ "prompt": "..." }' required></textarea></label>
+          <label>Description<textarea name="description" rows="4" maxlength="5000"></textarea></label>
+          <button type="submit">Create exercise</button>
+        </form>
+        <div class="portal-table-wrap"><table class="portal-table">
+          <thead><tr><th>Lesson</th><th>Exercise</th><th>Published</th><th>Created</th></tr></thead>
+          <tbody data-table-body="exercises"><tr><td colspan="4">Loading…</td></tr></tbody>
+        </table></div>
+      </section>
+
+      <section class="portal-card" data-admin-panel="assignments" aria-labelledby="assignments-panel-title" hidden>
+        <h2 class="portal-section-title" id="assignments-panel-title">Assignments</h2>
+        <form class="portal-form-grid" data-assignment-form>
+          <label>Teacher<select name="teacherId" required><option value="">Loading teachers…</option></select></label>
+          <label>Assignment type<select name="assignmentType" required>
+            <option value="lesson">Lesson</option>
+            <option value="exercise">Exercise</option>
+          </select></label>
+          <label>Lesson or exercise<select name="itemId" required><option value="">Select a type first</option></select></label>
+          <label>Student<select name="studentId"><option value="">Optional: direct student assignment</option></select></label>
+          <label>Group<select name="groupId"><option value="">Optional: assign to a group</option></select></label>
+          <label>Due date<input name="dueAt" type="date"></label>
+          <button type="submit">Assign work</button>
+        </form>
+        <div class="portal-table-wrap"><table class="portal-table">
+          <thead><tr><th>Teacher</th><th>Student</th><th>Type</th><th>Item</th><th>Status</th><th>Due</th></tr></thead>
+          <tbody data-table-body="assignments"><tr><td colspan="6">Loading…</td></tr></tbody>
+        </table></div>
+      </section>
+
+      <section class="portal-card" data-admin-panel="student_groups" aria-labelledby="student-groups-title" hidden>
+        <h2 class="portal-section-title" id="student-groups-title">Student groups</h2>
+        <form class="portal-form-grid" data-student-group-form>
+          <label>Teacher<select name="teacherId" required><option value="">Loading teachers…</option></select></label>
+          <label>Group name<input name="groupName" type="text" maxlength="120" placeholder="e.g. Upper Intermediate" required></label>
+          <button type="submit">Create group</button>
+        </form>
+        <form class="portal-form-grid" data-group-member-form>
+          <label>Teacher<select name="teacherId" required><option value="">Loading teachers…</option></select></label>
+          <label>Group<select name="groupId" required><option value="">Select a teacher first</option></select></label>
+          <label>Student<select name="studentId" required><option value="">Loading students…</option></select></label>
+          <button type="submit">Add student to group</button>
+        </form>
+        <div class="portal-table-wrap"><table class="portal-table">
+          <thead><tr><th>Group</th><th>Teacher</th><th>Students</th><th>Created</th></tr></thead>
+          <tbody data-table-body="student_groups"><tr><td colspan="4">Loading…</td></tr></tbody>
+        </table></div>
+      </section>
+
+      <section class="portal-card" data-admin-panel="admin_access" aria-labelledby="admin-access-title" hidden>
+        <h2 class="portal-section-title" id="admin-access-title">Admin access</h2>
+        <p class="portal-note">Create or update administrator accounts through the trusted server-side admin function. Do not store a password in the client code.</p>
+        <form class="portal-form-grid" data-admin-access-form>
+          <label>Action<select name="action" required>
+            <option value="create-user">Create admin user</option>
+            <option value="update-email">Update admin email</option>
+          </select></label>
+          <label>Account email<input name="email" type="email" placeholder="admin@example.com" required></label>
+          <label>Admin user ID<input name="userId" type="text" placeholder="Required only for email updates"></label>
+          <label>Password (create only)<input name="password" type="password" minlength="8" maxlength="128" placeholder="At least 8 characters"></label>
+          <label>Full name<input name="fullName" type="text" maxlength="120" placeholder="Optional for new admin"></label>
+          <button type="submit">Apply admin action</button>
+        </form>
+        <div class="portal-table-wrap"><table class="portal-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+          <tbody data-table-body="admin_accounts"><tr><td colspan="3">Loading…</td></tr></tbody>
         </table></div>
       </section>
     </div>
