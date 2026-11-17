@@ -250,6 +250,25 @@ body.admin-body {
   background: var(--admin-primary-light);
 }
 
+.btn-admin-danger {
+  background: #ffffff;
+  color: var(--admin-danger);
+  border: 1.5px solid var(--admin-danger);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-admin-danger:hover {
+  background: var(--admin-danger-bg);
+}
+
 .btn-full {
   width: 100%;
 }
@@ -442,6 +461,31 @@ body.admin-body {
   margin-bottom: 10px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.02);
   transition: transform 0.1s, box-shadow 0.1s;
+  position: relative;
+}
+
+.session-chip-delete {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 4px;
+  display: none;
+}
+
+.kronos-session-card:hover .session-chip-delete {
+  display: block;
+}
+
+.session-chip-delete:hover {
+  color: var(--admin-danger);
+  background: #fee2e2;
 }
 
 .kronos-session-card:hover {
@@ -589,6 +633,40 @@ body.admin-body {
   background: #fee8e6;
   color: #b91c1c;
   border: 1px solid #fecaca;
+}
+
+.editable-field {
+  outline: none;
+  border-radius: 3px;
+  padding: 1px 4px;
+  transition: background 0.15s, box-shadow 0.15s;
+  cursor: text;
+}
+
+.editable-field:hover {
+  background: #f1f5f9;
+}
+
+.editable-field:focus {
+  background: #ffffff;
+  box-shadow: 0 0 0 2px #4f46e5;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printableInvoiceArea, #printableInvoiceArea * {
+    visibility: visible;
+  }
+  #printableInvoiceArea {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 24px !important;
+  }
 }
 
 /* Modals */

@@ -275,12 +275,27 @@ function renderKronos() {
     const container = document.querySelector(`[data-kronos-day="${day}"]`);
     if (!container) return;
     const items = SAMPLE_DATA.kronos_week[day] || [];
-    container.innerHTML = items.map(item => `
+    container.innerHTML = items.map((item, idx) => `
       <div class="kronos-session-card ${item.pending ? 'is-pending' : ''}">
+        <button type="button" class="session-chip-delete" data-delete-day="${day}" data-delete-idx="${idx}" title="Delete session">&times;</button>
         <div class="kronos-session-time">${item.time}</div>
         <div class="kronos-session-info">${item.desc}</div>
       </div>
     `).join("");
+  });
+
+  // Attach delete session listeners
+  document.querySelectorAll("[data-delete-day]").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const d = btn.dataset.deleteDay;
+      const i = Number(btn.dataset.deleteIdx);
+      if (SAMPLE_DATA.kronos_week[d]) {
+        const removed = SAMPLE_DATA.kronos_week[d].splice(i, 1)[0];
+        renderKronos();
+        showToast(`Session (${removed.time} - ${removed.desc}) deleted from schedule.`, "success");
+      }
+    });
   });
 }
 
@@ -548,6 +563,69 @@ function setupEvents() {
     });
   }
 
+  // Delete invoice action
+  const btnDeleteInvoice = document.getElementById("btnDeleteInvoice");
+  if (btnDeleteInvoice) {
+    btnDeleteInvoice.addEventListener("click", () => {
+      if (!selectedEraInvoice) return;
+      const id = selectedEraInvoice.id;
+      const idx = SAMPLE_DATA.era_invoices.findIndex(inv => inv.id === id);
+      if (idx !== -1) {
+        SAMPLE_DATA.era_invoices.splice(idx, 1);
+        selectedEraInvoice = SAMPLE_DATA.era_invoices[0] || null;
+        renderEra();
+        renderOverview();
+        showToast(`Invoice ${id} has been deleted.`, "success");
+      }
+    });
+  }
+
+  // Delete lesson action
+  const btnDeleteLesson = document.getElementById("btnDeleteLesson");
+  if (btnDeleteLesson) {
+    btnDeleteLesson.addEventListener("click", () => {
+      if (!selectedGeniusLesson) return;
+      const title = selectedGeniusLesson.title;
+      const idx = SAMPLE_DATA.genius_lessons.findIndex(l => l.title === title);
+      if (idx !== -1) {
+        SAMPLE_DATA.genius_lessons.splice(idx, 1);
+        selectedGeniusLesson = SAMPLE_DATA.genius_lessons[0] || null;
+        renderGenius();
+        showToast(`Lesson "${title}" has been deleted.`, "success");
+      }
+    });
+  }
+
+  // View / Edit Official Arabic Invoice (فاتورة)
+  const btnViewArabicInvoice = document.getElementById("btnViewArabicInvoice");
+  if (btnViewArabicInvoice) {
+    btnViewArabicInvoice.addEventListener("click", () => {
+      if (!selectedEraInvoice) return;
+      populateArabicInvoiceModal(selectedEraInvoice);
+      openModal("modalArabicInvoice");
+    });
+  }
+
+  // Auto-calculation listeners for editable Arabic invoice
+  const itemQty = document.getElementById("invItemQty");
+  const itemRate = document.getElementById("invItemRate");
+  const itemTotal = document.getElementById("invItemTotal");
+  const amountDue = document.getElementById("invModalAmountDue");
+  const summarySubtotal = document.getElementById("invSummarySubtotal");
+
+  function recalcInvoice() {
+    if (!itemQty || !itemRate || !itemTotal) return;
+    const q = parseFloat(itemQty.textContent.replace(/,/g, ".")) || 0;
+    const r = parseFloat(itemRate.textContent.replace(/,/g, ".")) || 0;
+    const tot = (q * r).toFixed(2).replace(/\./g, ",");
+    itemTotal.textContent = tot;
+    if (amountDue) amountDue.textContent = tot;
+    if (summarySubtotal) summarySubtotal.textContent = tot;
+  }
+
+  if (itemQty) itemQty.addEventListener("input", recalcInvoice);
+  if (itemRate) itemRate.addEventListener("input", recalcInvoice);
+
   // Modal open buttons
   document.querySelectorAll("[data-modal-open]").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -672,6 +750,38 @@ function openModal(id) {
 function closeModal(id) {
   const el = document.getElementById(id);
   if (el) el.hidden = true;
+}
+
+function populateArabicInvoiceModal(inv) {
+  const modalId = document.getElementById("invModalId");
+  const modalDate = document.getElementById("invModalDate");
+  const modalDueDate = document.getElementById("invModalDueDate");
+  const modalBalance = document.getElementById("invModalBalance");
+  const modalAmountDue = document.getElementById("invModalAmountDue");
+  const modalStudent = document.getElementById("invModalStudent");
+  const modalProgName = document.getElementById("invModalProgName");
+  const itemQty = document.getElementById("invItemQty");
+  const itemRate = document.getElementById("invItemRate");
+  const itemTotal = document.getElementById("invItemTotal");
+  const summarySubtotal = document.getElementById("invSummarySubtotal");
+  const summaryPaid = document.getElementById("invSummaryPaid");
+
+  const todayStr = new Date().toLocaleDateString('fr-FR');
+  if (modalId) modalId.textContent = inv.id;
+  if (modalDate) modalDate.textContent = todayStr;
+  if (modalDueDate) modalDueDate.textContent = inv.due || "25/11/2026";
+  if (modalBalance) modalBalance.textContent = inv.status === 'Paid' ? "0,00 MAD" : `${inv.mad},00 MAD`;
+  if (modalAmountDue) modalAmountDue.textContent = `${inv.mad},00`;
+  if (modalStudent) modalStudent.textContent = inv.name;
+  if (modalProgName) modalProgName.textContent = `دورة اللغة الإنجليزية (${inv.program})`;
+
+  const sessions = 8;
+  const rate = (inv.mad / sessions).toFixed(2).replace(/\./g, ",");
+  if (itemQty) itemQty.textContent = sessions;
+  if (itemRate) itemRate.textContent = rate;
+  if (itemTotal) itemTotal.textContent = `${inv.mad},00`;
+  if (summarySubtotal) summarySubtotal.textContent = `${inv.mad},00`;
+  if (summaryPaid) summaryPaid.textContent = inv.status === 'Paid' ? `${inv.mad},00` : `0,00`;
 }
 
 // Try connecting to live Supabase backend if user is authenticated

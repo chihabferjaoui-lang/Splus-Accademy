@@ -243,7 +243,10 @@
               <div class="genius-preview-meta" id="geniusPreviewMeta">About 45 min · due Fri 20 Nov</div>
             </div>
 
-            <button type="button" class="btn-admin-primary btn-full" id="btnPushLesson">Push lesson</button>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <button type="button" class="btn-admin-primary btn-full" id="btnPushLesson">Push lesson</button>
+              <button type="button" class="btn-admin-danger btn-full" id="btnDeleteLesson">Delete lesson</button>
+            </div>
           </div>
         </div>
       </section>
@@ -322,6 +325,8 @@
             <div style="display: flex; flex-direction: column; gap: 10px;">
               <button type="button" class="btn-admin-primary btn-full" id="btnRecordPayment">Record payment</button>
               <button type="button" class="btn-admin-outline btn-full" id="btnSendReminder">Send reminder</button>
+              <button type="button" class="btn-admin-primary btn-full" id="btnViewArabicInvoice" style="background: #117a4d; border-color: #117a4d;">View / Edit Invoice (فاتورة)</button>
+              <button type="button" class="btn-admin-danger btn-full" id="btnDeleteInvoice">Delete invoice</button>
             </div>
           </div>
         </div>
@@ -616,6 +621,131 @@
         </div>
         <button type="submit" class="btn-admin-primary btn-full" style="margin-top: 10px;">Generate Invoice</button>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal: Official Arabic Invoice Template (فاتورة) -->
+  <div class="admin-modal-backdrop" id="modalArabicInvoice" hidden>
+    <div class="admin-modal-card" style="width: min(840px, calc(100% - 32px)); max-height: 95vh; padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+      <!-- Modal Header / Actions -->
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <span style="font-weight: 750; color: #1e293b; font-size: 16px;">نموذج فاتورة رسمية (Editable Official Invoice)</span>
+          <span style="font-size: 12px; color: #64748b;">(انقر على أي نص أو رقم لتعديله مباشرة)</span>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <button type="button" class="btn-admin-primary" style="padding: 7px 16px; font-size: 13px;" onclick="window.print()">طباعة / Print PDF</button>
+          <button type="button" class="admin-modal-close" data-modal-close style="font-size: 24px;">&times;</button>
+        </div>
+      </div>
+
+      <!-- Printable Invoice Sheet -->
+      <div id="printableInvoiceArea" class="arabic-invoice-sheet" dir="rtl" style="padding: 36px 44px; background: #ffffff; overflow-y: auto; font-family: 'Segoe UI', Tahoma, Arial, sans-serif; color: #1e293b;">
+        <!-- Top Row -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+          <!-- Brand Logo -->
+          <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-start;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="background: linear-gradient(135deg, #7c3aed, #4f46e5); color: #fff; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 850; font-size: 22px;">
+                S+
+              </div>
+              <div>
+                <div style="font-weight: 800; font-size: 19px; color: #3b28cc;">S+ English Course</div>
+                <div style="font-size: 11px; color: #64748b;">Elite Online Academy</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Invoice Details -->
+          <div style="text-align: left; min-width: 270px;">
+            <div style="font-size: 22px; font-weight: 800; color: #1e293b; margin-bottom: 12px;">
+              فاتورة # <span contenteditable="true" id="invModalId" class="editable-field">INV-0042</span>
+            </div>
+            <table style="width: 100%; font-size: 13px; text-align: left; border-collapse: collapse;">
+              <tr>
+                <td style="color: #64748b; padding: 4px 0;">تاريخ الدفع:</td>
+                <td style="font-weight: 600; text-align: left; padding: 4px 0;"><span contenteditable="true" id="invModalDate" class="editable-field">12/11/2026</span></td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; padding: 4px 0;">آخر موعد للدفع:</td>
+                <td style="font-weight: 600; text-align: left; padding: 4px 0;"><span contenteditable="true" id="invModalDueDate" class="editable-field">19/11/2026</span></td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; padding: 4px 0;">الرصيد المستحق:</td>
+                <td style="font-weight: 600; text-align: left; padding: 4px 0;"><span contenteditable="true" id="invModalBalance" class="editable-field">0.00 MAD</span></td>
+              </tr>
+            </table>
+            <div style="background: #f1f3f7; padding: 8px 12px; border-radius: 6px; margin-top: 8px; display: flex; justify-content: space-between; font-weight: 800; font-size: 15px;">
+              <span>المبلغ الواجب دفعه:</span>
+              <span><span contenteditable="true" id="invModalAmountDue" class="editable-field">800,00</span> MAD</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Student Name -->
+        <div style="margin-bottom: 24px; padding-bottom: 14px; border-bottom: 1px solid #e2e8f0;">
+          <span style="font-size: 14px; color: #64748b;">اسم المستخدم: </span>
+          <span contenteditable="true" id="invModalStudent" class="editable-field" style="font-size: 16px; font-weight: 750; color: #0f172a; border-bottom: 1px dashed #cbd5e1; padding: 0 8px;">Sara B.</span>
+        </div>
+
+        <!-- Items Table -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 14px;">
+          <thead>
+            <tr style="background: #232838; color: #ffffff;">
+              <th style="padding: 10px 14px; text-align: right; border-radius: 6px 0 0 6px;">دورة اللغة الإنجليزية</th>
+              <th style="padding: 10px 14px; text-align: center;">عدد الحصص</th>
+              <th style="padding: 10px 14px; text-align: center;">سعر الحصة</th>
+              <th style="padding: 10px 14px; text-align: left; border-radius: 0 6px 6px 0;">المستحقات</th>
+            </tr>
+          </thead>
+          <tbody id="invModalTableBody">
+            <tr style="border-bottom: 1px solid #e2e8f0;">
+              <td style="padding: 12px 14px; font-weight: 600;"><span contenteditable="true" id="invModalProgName" class="editable-field">دورة اللغة الإنجليزية (Business English)</span></td>
+              <td style="padding: 12px 14px; text-align: center;"><span contenteditable="true" id="invItemQty" class="editable-field">8</span></td>
+              <td style="padding: 12px 14px; text-align: center;"><span contenteditable="true" id="invItemRate" class="editable-field">100,00</span> MAD</td>
+              <td style="padding: 12px 14px; text-align: left; font-weight: 700;"><span contenteditable="true" id="invItemTotal" class="editable-field">800,00</span> MAD</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Summary -->
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 24px;">
+          <div style="width: 250px; font-size: 14px;">
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e2e8f0;">
+              <span style="color: #64748b;">المجموع:</span>
+              <span style="font-weight: 700;"><span contenteditable="true" id="invSummarySubtotal" class="editable-field">800,00</span> MAD</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 2px solid #0f172a;">
+              <span style="color: #64748b;">المبلغ المدفوع:</span>
+              <span style="font-weight: 700; color: #107548;"><span contenteditable="true" id="invSummaryPaid" class="editable-field">800,00</span> MAD</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes and Circular Stamp -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 20px;">
+          <div style="flex: 1; font-size: 12px; color: #475569; line-height: 1.8;">
+            <div style="font-weight: 700; font-size: 13px; color: #1e293b; margin-bottom: 4px;">ملحوظات:</div>
+            <div contenteditable="true" class="editable-field" style="white-space: pre-line;">
+.شكرا لاختياركم خدمتنا.
+.نحن نهتم بجودة التعلم الذي تحصلون عليه ونستثمر فيه.
+بالنسبة لبعض المنتجات / الخدمات ، سيطلب مزود الخدمة دفعة مقدما / أو دفعة يتم تحصيلها أثناء تجربة التعلم الخاصة بكم.
+إذا كنتم تعتقدون أنكم لن تصلوا في الوقت المحدد ، فيرجى الاتصال بمزود الخدمة الخاص بكم وإبلاغه بوقت وصولكم.
+في حالة وجود أي استفسارات ، يرجى الاتصال بنا على 0608782672
+يتم تغطية غياب الطالب في حالة وجود اتفاق بين الطرفين أو في حالة مرض الطالب
+            </div>
+          </div>
+
+          <!-- Stamp / Seal -->
+          <div style="flex-shrink: 0; text-align: center;">
+            <div style="width: 100px; height: 100px; border: 2.5px dashed #1e293b; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px; transform: rotate(-5deg); color: #1e293b;">
+              <span style="font-size: 8px; font-weight: 750; letter-spacing: 0.05em;">SINCE 2022</span>
+              <span style="font-size: 11px; font-weight: 900; background: #1e293b; color: #ffffff; padding: 1px 7px; border-radius: 3px; margin: 2px 0;">S+ ENGLISH</span>
+              <span style="font-size: 7.5px; font-weight: 750; letter-spacing: 0.05em;">YOUR FIRST CHOICE</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
