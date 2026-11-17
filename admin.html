@@ -7,310 +7,617 @@
   <meta name="description" content="S+ Academy administrator workspace.">
   <title>Admin Workspace | S+ Academy</title>
   <link rel="stylesheet" href="css/portal.css">
+  <link rel="stylesheet" href="css/admin-workspace.css">
 </head>
-<body>
-  <header class="portal-header">
-    <a class="portal-brand" href="index.html">
-      <img src="assets/logo.png" alt="">
-      <span>S+ Academy Admin</span>
-    </a>
-    <nav class="portal-header-links" aria-label="Admin navigation">
-      <span class="portal-user-email" data-user-email></span>
-      <button type="button" class="portal-button-secondary" data-sign-out>Sign out</button>
-    </nav>
-  </header>
+<body class="admin-body">
+  <div class="admin-shell">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" aria-label="Admin sidebar">
+      <a class="admin-sidebar-brand" href="index.html">
+        <span>S+ Academy</span>
+      </a>
 
-  <main class="portal-shell">
-    <h1 class="portal-heading">Admin workspace</h1>
-    <p class="portal-subtitle">Monitor student activity, bookings, lessons, applications, and academy operations.</p>
-    <div class="portal-message" data-portal-message role="status" aria-live="polite"></div>
-    <p class="portal-loading" data-loading>Verifying administrator access…</p>
+      <nav class="admin-nav-container" aria-label="Main modules">
+        <button type="button" class="admin-nav-btn active" data-nav-target="overview">Overview</button>
 
-    <div class="portal-dashboard" data-admin-dashboard hidden>
-      <section class="portal-stats" aria-label="Record totals">
-        <div class="portal-stat"><strong data-stat="students">—</strong><span>Student accounts</span></div>
-        <div class="portal-stat"><strong data-stat="bookings">—</strong><span>Current booking requests</span></div>
-        <div class="portal-stat"><strong data-stat="memberships">—</strong><span>Active enrollments</span></div>
-        <div class="portal-stat"><strong data-stat="upcoming_lessons">—</strong><span>Upcoming lessons</span></div>
-        <div class="portal-stat"><strong data-stat="student_applications">—</strong><span>Student applications</span></div>
-        <div class="portal-stat"><strong data-stat="teacher_applications">—</strong><span>Teacher applications</span></div>
-        <div class="portal-stat"><strong data-stat="paid_revenue">—</strong><span>Recorded paid revenue (MAD)</span></div>
-        <div class="portal-stat"><strong data-stat="newsletter_subscribers">—</strong><span>Active subscribers</span></div>
-      </section>
+        <div class="admin-nav-group-title">MODULES</div>
+        <button type="button" class="admin-nav-btn" data-nav-target="customers">Customers</button>
+        <button type="button" class="admin-nav-btn" data-nav-target="era">Era</button>
+        <button type="button" class="admin-nav-btn" data-nav-target="kronos">Kronos</button>
+        <button type="button" class="admin-nav-btn" data-nav-target="genius">Genius · Lessons</button>
+        <button type="button" class="admin-nav-btn" data-nav-target="notifications">Notifications</button>
 
-      <nav class="portal-tabs" aria-label="Admin data sections">
-        <button type="button" data-admin-tab="booking_requests" aria-selected="true">Booking requests</button>
-        <button type="button" data-admin-tab="class_sessions" aria-selected="false">Lessons</button>
-        <button type="button" data-admin-tab="lesson_progress" aria-selected="false">Student progress</button>
-        <button type="button" data-admin-tab="student_applications" aria-selected="false">Student applications</button>
-        <button type="button" data-admin-tab="teacher_applications" aria-selected="false">Teacher applications</button>
-        <button type="button" data-admin-tab="profiles" aria-selected="false">Students</button>
-        <button type="button" data-admin-tab="class_slots" aria-selected="false">Class slots</button>
-        <button type="button" data-admin-tab="orders" aria-selected="false">Orders</button>
-        <button type="button" data-admin-tab="newsletter_subscribers" aria-selected="false">Newsletter</button>
-        <button type="button" data-admin-tab="teacher_students" aria-selected="false">Teacher links</button>
-        <button type="button" data-admin-tab="teacher_availability" aria-selected="false">Teacher availability</button>
-        <button type="button" data-admin-tab="lesson_library" aria-selected="false">Lesson library</button>
-        <button type="button" data-admin-tab="assignments" aria-selected="false">Assignments</button>
-        <button type="button" data-admin-tab="student_groups" aria-selected="false">Student groups</button>
-        <button type="button" data-admin-tab="admin_access" aria-selected="false">Admin access</button>
+        <div class="admin-nav-group-title">ACADEMY</div>
+        <button type="button" class="admin-nav-btn" data-nav-target="applications">Applications</button>
+        <button type="button" class="admin-nav-btn" data-nav-target="class_slots">Class slots</button>
+        <button type="button" class="admin-nav-btn" data-nav-target="newsletter">Newsletter</button>
       </nav>
 
-      <section class="portal-card" data-admin-panel="student_applications" aria-labelledby="student-apps-title">
-        <h2 class="portal-section-title" id="student-apps-title">Student applications</h2>
-        <div class="portal-table-wrap"><table class="portal-table">
-          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Program</th><th>Level</th><th>Schedule / goals</th><th>Status</th><th>Submitted</th></tr></thead>
-          <tbody data-table-body="student_applications"><tr><td colspan="8">Loading…</td></tr></tbody>
-        </table></div>
+      <div class="admin-sidebar-footer">
+        <div class="admin-user-pill" data-user-email>admin@splusacademy.com</div>
+        <button type="button" class="admin-signout-btn" data-sign-out>Sign out</button>
+      </div>
+    </aside>
+
+    <!-- Main Workspace Content -->
+    <main class="admin-main">
+      <div class="admin-toast-message" data-portal-message role="status" aria-live="polite"></div>
+
+      <!-- VIEW 1: OVERVIEW -->
+      <section class="admin-view-panel" data-admin-panel="overview">
+        <header class="admin-view-header">
+          <div class="admin-view-titles">
+            <h1>Admin workspace</h1>
+            <p>Students, invoices, schedule and lessons in one place.</p>
+          </div>
+          <div class="admin-view-actions">
+            <button type="button" class="btn-sample-toggle active" data-toggle-sample>Sample data</button>
+          </div>
+        </header>
+
+        <div class="admin-stats-row">
+          <div class="admin-stat-card">
+            <div class="stat-val" data-stat="active_students">42</div>
+            <div class="stat-lbl">Active students</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-val" data-stat="overdue_invoices">3</div>
+            <div class="stat-lbl">Overdue invoices</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-val" data-stat="sessions_today">6</div>
+            <div class="stat-lbl">Sessions today</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-val" data-stat="lessons_week">28</div>
+            <div class="stat-lbl">Lessons pushed this week</div>
+          </div>
+        </div>
+
+        <div class="grid-2col-50-50">
+          <!-- Today's Sessions (Kronos) -->
+          <div class="admin-card">
+            <h2 class="admin-card-title">Today's sessions (Kronos)</h2>
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Student</th>
+                    <th>Teacher</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody data-tbody="overview_sessions">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Invoices Needing Attention (Era) -->
+          <div class="admin-card">
+            <h2 class="admin-card-title">Invoices needing attention (Era)</h2>
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Invoice</th>
+                    <th>Customer</th>
+                    <th>MAD</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody data-tbody="overview_invoices">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <section class="portal-card" data-admin-panel="teacher_applications" aria-labelledby="teacher-apps-title" hidden>
-        <h2 class="portal-section-title" id="teacher-apps-title">Teacher applications</h2>
-        <div class="portal-table-wrap"><table class="portal-table">
-          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Country</th><th>Experience / certification</th><th>Specialization</th><th>Availability / motivation</th><th>Status</th><th>Submitted</th></tr></thead>
-          <tbody data-table-body="teacher_applications"><tr><td colspan="9">Loading…</td></tr></tbody>
-        </table></div>
+      <!-- VIEW 2: KRONOS -->
+      <section class="admin-view-panel" data-admin-panel="kronos" hidden>
+        <header class="admin-view-header">
+          <div class="admin-view-titles">
+            <h1>Schedule</h1>
+            <p>Week of 16 to 20 November. Students see their own sessions on their dashboard.</p>
+          </div>
+          <div class="admin-view-actions">
+            <button type="button" class="btn-sample-toggle active" data-toggle-sample>Sample data</button>
+            <button type="button" class="btn-admin-primary" data-modal-open="book_session">Book session</button>
+          </div>
+        </header>
+
+        <div class="grid-2col-70-30">
+          <!-- Calendar columns Mon-Fri -->
+          <div class="admin-card">
+            <div class="kronos-week-calendar" id="kronosWeekGrid">
+              <!-- Monday -->
+              <div class="kronos-day-col">
+                <div class="kronos-day-header">Mon 16</div>
+                <div class="kronos-day-sessions" data-kronos-day="mon"></div>
+              </div>
+              <!-- Tuesday (Today) -->
+              <div class="kronos-day-col col-today">
+                <div class="kronos-day-header">Tue 17 <span class="today-badge">(today)</span></div>
+                <div class="kronos-day-sessions" data-kronos-day="tue"></div>
+              </div>
+              <!-- Wednesday -->
+              <div class="kronos-day-col">
+                <div class="kronos-day-header">Wed 18</div>
+                <div class="kronos-day-sessions" data-kronos-day="wed"></div>
+              </div>
+              <!-- Thursday -->
+              <div class="kronos-day-col">
+                <div class="kronos-day-header">Thu 19</div>
+                <div class="kronos-day-sessions" data-kronos-day="thu"></div>
+              </div>
+              <!-- Friday -->
+              <div class="kronos-day-col">
+                <div class="kronos-day-header">Fri 20</div>
+                <div class="kronos-day-sessions" data-kronos-day="fri"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Teacher hours & Availability -->
+          <div class="admin-card">
+            <h2 class="admin-card-title">Teacher hours</h2>
+            <div style="font-weight: 650; font-size: 14.5px; margin-bottom: 2px;">Chihab · 14.5 h this week</div>
+            <div class="admin-progress-track">
+              <div class="admin-progress-fill" style="width: 72%;"></div>
+            </div>
+            <p style="font-size: 13px; color: var(--admin-muted); margin: 0 0 24px;">3 sessions waiting for approval</p>
+
+            <h2 class="admin-card-title" style="margin-top: 10px;">Availability</h2>
+            <div style="font-size: 14px; font-weight: 500; margin-bottom: 6px;">Mon to Fri, 09:00 to 18:00</div>
+            <p style="font-size: 13px; color: var(--admin-muted); margin: 0 0 26px;">Double bookings are blocked automatically.</p>
+
+            <button type="button" class="btn-admin-primary btn-full" id="btnApproveTimesheet">Approve timesheet</button>
+          </div>
+        </div>
       </section>
 
-      <section class="portal-card" data-admin-panel="profiles" aria-labelledby="students-title" hidden>
-        <h2 class="portal-section-title" id="students-title">Student accounts</h2>
-        <div class="portal-table-wrap"><table class="portal-table">
-          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Account created</th></tr></thead>
-          <tbody data-table-body="profiles"><tr><td colspan="4">Loading…</td></tr></tbody>
-        </table></div>
+      <!-- VIEW 3: GENIUS · LESSONS -->
+      <section class="admin-view-panel" data-admin-panel="genius" hidden>
+        <header class="admin-view-header">
+          <div class="admin-view-titles">
+            <h1>Lesson library</h1>
+            <p>Admins build lessons here. Teachers pick one and push it to their students.</p>
+          </div>
+          <div class="admin-view-actions">
+            <button type="button" class="btn-sample-toggle active" data-toggle-sample>Sample data</button>
+            <button type="button" class="btn-admin-primary" data-modal-open="new_lesson">New lesson</button>
+          </div>
+        </header>
+
+        <div class="grid-2col-65-35">
+          <!-- Lesson table -->
+          <div class="admin-card">
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Lesson</th>
+                    <th>Level</th>
+                    <th>Program</th>
+                    <th>Duration</th>
+                  </tr>
+                </thead>
+                <tbody data-tbody="genius_lessons">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Push to student Card -->
+          <div class="admin-card">
+            <h2 class="admin-card-title">Push to student</h2>
+            <div style="font-weight: 650; font-size: 14px; margin-bottom: 18px; color: var(--admin-text);" id="geniusSelectedLessonTitle">
+              Selected: Writing Business Emails
+            </div>
+
+            <div class="admin-field-group">
+              <label for="geniusStudentSelect">Student</label>
+              <select id="geniusStudentSelect" class="admin-select">
+                <option value="Sara B.">Sara B.</option>
+                <option value="Omar K.">Omar K.</option>
+                <option value="Lina M.">Lina M.</option>
+                <option value="Youssef A.">Youssef A.</option>
+                <option value="Hana R.">Hana R.</option>
+                <option value="Adam A.">Adam A.</option>
+              </select>
+            </div>
+
+            <div class="admin-field-group">
+              <label for="geniusDueDate">Due date</label>
+              <input type="text" id="geniusDueDate" class="admin-input" value="Fri 20 Nov">
+            </div>
+
+            <div style="font-size: 13px; color: var(--admin-muted); margin-top: 14px;">The student sees this on their dashboard:</div>
+            <div class="genius-preview-box">
+              <div class="genius-preview-title" id="geniusPreviewTitle">New lesson: Writing Business Emails</div>
+              <div class="genius-preview-meta" id="geniusPreviewMeta">About 45 min · due Fri 20 Nov</div>
+            </div>
+
+            <button type="button" class="btn-admin-primary btn-full" id="btnPushLesson">Push lesson</button>
+          </div>
+        </div>
       </section>
 
-      <section class="portal-card" data-admin-panel="class_slots" aria-labelledby="slots-title" hidden>
-        <h2 class="portal-section-title" id="slots-title">Class slots</h2>
-        <form class="portal-form-grid" data-slot-form>
-          <label>Program<select name="programId" required><option value="">Loading programs…</option></select></label>
-          <label>Starts at<input name="startsAt" type="datetime-local" required></label>
-          <label>Ends at<input name="endsAt" type="datetime-local" required></label>
-          <label>Capacity<input name="capacity" type="number" min="1" max="200" value="10" required></label>
-          <button type="submit">Add slot</button>
-        </form>
-        <p class="portal-note">Times are saved in UTC from your local time selection.</p>
-        <div class="portal-table-wrap"><table class="portal-table">
-          <thead><tr><th>Program</th><th>Starts</th><th>Ends</th><th>Capacity</th><th>Active</th></tr></thead>
-          <tbody data-table-body="class_slots"><tr><td colspan="5">Loading…</td></tr></tbody>
-        </table></div>
+      <!-- VIEW 4: ERA (INVOICES) -->
+      <section class="admin-view-panel" data-admin-panel="era" hidden>
+        <header class="admin-view-header">
+          <div class="admin-view-titles">
+            <h1>Invoices</h1>
+            <p>Every invoice is tied to a customer number. Sample data.</p>
+          </div>
+          <div class="admin-view-actions">
+            <button type="button" class="btn-sample-toggle active" data-toggle-sample>Sample data</button>
+            <button type="button" class="btn-admin-primary" data-modal-open="new_invoice">New invoice</button>
+          </div>
+        </header>
+
+        <div class="admin-stats-row">
+          <div class="admin-stat-card">
+            <div class="stat-val" data-stat="era_outstanding">1,900</div>
+            <div class="stat-lbl">Outstanding (MAD)</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-val" data-stat="era_paid_month">12,350</div>
+            <div class="stat-lbl">Paid this month (MAD)</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-val" data-stat="era_overdue">1</div>
+            <div class="stat-lbl">Overdue</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-val" data-stat="era_reminders">5</div>
+            <div class="stat-lbl">Reminders scheduled</div>
+          </div>
+        </div>
+
+        <div class="grid-2col-70-30">
+          <!-- Invoices table -->
+          <div class="admin-card">
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Invoice</th>
+                    <th>Customer no.</th>
+                    <th>Name</th>
+                    <th>Program</th>
+                    <th>MAD</th>
+                    <th>Due</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody data-tbody="era_invoices">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Customer Detail Card -->
+          <div class="admin-card" id="eraCustomerCard">
+            <div class="customer-detail-title" id="eraCustNumber">Customer C-000017</div>
+            <div class="customer-detail-name" id="eraCustName">Sara B.</div>
+            <div class="customer-detail-meta" id="eraCustMeta">
+              14 Example Street, Casablanca<br>
+              +212 600 000 000<br>
+              sara@example.com
+            </div>
+
+            <div class="admin-card-title" style="margin-bottom: 12px; font-size: 15.5px;">Reminders</div>
+            <div class="customer-reminders-list" id="eraCustReminders">
+              <div>Due-date reminder, sent 9 Nov</div>
+              <div>Overdue notice, scheduled 13 Nov</div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <button type="button" class="btn-admin-primary btn-full" id="btnRecordPayment">Record payment</button>
+              <button type="button" class="btn-admin-outline btn-full" id="btnSendReminder">Send reminder</button>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <section class="portal-card" data-admin-panel="orders" aria-labelledby="orders-title" hidden>
-        <h2 class="portal-section-title" id="orders-title">Bookings and enrollment requests</h2>
-        <p class="portal-note">Orders are payment records. A booking request is not a confirmed or paid enrollment.</p>
-        <div class="portal-table-wrap"><table class="portal-table">
-          <thead><tr><th>Student</th><th>Program</th><th>Class slot</th><th>Amount</th><th>Status</th><th>Created</th></tr></thead>
-          <tbody data-table-body="orders"><tr><td colspan="6">Loading…</td></tr></tbody>
-        </table></div>
+      <!-- VIEW 5: CUSTOMERS -->
+      <section class="admin-view-panel" data-admin-panel="customers" hidden>
+        <header class="admin-view-header">
+          <div class="admin-view-titles">
+            <h1>Customers</h1>
+            <p>Profiles registered with institutional and billing identification numbers.</p>
+          </div>
+          <div class="admin-view-actions">
+            <button type="button" class="btn-sample-toggle active" data-toggle-sample>Sample data</button>
+          </div>
+        </header>
+
+        <div class="admin-card">
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Customer No.</th>
+                  <th>Student Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>City</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody data-tbody="customers_list">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
-      <section class="portal-card" data-admin-panel="booking_requests" aria-labelledby="booking-requests-title">
-        <h2 class="portal-section-title" id="booking-requests-title">Booking requests</h2>
-        <p class="portal-note">These are inquiries only. Confirm availability with the student; no payment or enrollment is created by a request.</p>
-        <div class="portal-table-wrap"><table class="portal-table">
-          <thead><tr><th>Reference</th><th>Name</th><th>Email</th><th>Phone</th><th>Program</th><th>Preferred date &amp; time</th><th>Status</th><th>Submitted</th></tr></thead>
-          <tbody data-table-body="booking_requests"><tr><td colspan="8">Loading…</td></tr></tbody>
-        </table></div>
+      <!-- VIEW 6: NOTIFICATIONS -->
+      <section class="admin-view-panel" data-admin-panel="notifications" hidden>
+        <header class="admin-view-header">
+          <div class="admin-view-titles">
+            <h1>Notifications &amp; Reminders</h1>
+            <p>Queue and dispatch log for lesson reminders, invoice notices, and in-app updates.</p>
+          </div>
+          <div class="admin-view-actions">
+            <button type="button" class="btn-sample-toggle active" data-toggle-sample>Sample data</button>
+          </div>
+        </header>
+
+        <div class="admin-card">
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Target</th>
+                  <th>Channel</th>
+                  <th>Topic</th>
+                  <th>Scheduled For</th>
+                  <th>Attempts</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody data-tbody="notifications_list">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
-      <section class="portal-card" data-admin-panel="class_sessions" aria-labelledby="sessions-title" hidden>
-        <h2 class="portal-section-title" id="sessions-title">Lessons and schedule</h2>
-        <form class="portal-form-grid" data-session-form>
-          <label>Class slot<select name="classSlotId" required><option value="">Loading class slots…</option></select></label>
-          <label>Teacher<select name="teacherId" required><option value="">Loading teachers…</option></select></label>
-          <label>Lesson title<input name="title" type="text" minlength="2" maxlength="120" required></label>
-          <label>Starts at<input name="startsAt" type="datetime-local" required></label>
-          <label>Ends at<input name="endsAt" type="datetime-local" required></label>
-          <label>Meeting link (HTTPS)<input name="meetingUrl" type="url" placeholder="https://…"></label>
-          <label>Description<input name="description" type="text" maxlength="2000"></label>
-          <button type="submit">Add lesson</button>
-        </form>
+      <!-- VIEW 7: APPLICATIONS (Student & Teacher) -->
+      <section class="admin-view-panel" data-admin-panel="applications" hidden>
+        <header class="admin-view-header">
+          <div class="admin-view-titles">
+            <h1>Applications</h1>
+            <p>Review submitted admissions for students and teaching candidate profiles.</p>
+          </div>
+          <div class="admin-view-actions">
+            <button type="button" class="btn-sample-toggle active" data-toggle-sample>Sample data</button>
+          </div>
+        </header>
 
-        <h3 class="portal-section-title">Session roster</h3>
-        <form class="portal-form-grid" data-session-student-form>
-          <label>Teacher<select name="teacherId" required><option value="">Loading teachers…</option></select></label>
-          <label>Session<select name="sessionId" required><option value="">Select a teacher first</option></select></label>
-          <label>Student<select name="studentId" required><option value="">Loading students…</option></select></label>
-          <button type="submit">Add participant</button>
-        </form>
+        <div class="admin-card" style="margin-bottom: 24px;">
+          <h2 class="admin-card-title">Student applications</h2>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Program</th>
+                  <th>Level</th>
+                  <th>Status</th>
+                  <th>Submitted</th>
+                </tr>
+              </thead>
+              <tbody data-tbody="student_applications">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-        <h3 class="portal-section-title">Timesheets</h3>
-        <form class="portal-form-grid" data-timesheet-form>
-          <label>Teacher<select name="teacherId" required><option value="">Loading teachers…</option></select></label>
-          <label>Session<select name="sessionId" required><option value="">Select a teacher first</option></select></label>
-          <label>Hours worked<input name="hoursWorked" type="number" min="0.25" max="24" step="0.25" value="1" required></label>
-          <label>Notes<input name="notes" type="text" maxlength="2000" placeholder="Session summary or notes"></label>
-          <button type="submit">Save timesheet</button>
-        </form>
-
-        <div class="portal-table-wrap"><table class="portal-table">
-          <thead><tr><th>Lesson</th><th>Teacher</th><th>Program</th><th>Class time</th><th>Meeting link</th><th>Status</th></tr></thead>
-          <tbody data-table-body="class_sessions"><tr><td colspan="6">Loading…</td></tr></tbody>
-        </table></div>
+        <div class="admin-card">
+          <h2 class="admin-card-title">Teacher applications</h2>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Country</th>
+                  <th>Specialization</th>
+                  <th>Status</th>
+                  <th>Submitted</th>
+                </tr>
+              </thead>
+              <tbody data-tbody="teacher_applications">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
-      <section class="portal-card" data-admin-panel="lesson_progress" aria-labelledby="progress-admin-title" hidden>
-        <h2 class="portal-section-title" id="progress-admin-title">Record student progress</h2>
-        <form class="portal-form-grid" data-progress-form>
-          <label>Student course enrollment<select name="membershipId" required><option value="">Loading enrollments…</option></select></label>
-          <label>Lesson<select name="sessionId" required><option value="">Loading lessons…</option></select></label>
-          <label>Attendance<select name="attendance" required>
-            <option value="not_marked">Not marked</option>
-            <option value="attended">Attended</option>
-            <option value="missed">Missed</option>
-            <option value="excused">Excused</option>
-          </select></label>
-          <label>Score (0–100)<input name="score" type="number" min="0" max="100"></label>
-          <label>Teacher feedback<input name="teacherNotes" type="text" maxlength="2000"></label>
-          <button type="submit">Save progress</button>
-        </form>
-        <div class="portal-table-wrap"><table class="portal-table">
-          <thead><tr><th>Student</th><th>Program</th><th>Lesson</th><th>Attendance</th><th>Score</th><th>Teacher feedback</th></tr></thead>
-          <tbody data-table-body="lesson_progress"><tr><td colspan="6">Loading…</td></tr></tbody>
-        </table></div>
+      <!-- VIEW 8: CLASS SLOTS -->
+      <section class="admin-view-panel" data-admin-panel="class_slots" hidden>
+        <header class="admin-view-header">
+          <div class="admin-view-titles">
+            <h1>Class slots</h1>
+            <p>Configure course capacity and available lesson time slots.</p>
+          </div>
+          <div class="admin-view-actions">
+            <button type="button" class="btn-sample-toggle active" data-toggle-sample>Sample data</button>
+          </div>
+        </header>
+
+        <div class="admin-card">
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Program</th>
+                  <th>Starts (Local)</th>
+                  <th>Ends (Local)</th>
+                  <th>Capacity</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody data-tbody="class_slots">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
-      <section class="portal-card" data-admin-panel="newsletter_subscribers" aria-labelledby="newsletter-title" hidden>
-        <h2 class="portal-section-title" id="newsletter-title">Newsletter subscribers</h2>
-        <div class="portal-table-wrap"><table class="portal-table">
-          <thead><tr><th>Email</th><th>Consent recorded</th><th>Unsubscribed</th></tr></thead>
-          <tbody data-table-body="newsletter_subscribers"><tr><td colspan="3">Loading…</td></tr></tbody>
-        </table></div>
-      </section>
+      <!-- VIEW 9: NEWSLETTER -->
+      <section class="admin-view-panel" data-admin-panel="newsletter" hidden>
+        <header class="admin-view-header">
+          <div class="admin-view-titles">
+            <h1>Newsletter Subscribers</h1>
+            <p>Consent-verified opt-in subscribers from the academy portal.</p>
+          </div>
+          <div class="admin-view-actions">
+            <button type="button" class="btn-sample-toggle active" data-toggle-sample>Sample data</button>
+          </div>
+        </header>
 
-      <section class="portal-card" data-admin-panel="teacher_students" aria-labelledby="teacher-students-title" hidden>
-        <h2 class="portal-section-title" id="teacher-students-title">Teacher and student links</h2>
-        <form class="portal-form-grid" data-teacher-link-form>
-          <label>Teacher<select name="teacherId" required><option value="">Loading teachers…</option></select></label>
-          <label>Student<select name="studentId" required><option value="">Loading students…</option></select></label>
-          <label>Status<select name="status" required>
-            <option value="active">Active</option>
-            <option value="ended">Ended</option>
-          </select></label>
-          <label>Ended at<input name="endedAt" type="date"></label>
-          <button type="submit">Save teacher link</button>
-        </form>
-        <div class="portal-table-wrap"><table class="portal-table">
-          <thead><tr><th>Teacher</th><th>Student</th><th>Status</th><th>Started</th><th>Ended</th></tr></thead>
-          <tbody data-table-body="teacher_students"><tr><td colspan="5">Loading…</td></tr></tbody>
-        </table></div>
+        <div class="admin-card">
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Consent Recorded</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody data-tbody="newsletter_subscribers">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
+    </main>
+  </div>
 
-      <section class="portal-card" data-admin-panel="teacher_availability" aria-labelledby="teacher-availability-title" hidden>
-        <h2 class="portal-section-title" id="teacher-availability-title">Teacher availability</h2>
-        <form class="portal-form-grid" data-teacher-availability-form>
-          <label>Teacher<select name="teacherId" required><option value="">Loading teachers…</option></select></label>
-          <label>Weekday<select name="weekday" required>
-            <option value="0">Monday</option>
-            <option value="1">Tuesday</option>
-            <option value="2">Wednesday</option>
-            <option value="3">Thursday</option>
-            <option value="4">Friday</option>
-            <option value="5">Saturday</option>
-            <option value="6">Sunday</option>
-          </select></label>
-          <label>Starts at<input name="startsAt" type="time" required></label>
-          <label>Ends at<input name="endsAt" type="time" required></label>
-          <label>Timezone<input name="timezone" type="text" value="Africa/Casablanca" required></label>
-          <label>Effective from<input name="effectiveFrom" type="date" required></label>
-          <label>Effective until<input name="effectiveUntil" type="date"></label>
-          <button type="submit">Save teacher availability</button>
-        </form>
-        <div class="portal-table-wrap"><table class="portal-table">
-          <thead><tr><th>Teacher</th><th>Weekday</th><th>Starts</th><th>Ends</th><th>Timezone</th><th>Dates</th></tr></thead>
-          <tbody data-table-body="teacher_availability"><tr><td colspan="6">Loading…</td></tr></tbody>
-        </table></div>
-      </section>
-
-      <section class="portal-card" data-admin-panel="lesson_library" aria-labelledby="lesson-library-title" hidden>
-        <h2 class="portal-section-title" id="lesson-library-title">Lesson library</h2>
-        <form class="portal-form-grid" data-lesson-form>
-          <label>Lesson name<input name="name" type="text" maxlength="160" required></label>
-          <label>Level<input name="level" type="text" maxlength="64" required></label>
-          <label>Program<select name="programId" required><option value="">Loading programs…</option></select></label>
-          <label>Estimated duration (minutes)<input name="duration" type="number" min="1" max="1440" value="45" required></label>
-          <label>Description<textarea name="description" rows="4" maxlength="5000"></textarea></label>
-          <button type="submit">Create lesson</button>
-        </form>
-        <div class="portal-table-wrap"><table class="portal-table">
-          <thead><tr><th>Lesson</th><th>Level</th><th>Program</th><th>Duration</th><th>Status</th></tr></thead>
-          <tbody data-table-body="lessons"><tr><td colspan="5">Loading…</td></tr></tbody>
-        </table></div>
-
-        <form class="portal-form-grid" data-exercise-form>
-          <label>Lesson<select name="lessonId" required><option value="">Loading lessons…</option></select></label>
-          <label>Exercise name<input name="name" type="text" maxlength="160" required></label>
-          <label>Exercise content JSON<textarea name="content" rows="6" placeholder='{ "prompt": "..." }' required></textarea></label>
-          <label>Description<textarea name="description" rows="4" maxlength="5000"></textarea></label>
-          <button type="submit">Create exercise</button>
-        </form>
-        <div class="portal-table-wrap"><table class="portal-table">
-          <thead><tr><th>Lesson</th><th>Exercise</th><th>Published</th><th>Created</th></tr></thead>
-          <tbody data-table-body="exercises"><tr><td colspan="4">Loading…</td></tr></tbody>
-        </table></div>
-      </section>
-
-      <section class="portal-card" data-admin-panel="assignments" aria-labelledby="assignments-panel-title" hidden>
-        <h2 class="portal-section-title" id="assignments-panel-title">Assignments</h2>
-        <form class="portal-form-grid" data-assignment-form>
-          <label>Teacher<select name="teacherId" required><option value="">Loading teachers…</option></select></label>
-          <label>Assignment type<select name="assignmentType" required>
-            <option value="lesson">Lesson</option>
-            <option value="exercise">Exercise</option>
-          </select></label>
-          <label>Lesson or exercise<select name="itemId" required><option value="">Select a type first</option></select></label>
-          <label>Student<select name="studentId"><option value="">Optional: direct student assignment</option></select></label>
-          <label>Group<select name="groupId"><option value="">Optional: assign to a group</option></select></label>
-          <label>Due date<input name="dueAt" type="date"></label>
-          <button type="submit">Assign work</button>
-        </form>
-        <div class="portal-table-wrap"><table class="portal-table">
-          <thead><tr><th>Teacher</th><th>Student</th><th>Type</th><th>Item</th><th>Status</th><th>Due</th></tr></thead>
-          <tbody data-table-body="assignments"><tr><td colspan="6">Loading…</td></tr></tbody>
-        </table></div>
-      </section>
-
-      <section class="portal-card" data-admin-panel="student_groups" aria-labelledby="student-groups-title" hidden>
-        <h2 class="portal-section-title" id="student-groups-title">Student groups</h2>
-        <form class="portal-form-grid" data-student-group-form>
-          <label>Teacher<select name="teacherId" required><option value="">Loading teachers…</option></select></label>
-          <label>Group name<input name="groupName" type="text" maxlength="120" placeholder="e.g. Upper Intermediate" required></label>
-          <button type="submit">Create group</button>
-        </form>
-        <form class="portal-form-grid" data-group-member-form>
-          <label>Teacher<select name="teacherId" required><option value="">Loading teachers…</option></select></label>
-          <label>Group<select name="groupId" required><option value="">Select a teacher first</option></select></label>
-          <label>Student<select name="studentId" required><option value="">Loading students…</option></select></label>
-          <button type="submit">Add student to group</button>
-        </form>
-        <div class="portal-table-wrap"><table class="portal-table">
-          <thead><tr><th>Group</th><th>Teacher</th><th>Students</th><th>Created</th></tr></thead>
-          <tbody data-table-body="student_groups"><tr><td colspan="4">Loading…</td></tr></tbody>
-        </table></div>
-      </section>
-
-      <section class="portal-card" data-admin-panel="admin_access" aria-labelledby="admin-access-title" hidden>
-        <h2 class="portal-section-title" id="admin-access-title">Admin access</h2>
-        <p class="portal-note">Create or update administrator accounts through the trusted server-side admin function. Do not store a password in the client code.</p>
-        <form class="portal-form-grid" data-admin-access-form>
-          <label>Action<select name="action" required>
-            <option value="create-user">Create admin user</option>
-            <option value="update-email">Update admin email</option>
-          </select></label>
-          <label>Account email<input name="email" type="email" placeholder="admin@example.com" required></label>
-          <label>Admin user ID<input name="userId" type="text" placeholder="Required only for email updates"></label>
-          <label>Password (create only)<input name="password" type="password" minlength="8" maxlength="128" placeholder="At least 8 characters"></label>
-          <label>Full name<input name="fullName" type="text" maxlength="120" placeholder="Optional for new admin"></label>
-          <button type="submit">Apply admin action</button>
-        </form>
-        <div class="portal-table-wrap"><table class="portal-table">
-          <thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
-          <tbody data-table-body="admin_accounts"><tr><td colspan="3">Loading…</td></tr></tbody>
-        </table></div>
-      </section>
+  <!-- MODALS -->
+  <!-- Modal: Book Session -->
+  <div class="admin-modal-backdrop" id="modalBookSession" hidden>
+    <div class="admin-modal-card">
+      <div class="admin-modal-header">
+        <h2>Book New Session (Kronos)</h2>
+        <button type="button" class="admin-modal-close" data-modal-close>&times;</button>
+      </div>
+      <form id="formBookSession">
+        <div class="admin-field-group">
+          <label>Student / Group Name</label>
+          <input type="text" id="sessionStudentName" class="admin-input" placeholder="e.g. Sara B. or Exam Prep Group" required>
+        </div>
+        <div class="admin-field-group">
+          <label>Program / Subject</label>
+          <input type="text" id="sessionProgram" class="admin-input" placeholder="e.g. Business English, Tutoring" required>
+        </div>
+        <div class="admin-field-group">
+          <label>Day of Week</label>
+          <select id="sessionDay" class="admin-select" required>
+            <option value="mon">Monday 16</option>
+            <option value="tue" selected>Tuesday 17 (today)</option>
+            <option value="wed">Wednesday 18</option>
+            <option value="thu">Thursday 19</option>
+            <option value="fri">Friday 20</option>
+          </select>
+        </div>
+        <div class="admin-field-group">
+          <label>Time</label>
+          <input type="text" id="sessionTime" class="admin-input" placeholder="e.g. 15:30" required>
+        </div>
+        <div class="admin-field-group">
+          <label>Teacher</label>
+          <input type="text" id="sessionTeacher" class="admin-input" value="Chihab" required>
+        </div>
+        <button type="submit" class="btn-admin-primary btn-full" style="margin-top: 10px;">Confirm Session</button>
+      </form>
     </div>
-  </main>
+  </div>
+
+  <!-- Modal: New Lesson -->
+  <div class="admin-modal-backdrop" id="modalNewLesson" hidden>
+    <div class="admin-modal-card">
+      <div class="admin-modal-header">
+        <h2>Create Lesson (Genius)</h2>
+        <button type="button" class="admin-modal-close" data-modal-close>&times;</button>
+      </div>
+      <form id="formNewLesson">
+        <div class="admin-field-group">
+          <label>Lesson Title</label>
+          <input type="text" id="newLessonTitle" class="admin-input" placeholder="e.g. Negotiation Techniques" required>
+        </div>
+        <div class="admin-field-group">
+          <label>Level (CEFR)</label>
+          <select id="newLessonLevel" class="admin-select" required>
+            <option value="A1">A1 - Beginner</option>
+            <option value="A2">A2 - Elementary</option>
+            <option value="B1" selected>B1 - Intermediate</option>
+            <option value="B2">B2 - Upper Intermediate</option>
+            <option value="C1">C1 - Advanced</option>
+            <option value="C2">C2 - Mastery</option>
+          </select>
+        </div>
+        <div class="admin-field-group">
+          <label>Program</label>
+          <input type="text" id="newLessonProgram" class="admin-input" value="Business English" required>
+        </div>
+        <div class="admin-field-group">
+          <label>Estimated Duration (e.g. 45 min)</label>
+          <input type="text" id="newLessonDuration" class="admin-input" value="45 min" required>
+        </div>
+        <button type="submit" class="btn-admin-primary btn-full" style="margin-top: 10px;">Save Lesson</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: New Invoice -->
+  <div class="admin-modal-backdrop" id="modalNewInvoice" hidden>
+    <div class="admin-modal-card">
+      <div class="admin-modal-header">
+        <h2>Generate Invoice (Era)</h2>
+        <button type="button" class="admin-modal-close" data-modal-close>&times;</button>
+      </div>
+      <form id="formNewInvoice">
+        <div class="admin-field-group">
+          <label>Student Name</label>
+          <input type="text" id="invStudentName" class="admin-input" placeholder="e.g. Sara B." required>
+        </div>
+        <div class="admin-field-group">
+          <label>Program</label>
+          <input type="text" id="invProgram" class="admin-input" value="Business English" required>
+        </div>
+        <div class="admin-field-group">
+          <label>Total Amount (MAD)</label>
+          <input type="number" id="invAmount" class="admin-input" value="800" min="50" step="50" required>
+        </div>
+        <div class="admin-field-group">
+          <label>Due Date</label>
+          <input type="text" id="invDueDate" class="admin-input" value="25 Nov" required>
+        </div>
+        <button type="submit" class="btn-admin-primary btn-full" style="margin-top: 10px;">Generate Invoice</button>
+      </form>
+    </div>
+  </div>
 
   <script src="js/supabase-config.js"></script>
   <script type="module" src="js/admin.js"></script>
