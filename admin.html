@@ -336,11 +336,14 @@
             <p>Profiles registered with institutional and billing identification numbers.</p>
           </div>
           <div class="admin-view-actions">
-            <button type="button" class="btn-sample-toggle active" data-toggle-sample>Sample data</button>
+            <button type="button" class="btn-admin-primary" data-modal-open="new_customer">+ New customer</button>
           </div>
         </header>
 
         <div class="admin-card">
+          <div class="admin-table-toolbar" style="display:flex;align-items:center;gap:10px;padding:10px 0 6px;">
+            <input type="search" id="searchCustomers" class="admin-input" placeholder="Search name, email, city…" style="max-width:280px;padding:7px 12px;font-size:13px;" autocomplete="off">
+          </div>
           <div class="admin-table-wrap">
             <table class="admin-table">
               <thead>
@@ -351,6 +354,7 @@
                   <th>Phone</th>
                   <th>City</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody data-tbody="customers_list">
@@ -358,6 +362,7 @@
               </tbody>
             </table>
           </div>
+          <div id="paginationCustomers" class="pagination-bar"></div>
         </div>
       </section>
 
@@ -816,6 +821,48 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+
+  <!-- Modal: Add / Edit Customer -->
+  <div class="admin-modal-backdrop" id="modalCustomer" hidden>
+    <div class="admin-modal-card">
+      <div class="admin-modal-header">
+        <h2 id="modalCustomerTitle">Add Customer</h2>
+        <button type="button" class="admin-modal-close" data-modal-close>&times;</button>
+      </div>
+      <form id="formCustomer">
+        <input type="hidden" id="editCustomerCustNo">
+        <div class="admin-field-group">
+          <label>Full Name</label>
+          <input type="text" id="custName" class="admin-input" placeholder="e.g. Sara B." required>
+        </div>
+        <div class="admin-field-group">
+          <label>Email</label>
+          <input type="email" id="custEmail" class="admin-input" placeholder="sara@example.com" required>
+        </div>
+        <div class="admin-field-group">
+          <label>Phone</label>
+          <input type="text" id="custPhone" class="admin-input" placeholder="+212 600 000 000">
+        </div>
+        <div class="admin-field-group">
+          <label>City</label>
+          <input type="text" id="custCity" class="admin-input" placeholder="Casablanca">
+        </div>
+        <div class="admin-field-group">
+          <label>Status</label>
+          <select id="custStatus" class="admin-select">
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+            <option value="Suspended">Suspended</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px;">
+          <button type="submit" class="btn-admin-primary" style="flex:1;" id="btnCustomerSubmit">Save Customer</button>
+          <button type="button" class="btn-admin-danger" id="btnDeleteCustomerModal" style="flex:1;display:none;">Delete Customer</button>
+        </div>
+      </form>
     </div>
   </div>
 

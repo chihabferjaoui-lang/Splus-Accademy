@@ -307,7 +307,8 @@ const PAGINATION = {
   booking_requests: { page: 1, pageSize: 8, search: "" },
   student_applications: { page: 1, pageSize: 8, search: "" },
   teacher_applications: { page: 1, pageSize: 8, search: "" },
-  era_invoices: { page: 1, pageSize: 8, search: "" }
+  era_invoices: { page: 1, pageSize: 8, search: "" },
+  customers: { page: 1, pageSize: 8, search: "" }
 };
 
 function renderPaginationBar(tableKey, totalItems) {
@@ -688,14 +689,59 @@ function updateEraCustomerCard() {
 function renderCustomers() {
   const tbody = document.querySelector('[data-tbody="customers_list"]');
   if (!tbody) return;
-  tbody.innerHTML = APP_STATE.customers.map(c => `
+
+  const cfg = PAGINATION.customers;
+  let list = APP_STATE.customers || [];
+
+  if (cfg.search) {
+    const s = cfg.search.toLowerCase();
+    list = list.filter(c =>
+      (c.name && c.name.toLowerCase().includes(s)) ||
+      (c.email && c.email.toLowerCase().includes(s)) ||
+      (c.custNo && c.custNo.toLowerCase().includes(s)) ||
+      (c.city && c.city.toLowerCase().includes(s)) ||
+      (c.phone && c.phone.toLowerCase().includes(s)) ||
+      (c.status && c.status.toLowerCase().includes(s))
+    );
+  }
+
+  const total = list.length;
+  // Render pagination into dedicated container
+  const paginationEl = document.getElementById("paginationCustomers");
+  if (paginationEl) {
+    const totalPages = Math.max(1, Math.ceil(total / cfg.pageSize));
+    if (cfg.page > totalPages) cfg.page = totalPages;
+    const start = (cfg.page - 1) * cfg.pageSize + 1;
+    const end = Math.min(cfg.page * cfg.pageSize, total);
+    let html = `<span style="font-size:12px;color:var(--admin-muted);margin-right:8px;">${total === 0 ? "0" : start}–${end} of ${total}</span>`;
+    for (let p = 1; p <= totalPages; p++) {
+      html += `<button type="button" class="page-btn${p === cfg.page ? " active" : ""}" data-page-customers="${p}">${p}</button>`;
+    }
+    paginationEl.innerHTML = html;
+  }
+
+  const start = (cfg.page - 1) * cfg.pageSize;
+  const paginated = list.slice(start, start + cfg.pageSize);
+
+  if (paginated.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--admin-muted);padding:24px;">${cfg.search ? "No matching customers found." : "No customers yet. Approved applications auto-create customer profiles, or add one manually."}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = paginated.map(c => `
     <tr>
-      <td style="font-weight: 650; color: var(--admin-primary);">${c.custNo}</td>
-      <td style="font-weight: 600;">${c.name}</td>
+      <td style="font-weight:650;color:var(--admin-primary);">${c.custNo}</td>
+      <td style="font-weight:600;">${c.name}</td>
       <td>${c.email}</td>
-      <td>${c.phone}</td>
-      <td>${c.city}</td>
-      <td><span class="badge-pill confirmed">${c.status}</span></td>
+      <td>${c.phone || "—"}</td>
+      <td>${c.city || "—"}</td>
+      <td><span class="badge-pill ${(c.status||"").toLowerCase() === "active" ? "confirmed" : "overdue"}">${c.status || "Active"}</span></td>
+      <td>
+        <div class="table-actions-cell">
+          <button type="button" class="btn-xs btn-xs-primary" data-action="edit-customer" data-custno="${c.custNo}">Edit</button>
+          <button type="button" class="btn-xs btn-xs-danger" data-action="delete-customer" data-custno="${c.custNo}">Delete</button>
+        </div>
+      </td>
     </tr>
   `).join("");
 }
@@ -1146,6 +1192,15 @@ function setupEvents() {
       if (modalTarget === "book_session") openModal("modalBookSession");
       if (modalTarget === "new_lesson") openModal("modalNewLesson");
       if (modalTarget === "new_invoice") openModal("modalNewInvoice");
+      if (modalTarget === "new_customer") {
+        document.getElementById("modalCustomerTitle").textContent = "Add Customer";
+        document.getElementById("editCustomerCustNo").value = "";
+        document.getElementById("formCustomer").reset();
+        document.getElementById("custStatus").value = "Active";
+        const delBtn = document.getElementById("btnDeleteCustomerModal");
+        if (delBtn) delBtn.style.display = "none";
+        openModal("modalCustomer");
+      }
       return;
     }
 
@@ -1363,6 +1418,50 @@ function setupEvents() {
     if (e.target.classList.contains('admin-modal-backdrop')) {
       e.target.hidden = true;
     }
+
+    // 20. Customer pagination
+    const pageCustomerBtn = e.target.closest('[data-page-customers]');
+    if (pageCustomerBtn) {
+      PAGINATION.customers.page = parseInt(pageCustomerBtn.dataset.pageCustomers, 10);
+      renderCustomers();
+      return;
+    }
+
+    // 21. Edit Customer
+    const btnEditCustomer = e.target.closest('[data-action="edit-customer"]');
+    if (btnEditCustomer) {
+      e.stopPropagation();
+      const custNo = btnEditCustomer.dataset.custno;
+      const c = (APP_STATE.customers || []).find(x => x.custNo === custNo);
+      if (c) {
+        document.getElementById("modalCustomerTitle").textContent = "Edit Customer";
+        document.getElementById("editCustomerCustNo").value = custNo;
+        document.getElementById("custName").value = c.name || "";
+        document.getElementById("custEmail").value = c.email || "";
+        document.getElementById("custPhone").value = c.phone || "";
+        document.getElementById("custCity").value = c.city || "";
+        document.getElementById("custStatus").value = c.status || "Active";
+        const delBtn = document.getElementById("btnDeleteCustomerModal");
+        if (delBtn) delBtn.style.display = "";
+        openModal("modalCustomer");
+      }
+      return;
+    }
+
+    // 22. Delete Customer (table button)
+    const btnDeleteCustomer = e.target.closest('[data-action="delete-customer"]');
+    if (btnDeleteCustomer) {
+      e.stopPropagation();
+      const custNo = btnDeleteCustomer.dataset.custno;
+      const idx = (APP_STATE.customers || []).findIndex(x => x.custNo === custNo);
+      if (idx !== -1) {
+        const removed = APP_STATE.customers.splice(idx, 1)[0];
+        saveWorkspaceState();
+        renderCustomers();
+        showToast(`Customer ${removed.name} (${removed.custNo}) deleted.`, "success");
+      }
+      return;
+    }
   });
 
   // Cross-tab real-time sync for online bookings and applications
@@ -1468,6 +1567,70 @@ function setupEvents() {
 
   if (itemQty) itemQty.addEventListener("input", recalcInvoice);
   if (itemRate) itemRate.addEventListener("input", recalcInvoice);
+
+  // ── CUSTOMER MODULE: Add / Edit / Delete / Search / Pagination ──
+
+  // Search input
+  const searchCustomersInput = document.getElementById("searchCustomers");
+  if (searchCustomersInput) {
+    searchCustomersInput.addEventListener("input", (e) => {
+      PAGINATION.customers.search = e.target.value.trim();
+      PAGINATION.customers.page = 1;
+      renderCustomers();
+    });
+  }
+
+  // Form submit (Add or Edit)
+  const formCustomer = document.getElementById("formCustomer");
+  if (formCustomer) {
+    formCustomer.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const editingCustNo = document.getElementById("editCustomerCustNo").value.trim();
+      const name  = document.getElementById("custName").value.trim();
+      const email = document.getElementById("custEmail").value.trim();
+      const phone = document.getElementById("custPhone").value.trim() || "—";
+      const city  = document.getElementById("custCity").value.trim() || "—";
+      const status = document.getElementById("custStatus").value;
+
+      if (editingCustNo) {
+        // Edit existing
+        const c = (APP_STATE.customers || []).find(x => x.custNo === editingCustNo);
+        if (c) {
+          c.name = name; c.email = email; c.phone = phone; c.city = city; c.status = status;
+          saveWorkspaceState();
+          renderCustomers();
+          closeModal("modalCustomer");
+          showToast(`Customer ${name} updated successfully.`, "success");
+        }
+      } else {
+        // Add new
+        const newNo = `C-${String(Date.now()).slice(-6)}`;
+        APP_STATE.customers = APP_STATE.customers || [];
+        APP_STATE.customers.unshift({ custNo: newNo, name, email, phone, city, status });
+        saveWorkspaceState();
+        renderCustomers();
+        closeModal("modalCustomer");
+        showToast(`Customer ${name} added (${newNo}).`, "success");
+      }
+    });
+  }
+
+  // Delete from modal
+  const btnDeleteCustomerModal = document.getElementById("btnDeleteCustomerModal");
+  if (btnDeleteCustomerModal) {
+    btnDeleteCustomerModal.addEventListener("click", () => {
+      const custNo = document.getElementById("editCustomerCustNo").value.trim();
+      if (!custNo) return;
+      const idx = (APP_STATE.customers || []).findIndex(x => x.custNo === custNo);
+      if (idx !== -1) {
+        const removed = APP_STATE.customers.splice(idx, 1)[0];
+        saveWorkspaceState();
+        renderCustomers();
+        closeModal("modalCustomer");
+        showToast(`Customer ${removed.name} deleted.`, "success");
+      }
+    });
+  }
 
   // Lesson actions
   const btnPushLesson = document.getElementById("btnPushLesson");
