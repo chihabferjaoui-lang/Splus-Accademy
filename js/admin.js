@@ -229,7 +229,7 @@ let selectedEraInvoice = APP_STATE.era_invoices[0] || null;
 let editingSessionContext = null;
 
 // Kronos Calendar State & Multi-Date Scroll Engine
-let kronosAnchorDate = new Date(2026, 10, 18);
+let kronosAnchorDate = new Date();
 function getTodayISO() {
   const d = new Date();
   const yyyy = d.getFullYear();
@@ -1534,7 +1534,7 @@ function setupEvents() {
   const btnToday = document.getElementById("kronosTodayBtn");
   if (btnToday) {
     btnToday.addEventListener("click", () => {
-      kronosAnchorDate = new Date(2026, 10, 18);
+      kronosAnchorDate = new Date();
       renderKronos();
       setTimeout(scrollKronosToToday, 60);
     });
