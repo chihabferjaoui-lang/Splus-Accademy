@@ -120,6 +120,7 @@ function syncSubmissionToWorkspace(functionName, payload, reference) {
   } else if (functionName === "submit-student-application") {
     store.student_applications = store.student_applications || [];
     store.student_applications.unshift({
+      id: "stu-" + Date.now(),
       name: payload.fullName || payload.name,
       email: payload.email,
       phone: payload.phone,
@@ -131,6 +132,7 @@ function syncSubmissionToWorkspace(functionName, payload, reference) {
   } else if (functionName === "submit-teacher-application") {
     store.teacher_applications = store.teacher_applications || [];
     store.teacher_applications.unshift({
+      id: "tea-" + Date.now(),
       name: payload.fullName || payload.name,
       email: payload.email,
       phone: payload.phone,
@@ -141,11 +143,35 @@ function syncSubmissionToWorkspace(functionName, payload, reference) {
     });
   }
 
+  // Bound collection sizes to ensure local storage never hits QuotaExceededError under high volume
+  const MAX_RECORDS = 500;
+  if (store.student_applications && store.student_applications.length > MAX_RECORDS) {
+    store.student_applications = store.student_applications.slice(0, MAX_RECORDS);
+  }
+  if (store.teacher_applications && store.teacher_applications.length > MAX_RECORDS) {
+    store.teacher_applications = store.teacher_applications.slice(0, MAX_RECORDS);
+  }
+  if (store.booking_requests && store.booking_requests.length > MAX_RECORDS) {
+    store.booking_requests = store.booking_requests.slice(0, MAX_RECORDS);
+  }
+  if (store.notifications && store.notifications.length > 200) {
+    store.notifications = store.notifications.slice(0, 200);
+  }
+
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
     window.dispatchEvent(new CustomEvent("splus-data-updated"));
   } catch (e) {
-    console.error("Storage write error:", e);
+    console.warn("Storage quota warning, performing emergency prune:", e);
+    try {
+      store.student_applications = (store.student_applications || []).slice(0, 100);
+      store.teacher_applications = (store.teacher_applications || []).slice(0, 100);
+      store.booking_requests = (store.booking_requests || []).slice(0, 100);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+      window.dispatchEvent(new CustomEvent("splus-data-updated"));
+    } catch (criticalErr) {
+      console.error("Critical storage error:", criticalErr);
+    }
   }
 }
 

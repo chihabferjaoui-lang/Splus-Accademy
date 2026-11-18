@@ -148,13 +148,13 @@ const DEFAULT_WORKSPACE_DATA = {
     { target: "Lina M.", channel: "In-app", topic: "New Lesson: Writing Business Emails", scheduled: "17 Nov 2026, 10:00", attempts: 1, status: "Delivered" }
   ],
   student_applications: [
-    { name: "Fatima E.", email: "fatima@example.com", phone: "+212 670 123 456", program: "Business English", level: "B1", status: "Under Review", submitted: "15 Nov 2026" },
-    { name: "Karim Z.", email: "karim@example.com", phone: "+212 661 987 654", program: "Exam Preparation", level: "B2", status: "Approved", submitted: "14 Nov 2026" },
-    { name: "Nour H.", email: "nour@example.com", phone: "+212 652 334 455", program: "Day-to-Day English", level: "A2", status: "Contacted", submitted: "12 Nov 2026" }
+    { id: "stu-sample-1", name: "Fatima E.", email: "fatima@example.com", phone: "+212 670 123 456", program: "Business English", level: "B1", status: "Under Review", submitted: "15 Nov 2026" },
+    { id: "stu-sample-2", name: "Karim Z.", email: "karim@example.com", phone: "+212 661 987 654", program: "Exam Preparation", level: "B2", status: "Approved", submitted: "14 Nov 2026" },
+    { id: "stu-sample-3", name: "Nour H.", email: "nour@example.com", phone: "+212 652 334 455", program: "Day-to-Day English", level: "A2", status: "Contacted", submitted: "12 Nov 2026" }
   ],
   teacher_applications: [
-    { name: "David M.", email: "david@example.com", phone: "+44 7700 900077", country: "United Kingdom", spec: "CELTA Certified / IELTS", status: "Interviewed", submitted: "10 Nov 2026" },
-    { name: "Sophie L.", email: "sophie@example.com", phone: "+33 612 345 678", country: "France", spec: "Business Communication & TOEFL", status: "Under Review", submitted: "13 Nov 2026" }
+    { id: "tea-sample-1", name: "David M.", email: "david@example.com", phone: "+44 7700 900077", country: "United Kingdom", spec: "CELTA Certified / IELTS", status: "Interviewed", submitted: "10 Nov 2026" },
+    { id: "tea-sample-2", name: "Sophie L.", email: "sophie@example.com", phone: "+33 612 345 678", country: "France", spec: "Business Communication & TOEFL", status: "Under Review", submitted: "13 Nov 2026" }
   ],
   class_slots: [
     { program: "Business English (Evening)", starts: "18:00", ends: "19:30", capacity: "8 / 10", status: "Active" },
@@ -171,27 +171,55 @@ const DEFAULT_WORKSPACE_DATA = {
 const STORAGE_KEY = "splus_workspace_store_v1";
 
 function loadWorkspaceState() {
+  let state = null;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.kronos_week && parsed.era_invoices) {
-        return parsed;
+        state = parsed;
       }
     }
   } catch (e) {
     console.warn("Storage parse error:", e);
   }
-  return JSON.parse(JSON.stringify(DEFAULT_WORKSPACE_DATA));
+  if (!state) {
+    state = JSON.parse(JSON.stringify(DEFAULT_WORKSPACE_DATA));
+  }
+  // Ensure IDs exist on applications and bookings
+  (state.student_applications || []).forEach((app, i) => {
+    if (!app.id) app.id = `stu-${i}-${Date.now()}`;
+  });
+  (state.teacher_applications || []).forEach((app, i) => {
+    if (!app.id) app.id = `tea-${i}-${Date.now()}`;
+  });
+  return state;
 }
 
 let APP_STATE = loadWorkspaceState();
 
 function saveWorkspaceState() {
   try {
+    // Bound collections to prevent QuotaExceededError under extreme volume
+    const MAX_ITEMS = 500;
+    ['student_applications', 'teacher_applications', 'booking_requests', 'era_invoices', 'notifications'].forEach(key => {
+      if (Array.isArray(APP_STATE[key]) && APP_STATE[key].length > MAX_ITEMS) {
+        APP_STATE[key] = APP_STATE[key].slice(0, MAX_ITEMS);
+      }
+    });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_STATE));
   } catch (e) {
-    console.error("Save state error:", e);
+    console.error("Save state error, attempting aggressive pruning:", e);
+    try {
+      ['student_applications', 'teacher_applications', 'booking_requests', 'era_invoices', 'notifications'].forEach(key => {
+        if (Array.isArray(APP_STATE[key])) {
+          APP_STATE[key] = APP_STATE[key].slice(0, 100);
+        }
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_STATE));
+    } catch (err2) {
+      console.error("Critical storage error:", err2);
+    }
   }
 }
 
@@ -216,6 +244,34 @@ function showToast(message, type = "success") {
   setTimeout(() => {
     toastEl.className = "admin-toast-message";
   }, 4000);
+}
+
+// Pagination & Search Filter State for High Volume Scaling
+const PAGINATION = {
+  booking_requests: { page: 1, pageSize: 8, search: "" },
+  student_applications: { page: 1, pageSize: 8, search: "" },
+  teacher_applications: { page: 1, pageSize: 8, search: "" },
+  era_invoices: { page: 1, pageSize: 8, search: "" }
+};
+
+function renderPaginationBar(tableKey, totalItems) {
+  const container = document.querySelector(`[data-pagination="${tableKey}"]`);
+  if (!container) return;
+  const config = PAGINATION[tableKey];
+  const totalPages = Math.max(1, Math.ceil(totalItems / config.pageSize));
+  if (config.page > totalPages) config.page = totalPages;
+
+  const startItem = totalItems === 0 ? 0 : (config.page - 1) * config.pageSize + 1;
+  const endItem = Math.min(totalItems, config.page * config.pageSize);
+
+  container.innerHTML = `
+    <div>Showing <strong>${startItem}–${endItem}</strong> of <strong>${totalItems}</strong> entries</div>
+    <div class="table-pagination-controls">
+      <button type="button" class="table-pagination-btn" data-page-action="prev" data-table="${tableKey}" ${config.page <= 1 ? "disabled" : ""}>Previous</button>
+      <span style="font-weight: 600; padding: 0 4px;">Page ${config.page} / ${totalPages}</span>
+      <button type="button" class="table-pagination-btn" data-page-action="next" data-table="${tableKey}" ${config.page >= totalPages ? "disabled" : ""}>Next</button>
+    </div>
+  `;
 }
 
 // View Switching
@@ -438,14 +494,36 @@ function renderEra() {
   const tbody = document.querySelector('[data-tbody="era_invoices"]');
   if (!tbody) return;
 
-  if (APP_STATE.era_invoices.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--admin-muted); padding: 24px;">No invoices found. Click "New invoice" to create one.</td></tr>`;
-    selectedEraInvoice = null;
-    updateEraCustomerCard();
+  const cfg = PAGINATION.era_invoices;
+  let list = APP_STATE.era_invoices || [];
+
+  if (cfg.search) {
+    const s = cfg.search.toLowerCase();
+    list = list.filter(inv =>
+      (inv.id && inv.id.toLowerCase().includes(s)) ||
+      (inv.name && inv.name.toLowerCase().includes(s)) ||
+      (inv.custNo && inv.custNo.toLowerCase().includes(s)) ||
+      (inv.program && inv.program.toLowerCase().includes(s)) ||
+      (inv.status && inv.status.toLowerCase().includes(s))
+    );
+  }
+
+  const total = list.length;
+  renderPaginationBar("era_invoices", total);
+
+  const start = (cfg.page - 1) * cfg.pageSize;
+  const paginated = list.slice(start, start + cfg.pageSize);
+
+  if (paginated.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--admin-muted); padding: 24px;">${cfg.search ? 'No matching invoices found.' : 'No invoices found. Click "New invoice" to create one.'}</td></tr>`;
+    if (!list.length) {
+      selectedEraInvoice = null;
+      updateEraCustomerCard();
+    }
     return;
   }
 
-  tbody.innerHTML = APP_STATE.era_invoices.map((inv) => {
+  tbody.innerHTML = paginated.map((inv) => {
     const isSelected = selectedEraInvoice && selectedEraInvoice.id === inv.id;
     return `
       <tr class="clickable ${isSelected ? 'row-selected' : ''}" data-invoice-id="${inv.id}">
@@ -533,11 +611,28 @@ function renderNotifications() {
 function renderApplications() {
   const bTbody = document.querySelector('[data-tbody="booking_requests"]');
   if (bTbody) {
-    const list = APP_STATE.booking_requests || [];
-    if (list.length === 0) {
-      bTbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--admin-muted); padding: 18px;">No online booking requests yet. Submissions from booking.html will appear here automatically.</td></tr>`;
+    const cfg = PAGINATION.booking_requests;
+    let list = APP_STATE.booking_requests || [];
+    if (cfg.search) {
+      const s = cfg.search.toLowerCase();
+      list = list.filter(r =>
+        (r.name && r.name.toLowerCase().includes(s)) ||
+        (r.reference && r.reference.toLowerCase().includes(s)) ||
+        (r.email && r.email.toLowerCase().includes(s)) ||
+        (r.phone && r.phone.toLowerCase().includes(s)) ||
+        (r.program && r.program.toLowerCase().includes(s))
+      );
+    }
+    const total = list.length;
+    renderPaginationBar("booking_requests", total);
+
+    const start = (cfg.page - 1) * cfg.pageSize;
+    const paginated = list.slice(start, start + cfg.pageSize);
+
+    if (paginated.length === 0) {
+      bTbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--admin-muted); padding: 18px;">${cfg.search ? 'No matching bookings found.' : 'No online booking requests yet. Submissions from booking.html will appear here automatically.'}</td></tr>`;
     } else {
-      bTbody.innerHTML = list.map(req => {
+      bTbody.innerHTML = paginated.map(req => {
         const isPending = (req.status || "").toLowerCase() === "pending";
         return `
           <tr>
@@ -562,11 +657,29 @@ function renderApplications() {
 
   const sTbody = document.querySelector('[data-tbody="student_applications"]');
   if (sTbody) {
-    const list = APP_STATE.student_applications || [];
-    if (list.length === 0) {
-      sTbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--admin-muted); padding: 18px;">No student applications received yet. Submissions from apply.html will appear here.</td></tr>`;
+    const cfg = PAGINATION.student_applications;
+    let list = APP_STATE.student_applications || [];
+    if (cfg.search) {
+      const s = cfg.search.toLowerCase();
+      list = list.filter(app =>
+        (app.name && app.name.toLowerCase().includes(s)) ||
+        (app.email && app.email.toLowerCase().includes(s)) ||
+        (app.phone && app.phone.toLowerCase().includes(s)) ||
+        (app.program && app.program.toLowerCase().includes(s)) ||
+        (app.level && app.level.toLowerCase().includes(s)) ||
+        (app.status && app.status.toLowerCase().includes(s))
+      );
+    }
+    const total = list.length;
+    renderPaginationBar("student_applications", total);
+
+    const start = (cfg.page - 1) * cfg.pageSize;
+    const paginated = list.slice(start, start + cfg.pageSize);
+
+    if (paginated.length === 0) {
+      sTbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--admin-muted); padding: 18px;">${cfg.search ? 'No matching applications found.' : 'No student applications received yet. Submissions from apply.html will appear here.'}</td></tr>`;
     } else {
-      sTbody.innerHTML = list.map((app, idx) => {
+      sTbody.innerHTML = paginated.map(app => {
         const isApproved = (app.status || "").toLowerCase() === "approved";
         const isDenied = (app.status || "").toLowerCase() === "denied" || (app.status || "").toLowerCase() === "rejected";
         return `
@@ -580,9 +693,9 @@ function renderApplications() {
             <td style="color: var(--admin-muted);">${app.submitted}</td>
             <td>
               <div class="table-actions-cell">
-                ${!isApproved ? `<button type="button" class="btn-xs btn-xs-success" data-action="approve-student-app" data-idx="${idx}">Approve & Transfer to Kronos</button>` : `<span class="badge-pill confirmed" style="font-size: 11px;">In Kronos</span>`}
-                ${!isDenied ? `<button type="button" class="btn-xs btn-xs-danger" data-action="deny-student-app" data-idx="${idx}">Deny</button>` : ''}
-                <button type="button" class="btn-xs btn-xs-danger" data-action="delete-student-app" data-idx="${idx}">Delete</button>
+                ${!isApproved ? `<button type="button" class="btn-xs btn-xs-success" data-action="approve-student-app" data-id="${app.id}">Approve & Transfer to Kronos</button>` : `<span class="badge-pill confirmed" style="font-size: 11px;">In Kronos</span>`}
+                ${!isDenied ? `<button type="button" class="btn-xs btn-xs-danger" data-action="deny-student-app" data-id="${app.id}">Deny</button>` : ''}
+                <button type="button" class="btn-xs btn-xs-danger" data-action="delete-student-app" data-id="${app.id}">Delete</button>
               </div>
             </td>
           </tr>
@@ -593,11 +706,29 @@ function renderApplications() {
 
   const tTbody = document.querySelector('[data-tbody="teacher_applications"]');
   if (tTbody) {
-    const list = APP_STATE.teacher_applications || [];
-    if (list.length === 0) {
-      tTbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--admin-muted); padding: 18px;">No teacher applications received yet. Submissions from teacher-apply.html will appear here.</td></tr>`;
+    const cfg = PAGINATION.teacher_applications;
+    let list = APP_STATE.teacher_applications || [];
+    if (cfg.search) {
+      const s = cfg.search.toLowerCase();
+      list = list.filter(app =>
+        (app.name && app.name.toLowerCase().includes(s)) ||
+        (app.email && app.email.toLowerCase().includes(s)) ||
+        (app.phone && app.phone.toLowerCase().includes(s)) ||
+        (app.country && app.country.toLowerCase().includes(s)) ||
+        (app.spec && app.spec.toLowerCase().includes(s)) ||
+        (app.status && app.status.toLowerCase().includes(s))
+      );
+    }
+    const total = list.length;
+    renderPaginationBar("teacher_applications", total);
+
+    const start = (cfg.page - 1) * cfg.pageSize;
+    const paginated = list.slice(start, start + cfg.pageSize);
+
+    if (paginated.length === 0) {
+      tTbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--admin-muted); padding: 18px;">${cfg.search ? 'No matching teachers found.' : 'No teacher applications received yet. Submissions from teacher-apply.html will appear here.'}</td></tr>`;
     } else {
-      tTbody.innerHTML = list.map((app, idx) => {
+      tTbody.innerHTML = paginated.map(app => {
         const isApproved = (app.status || "").toLowerCase() === "approved";
         const isDenied = (app.status || "").toLowerCase() === "denied" || (app.status || "").toLowerCase() === "rejected";
         return `
@@ -611,9 +742,9 @@ function renderApplications() {
             <td style="color: var(--admin-muted);">${app.submitted}</td>
             <td>
               <div class="table-actions-cell">
-                ${!isApproved ? `<button type="button" class="btn-xs btn-xs-success" data-action="approve-teacher-app" data-idx="${idx}">Approve</button>` : ''}
-                ${!isDenied ? `<button type="button" class="btn-xs btn-xs-danger" data-action="deny-teacher-app" data-idx="${idx}">Deny</button>` : ''}
-                <button type="button" class="btn-xs btn-xs-danger" data-action="delete-teacher-app" data-idx="${idx}">Delete</button>
+                ${!isApproved ? `<button type="button" class="btn-xs btn-xs-success" data-action="approve-teacher-app" data-id="${app.id}">Approve</button>` : ''}
+                ${!isDenied ? `<button type="button" class="btn-xs btn-xs-danger" data-action="deny-teacher-app" data-id="${app.id}">Deny</button>` : ''}
+                <button type="button" class="btn-xs btn-xs-danger" data-action="delete-teacher-app" data-id="${app.id}">Delete</button>
               </div>
             </td>
           </tr>
@@ -690,6 +821,19 @@ function setupEvents() {
   navButtons.forEach(btn => {
     btn.addEventListener("click", () => {
       switchView(btn.dataset.navTarget);
+    });
+  });
+
+  // Real-time table search inputs
+  document.querySelectorAll("[data-search-table]").forEach(input => {
+    input.addEventListener("input", (e) => {
+      const tableKey = e.target.dataset.searchTable;
+      if (PAGINATION[tableKey]) {
+        PAGINATION[tableKey].search = e.target.value.trim();
+        PAGINATION[tableKey].page = 1;
+        if (tableKey === "era_invoices") renderEra();
+        else renderApplications();
+      }
     });
   });
 
@@ -927,12 +1071,30 @@ function setupEvents() {
       return;
     }
 
+    // Pagination Next / Prev controls
+    const btnPage = e.target.closest('[data-page-action]');
+    if (btnPage) {
+      e.stopPropagation();
+      const action = btnPage.dataset.pageAction;
+      const table = btnPage.dataset.table;
+      if (PAGINATION[table]) {
+        if (action === "prev" && PAGINATION[table].page > 1) {
+          PAGINATION[table].page--;
+        } else if (action === "next") {
+          PAGINATION[table].page++;
+        }
+        if (table === "era_invoices") renderEra();
+        else renderApplications();
+      }
+      return;
+    }
+
     // 16. Approve Student Application -> Automatically transfer to Kronos & Customers
     const btnApproveApp = e.target.closest('[data-action="approve-student-app"]');
     if (btnApproveApp) {
       e.stopPropagation();
-      const idx = Number(btnApproveApp.dataset.idx);
-      const app = APP_STATE.student_applications[idx];
+      const id = btnApproveApp.dataset.id;
+      const app = (APP_STATE.student_applications || []).find(a => a.id === id);
       if (app) {
         app.status = "Approved";
 
@@ -952,7 +1114,7 @@ function setupEvents() {
           program: app.program || "English Program",
           teacher: "Chihab",
           status: "Confirmed",
-          reference: `APP-${idx + 1}`,
+          reference: `APP-${Date.now().toString().slice(-4)}`,
           phone: app.phone || "",
           email: app.email || ""
         };
@@ -999,8 +1161,8 @@ function setupEvents() {
     const btnDenyApp = e.target.closest('[data-action="deny-student-app"]');
     if (btnDenyApp) {
       e.stopPropagation();
-      const idx = Number(btnDenyApp.dataset.idx);
-      const app = APP_STATE.student_applications[idx];
+      const id = btnDenyApp.dataset.id;
+      const app = (APP_STATE.student_applications || []).find(a => a.id === id);
       if (app) {
         app.status = "Denied";
         saveWorkspaceState();
@@ -1014,12 +1176,15 @@ function setupEvents() {
     const btnDeleteApp = e.target.closest('[data-action="delete-student-app"]');
     if (btnDeleteApp) {
       e.stopPropagation();
-      const idx = Number(btnDeleteApp.dataset.idx);
+      const id = btnDeleteApp.dataset.id;
       if (APP_STATE.student_applications) {
-        const removed = APP_STATE.student_applications.splice(idx, 1)[0];
-        saveWorkspaceState();
-        renderCurrentView();
-        showToast(`Application for ${removed.name} removed.`, "success");
+        const idx = APP_STATE.student_applications.findIndex(a => a.id === id);
+        if (idx !== -1) {
+          const removed = APP_STATE.student_applications.splice(idx, 1)[0];
+          saveWorkspaceState();
+          renderCurrentView();
+          showToast(`Application for ${removed.name} removed.`, "success");
+        }
       }
       return;
     }
@@ -1028,8 +1193,8 @@ function setupEvents() {
     const btnApproveTeach = e.target.closest('[data-action="approve-teacher-app"]');
     if (btnApproveTeach) {
       e.stopPropagation();
-      const idx = Number(btnApproveTeach.dataset.idx);
-      const app = APP_STATE.teacher_applications[idx];
+      const id = btnApproveTeach.dataset.id;
+      const app = (APP_STATE.teacher_applications || []).find(a => a.id === id);
       if (app) {
         app.status = "Approved";
         saveWorkspaceState();
@@ -1042,8 +1207,8 @@ function setupEvents() {
     const btnDenyTeach = e.target.closest('[data-action="deny-teacher-app"]');
     if (btnDenyTeach) {
       e.stopPropagation();
-      const idx = Number(btnDenyTeach.dataset.idx);
-      const app = APP_STATE.teacher_applications[idx];
+      const id = btnDenyTeach.dataset.id;
+      const app = (APP_STATE.teacher_applications || []).find(a => a.id === id);
       if (app) {
         app.status = "Denied";
         saveWorkspaceState();
@@ -1056,12 +1221,15 @@ function setupEvents() {
     const btnDeleteTeach = e.target.closest('[data-action="delete-teacher-app"]');
     if (btnDeleteTeach) {
       e.stopPropagation();
-      const idx = Number(btnDeleteTeach.dataset.idx);
+      const id = btnDeleteTeach.dataset.id;
       if (APP_STATE.teacher_applications) {
-        const removed = APP_STATE.teacher_applications.splice(idx, 1)[0];
-        saveWorkspaceState();
-        renderCurrentView();
-        showToast(`Teacher application for ${removed.name} deleted.`, "success");
+        const idx = APP_STATE.teacher_applications.findIndex(a => a.id === id);
+        if (idx !== -1) {
+          const removed = APP_STATE.teacher_applications.splice(idx, 1)[0];
+          saveWorkspaceState();
+          renderCurrentView();
+          showToast(`Teacher application for ${removed.name} deleted.`, "success");
+        }
       }
       return;
     }

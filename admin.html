@@ -294,6 +294,10 @@
         <div class="grid-2col-70-30">
           <!-- Invoices table -->
           <div class="admin-card">
+            <div class="table-header-flex">
+              <h2 class="admin-card-title">Invoices List</h2>
+              <input type="text" class="table-search-input" placeholder="Search invoices..." data-search-table="era_invoices">
+            </div>
             <div class="admin-table-wrap">
               <table class="admin-table">
                 <thead>
@@ -313,6 +317,7 @@
                 </tbody>
               </table>
             </div>
+            <div class="table-pagination-bar" data-pagination="era_invoices"></div>
           </div>
 
           <!-- Customer Detail Card -->
@@ -420,7 +425,10 @@
         </header>
 
         <div class="admin-card" style="margin-bottom: 24px;">
-          <h2 class="admin-card-title">Online booking requests (حجوزات الموقع المباشرة)</h2>
+          <div class="table-header-flex">
+            <h2 class="admin-card-title">Online booking requests (حجوزات الموقع المباشرة)</h2>
+            <input type="text" class="table-search-input" placeholder="Search bookings..." data-search-table="booking_requests">
+          </div>
           <div class="admin-table-wrap">
             <table class="admin-table">
               <thead>
@@ -440,10 +448,14 @@
               </tbody>
             </table>
           </div>
+          <div class="table-pagination-bar" data-pagination="booking_requests"></div>
         </div>
 
         <div class="admin-card" style="margin-bottom: 24px;">
-          <h2 class="admin-card-title">Student applications</h2>
+          <div class="table-header-flex">
+            <h2 class="admin-card-title">Student applications</h2>
+            <input type="text" class="table-search-input" placeholder="Search applications..." data-search-table="student_applications">
+          </div>
           <div class="admin-table-wrap">
             <table class="admin-table">
               <thead>
@@ -463,10 +475,14 @@
               </tbody>
             </table>
           </div>
+          <div class="table-pagination-bar" data-pagination="student_applications"></div>
         </div>
 
         <div class="admin-card">
-          <h2 class="admin-card-title">Teacher applications</h2>
+          <div class="table-header-flex">
+            <h2 class="admin-card-title">Teacher applications</h2>
+            <input type="text" class="table-search-input" placeholder="Search teachers..." data-search-table="teacher_applications">
+          </div>
           <div class="admin-table-wrap">
             <table class="admin-table">
               <thead>
@@ -486,6 +502,7 @@
               </tbody>
             </table>
           </div>
+          <div class="table-pagination-bar" data-pagination="teacher_applications"></div>
         </div>
       </section>
 

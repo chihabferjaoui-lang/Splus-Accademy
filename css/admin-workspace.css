@@ -453,6 +453,80 @@ body.admin-body {
   color: var(--admin-muted);
 }
 
+/* Search and Pagination for High Volume Scalability */
+.table-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.table-header-flex .admin-card-title {
+  margin: 0;
+}
+
+.table-search-input {
+  max-width: 260px;
+  padding: 6px 12px;
+  font-size: 13px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+  background: #ffffff;
+  color: var(--admin-text);
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.table-search-input:focus {
+  border-color: var(--admin-primary);
+  box-shadow: 0 0 0 2px rgba(47, 43, 150, 0.12);
+}
+
+.table-pagination-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px 4px;
+  font-size: 12.5px;
+  color: var(--admin-muted);
+  border-top: 1px solid #edf1f7;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.table-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.table-pagination-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--admin-text);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.table-pagination-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: var(--admin-primary);
+  color: var(--admin-primary);
+}
+
+.table-pagination-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 /* Action buttons in tables and cards */
 .btn-xs {
   padding: 4px 10px;
