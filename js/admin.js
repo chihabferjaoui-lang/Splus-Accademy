@@ -562,32 +562,64 @@ function renderApplications() {
 
   const sTbody = document.querySelector('[data-tbody="student_applications"]');
   if (sTbody) {
-    sTbody.innerHTML = APP_STATE.student_applications.map(app => `
-      <tr>
-        <td style="font-weight: 600;">${app.name}</td>
-        <td>${app.email}</td>
-        <td>${app.phone}</td>
-        <td>${app.program}</td>
-        <td><span class="badge-pill sent">${app.level}</span></td>
-        <td><span class="badge-pill ${app.status === 'Approved' ? 'confirmed' : 'pending'}">${app.status}</span></td>
-        <td style="color: var(--admin-muted);">${app.submitted}</td>
-      </tr>
-    `).join("");
+    const list = APP_STATE.student_applications || [];
+    if (list.length === 0) {
+      sTbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--admin-muted); padding: 18px;">No student applications received yet. Submissions from apply.html will appear here.</td></tr>`;
+    } else {
+      sTbody.innerHTML = list.map((app, idx) => {
+        const isApproved = (app.status || "").toLowerCase() === "approved";
+        const isDenied = (app.status || "").toLowerCase() === "denied" || (app.status || "").toLowerCase() === "rejected";
+        return `
+          <tr>
+            <td style="font-weight: 600;">${app.name}</td>
+            <td>${app.email || "—"}</td>
+            <td>${app.phone || "—"}</td>
+            <td>${app.program}</td>
+            <td><span class="badge-pill sent">${app.level}</span></td>
+            <td><span class="badge-pill ${isApproved ? 'confirmed' : (isDenied ? 'overdue' : 'pending')}">${app.status}</span></td>
+            <td style="color: var(--admin-muted);">${app.submitted}</td>
+            <td>
+              <div class="table-actions-cell">
+                ${!isApproved ? `<button type="button" class="btn-xs btn-xs-success" data-action="approve-student-app" data-idx="${idx}">Approve & Transfer to Kronos</button>` : `<span class="badge-pill confirmed" style="font-size: 11px;">In Kronos</span>`}
+                ${!isDenied ? `<button type="button" class="btn-xs btn-xs-danger" data-action="deny-student-app" data-idx="${idx}">Deny</button>` : ''}
+                <button type="button" class="btn-xs btn-xs-danger" data-action="delete-student-app" data-idx="${idx}">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
   }
 
   const tTbody = document.querySelector('[data-tbody="teacher_applications"]');
   if (tTbody) {
-    tTbody.innerHTML = APP_STATE.teacher_applications.map(app => `
-      <tr>
-        <td style="font-weight: 600;">${app.name}</td>
-        <td>${app.email}</td>
-        <td>${app.phone}</td>
-        <td>${app.country}</td>
-        <td>${app.spec}</td>
-        <td><span class="badge-pill ${app.status === 'Approved' ? 'confirmed' : 'pending'}">${app.status}</span></td>
-        <td style="color: var(--admin-muted);">${app.submitted}</td>
-      </tr>
-    `).join("");
+    const list = APP_STATE.teacher_applications || [];
+    if (list.length === 0) {
+      tTbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--admin-muted); padding: 18px;">No teacher applications received yet. Submissions from teacher-apply.html will appear here.</td></tr>`;
+    } else {
+      tTbody.innerHTML = list.map((app, idx) => {
+        const isApproved = (app.status || "").toLowerCase() === "approved";
+        const isDenied = (app.status || "").toLowerCase() === "denied" || (app.status || "").toLowerCase() === "rejected";
+        return `
+          <tr>
+            <td style="font-weight: 600;">${app.name}</td>
+            <td>${app.email || "—"}</td>
+            <td>${app.phone || "—"}</td>
+            <td>${app.country || "—"}</td>
+            <td>${app.spec}</td>
+            <td><span class="badge-pill ${isApproved ? 'confirmed' : (isDenied ? 'overdue' : 'pending')}">${app.status}</span></td>
+            <td style="color: var(--admin-muted);">${app.submitted}</td>
+            <td>
+              <div class="table-actions-cell">
+                ${!isApproved ? `<button type="button" class="btn-xs btn-xs-success" data-action="approve-teacher-app" data-idx="${idx}">Approve</button>` : ''}
+                ${!isDenied ? `<button type="button" class="btn-xs btn-xs-danger" data-action="deny-teacher-app" data-idx="${idx}">Deny</button>` : ''}
+                <button type="button" class="btn-xs btn-xs-danger" data-action="delete-teacher-app" data-idx="${idx}">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
   }
 }
 
@@ -891,6 +923,145 @@ function setupEvents() {
           renderCurrentView();
           showToast(`Booking request ${ref} removed.`, "success");
         }
+      }
+      return;
+    }
+
+    // 16. Approve Student Application -> Automatically transfer to Kronos & Customers
+    const btnApproveApp = e.target.closest('[data-action="approve-student-app"]');
+    if (btnApproveApp) {
+      e.stopPropagation();
+      const idx = Number(btnApproveApp.dataset.idx);
+      const app = APP_STATE.student_applications[idx];
+      if (app) {
+        app.status = "Approved";
+
+        // Determine schedule day from preferredSchedule
+        let targetDay = "tue";
+        const schedLower = (app.schedule || "").toLowerCase();
+        if (schedLower.includes("mon")) targetDay = "mon";
+        else if (schedLower.includes("wed")) targetDay = "wed";
+        else if (schedLower.includes("thu")) targetDay = "thu";
+        else if (schedLower.includes("fri")) targetDay = "fri";
+
+        // Create confirmed session in Kronos
+        const newSession = {
+          id: `sess-app-${Date.now()}`,
+          time: "14:00",
+          student: app.name,
+          program: app.program || "English Program",
+          teacher: "Chihab",
+          status: "Confirmed",
+          reference: `APP-${idx + 1}`,
+          phone: app.phone || "",
+          email: app.email || ""
+        };
+
+        APP_STATE.kronos_week[targetDay] = APP_STATE.kronos_week[targetDay] || [];
+        APP_STATE.kronos_week[targetDay].push(newSession);
+
+        // Add to Customers list
+        const custNo = `C-0000${Math.floor(30 + Math.random() * 50)}`;
+        APP_STATE.customers.unshift({
+          custNo: custNo,
+          name: app.name,
+          email: app.email,
+          phone: app.phone,
+          city: "Casablanca",
+          status: "Active"
+        });
+
+        // Add to Era Invoices
+        const newInvId = `INV-00${Math.floor(50 + Math.random() * 50)}`;
+        APP_STATE.era_invoices.unshift({
+          id: newInvId,
+          custNo: custNo,
+          name: app.name,
+          program: app.program || "English Program",
+          mad: 800,
+          due: "25 Nov",
+          status: "Sent",
+          statusClass: "sent",
+          address: "Casablanca, Morocco",
+          phone: app.phone || "+212 600 000 000",
+          email: app.email || "student@example.com",
+          reminders: ["Enrollment invoice generated upon approval"]
+        });
+
+        saveWorkspaceState();
+        renderCurrentView();
+        showToast(`Application for ${app.name} approved! Transferred to Kronos schedule and Customers.`, "success");
+      }
+      return;
+    }
+
+    // 17. Deny Student Application
+    const btnDenyApp = e.target.closest('[data-action="deny-student-app"]');
+    if (btnDenyApp) {
+      e.stopPropagation();
+      const idx = Number(btnDenyApp.dataset.idx);
+      const app = APP_STATE.student_applications[idx];
+      if (app) {
+        app.status = "Denied";
+        saveWorkspaceState();
+        renderCurrentView();
+        showToast(`Application for ${app.name} marked as Denied.`, "success");
+      }
+      return;
+    }
+
+    // 18. Delete Student Application
+    const btnDeleteApp = e.target.closest('[data-action="delete-student-app"]');
+    if (btnDeleteApp) {
+      e.stopPropagation();
+      const idx = Number(btnDeleteApp.dataset.idx);
+      if (APP_STATE.student_applications) {
+        const removed = APP_STATE.student_applications.splice(idx, 1)[0];
+        saveWorkspaceState();
+        renderCurrentView();
+        showToast(`Application for ${removed.name} removed.`, "success");
+      }
+      return;
+    }
+
+    // 19. Teacher Application Actions (Approve / Deny / Delete)
+    const btnApproveTeach = e.target.closest('[data-action="approve-teacher-app"]');
+    if (btnApproveTeach) {
+      e.stopPropagation();
+      const idx = Number(btnApproveTeach.dataset.idx);
+      const app = APP_STATE.teacher_applications[idx];
+      if (app) {
+        app.status = "Approved";
+        saveWorkspaceState();
+        renderCurrentView();
+        showToast(`Teacher application for ${app.name} approved!`, "success");
+      }
+      return;
+    }
+
+    const btnDenyTeach = e.target.closest('[data-action="deny-teacher-app"]');
+    if (btnDenyTeach) {
+      e.stopPropagation();
+      const idx = Number(btnDenyTeach.dataset.idx);
+      const app = APP_STATE.teacher_applications[idx];
+      if (app) {
+        app.status = "Denied";
+        saveWorkspaceState();
+        renderCurrentView();
+        showToast(`Teacher application for ${app.name} marked as Denied.`, "success");
+      }
+      return;
+    }
+
+    const btnDeleteTeach = e.target.closest('[data-action="delete-teacher-app"]');
+    if (btnDeleteTeach) {
+      e.stopPropagation();
+      const idx = Number(btnDeleteTeach.dataset.idx);
+      if (APP_STATE.teacher_applications) {
+        const removed = APP_STATE.teacher_applications.splice(idx, 1)[0];
+        saveWorkspaceState();
+        renderCurrentView();
+        showToast(`Teacher application for ${removed.name} deleted.`, "success");
       }
       return;
     }

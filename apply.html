@@ -814,7 +814,7 @@
         const button = event.currentTarget;
         const status = document.getElementById('studentApplicationStatus');
         button.disabled = true;
-        status.textContent = 'Complete the security check to continue.';
+        status.textContent = 'Submitting your application...';
         try {
           await submitPublicRequest('submit-student-application', {
             programSlug: state.program.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),

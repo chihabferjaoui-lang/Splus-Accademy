@@ -907,7 +907,7 @@
           const button = event.currentTarget;
           const status = document.getElementById('teacherApplicationStatus');
           button.disabled = true;
-          status.textContent = 'Complete the security check to continue.';
+          status.textContent = 'Submitting your application...';
           try {
             await submitPublicRequest('submit-teacher-application', {
               fullName: state.fullName,
