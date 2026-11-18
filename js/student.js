@@ -243,6 +243,8 @@ function renderNotifications(notifications) {
     time.textContent = formatDate(notification.created_at);
     content.append(title, body, time);
     article.append(content);
+    const actions = document.createElement("div");
+    actions.className = "portal-notification-actions";
     if (!notification.read_at) {
       const button = document.createElement("button");
       button.type = "button";
@@ -263,8 +265,34 @@ function renderNotifications(notifications) {
           button.disabled = false;
         }
       });
-      article.append(button);
+      actions.append(button);
     }
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "portal-button-danger";
+    deleteButton.textContent = "Delete";
+    deleteButton.setAttribute("aria-label", `Delete notification: ${notification.title}`);
+    deleteButton.addEventListener("click", async () => {
+      if (!window.confirm("Delete this notification? This action cannot be undone.")) return;
+      deleteButton.disabled = true;
+      try {
+        const { data, error } = await getSupabaseClient()
+          .from("notifications")
+          .delete()
+          .eq("id", notification.id)
+          .eq("recipient_id", currentUser.id)
+          .eq("channel", "in_app")
+          .select("id");
+        if (error) throw error;
+        if (!data?.length) throw new Error("The notification could not be found or deleted.");
+        await loadNotifications();
+      } catch (error) {
+        showMessage(`Could not delete the notification: ${error.message}`, "error");
+        deleteButton.disabled = false;
+      }
+    });
+    actions.append(deleteButton);
+    article.append(actions);
     container.append(article);
   });
 }

@@ -146,6 +146,11 @@ button:disabled { cursor: not-allowed; opacity: .58; }
 .portal-notification h3 { font-size: 16px; margin: 0 0 4px; }
 .portal-notification p { margin: 0; }
 .portal-notification time { color: var(--portal-muted); display: block; font-size: 13px; margin-top: 6px; }
+.portal-notification-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; }
+.portal-notification-actions .portal-button-secondary,
+.portal-notification-actions .portal-button-danger { min-height: 36px; padding: 6px 12px; }
+.portal-button-danger { background: #fff0f1; color: var(--portal-danger); }
+.portal-button-danger:hover { background: #ffe0e3; }
 .portal-empty { color: var(--portal-muted); margin: 8px 0; }
 .portal-table .portal-status { white-space: nowrap; }
 .portal-table .portal-invoice-details { min-width: 0; }
