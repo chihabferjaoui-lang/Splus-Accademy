@@ -228,6 +228,62 @@ let selectedGeniusLesson = APP_STATE.genius_lessons[0] || null;
 let selectedEraInvoice = APP_STATE.era_invoices[0] || null;
 let editingSessionContext = null;
 
+// Kronos Calendar State & Multi-Date Scroll Engine
+let kronosAnchorDate = new Date(2026, 10, 18);
+function getTodayISO() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+const TODAY_ISO = getTodayISO();
+
+const LEGACY_DAY_MAP = {
+  "2026-11-16": "mon",
+  "2026-11-17": "tue",
+  "2026-11-18": "wed",
+  "2026-11-19": "thu",
+  "2026-11-20": "fri",
+  "2026-11-21": "sat",
+  "2026-11-22": "sun"
+};
+
+function getSessionsForDate(dateISO) {
+  let list = APP_STATE.kronos_week[dateISO];
+  if (Array.isArray(list) && list.length > 0) return list;
+  const legacyKey = LEGACY_DAY_MAP[dateISO];
+  if (legacyKey && Array.isArray(APP_STATE.kronos_week[legacyKey])) {
+    return APP_STATE.kronos_week[legacyKey];
+  }
+  return list || [];
+}
+
+function findSessionAndBucket(id) {
+  for (const key of Object.keys(APP_STATE.kronos_week)) {
+    const list = APP_STATE.kronos_week[key];
+    if (Array.isArray(list)) {
+      const idx = list.findIndex(s => s.id === id);
+      if (idx !== -1) {
+        return { bucket: key, index: idx, session: list[idx] };
+      }
+    }
+  }
+  return null;
+}
+
+function scrollKronosToToday() {
+  const container = document.getElementById("kronosScrollContainer");
+  const todayCol = document.querySelector(".kronos-day-col.col-today");
+  if (container && todayCol) {
+    const containerWidth = container.clientWidth;
+    container.scrollTo({
+      left: todayCol.offsetLeft - (containerWidth / 2) + (todayCol.offsetWidth / 2),
+      behavior: "smooth"
+    });
+  }
+}
+
 // DOM References
 const toastEl = document.querySelector("[data-portal-message]");
 const navButtons = document.querySelectorAll("[data-nav-target]");
@@ -285,6 +341,9 @@ function switchView(targetView) {
     panel.hidden = panel.dataset.adminPanel !== targetView;
   });
   renderCurrentView();
+  if (targetView === "kronos") {
+    setTimeout(scrollKronosToToday, 60);
+  }
 }
 
 function renderCurrentView() {
@@ -303,7 +362,7 @@ function renderCurrentView() {
 // Calculate dynamic stats
 function calculateStats() {
   const allSessions = Object.values(APP_STATE.kronos_week).flat();
-  const todaySessions = APP_STATE.kronos_week["tue"] || [];
+  const todaySessions = getSessionsForDate(TODAY_ISO);
   const overdueInvoices = APP_STATE.era_invoices.filter(i => (i.status || "").toLowerCase() === "overdue");
   const uniqueStudents = new Set([
     ...allSessions.map(s => s.student),
@@ -345,7 +404,7 @@ function calculateStats() {
 function renderOverview() {
   const sessionsTbody = document.querySelector('[data-tbody="overview_sessions"]');
   if (sessionsTbody) {
-    const todaySessions = APP_STATE.kronos_week["tue"] || [];
+    const todaySessions = getSessionsForDate(TODAY_ISO);
     if (todaySessions.length === 0) {
       sessionsTbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--admin-muted); padding: 18px;">No sessions scheduled for today.</td></tr>`;
     } else {
@@ -359,8 +418,8 @@ function renderOverview() {
             <td><span class="badge-pill ${isPending ? 'pending' : 'confirmed'}">${s.status}</span></td>
             <td>
               <div class="table-actions-cell">
-                ${isPending ? `<button type="button" class="btn-xs btn-xs-success" data-action="approve-session" data-id="${s.id}" data-day="tue">Approve</button>` : ''}
-                <button type="button" class="btn-xs btn-xs-danger" data-action="delete-session" data-id="${s.id}" data-day="tue">Delete</button>
+                ${isPending ? `<button type="button" class="btn-xs btn-xs-success" data-action="approve-session" data-id="${s.id}">Approve</button>` : ''}
+                <button type="button" class="btn-xs btn-xs-danger" data-action="delete-session" data-id="${s.id}">Delete</button>
               </div>
             </td>
           </tr>
@@ -396,45 +455,95 @@ function renderOverview() {
   }
 }
 
-// RENDER: KRONOS SCHEDULE
+// RENDER: KRONOS SCHEDULE (Multi-Date Scrollable Extended Engine)
 function renderKronos() {
-  const days = ["mon", "tue", "wed", "thu", "fri"];
+  const grid = document.getElementById("kronosWeekGrid");
+  if (!grid) return;
+
+  const todayStr = TODAY_ISO;
   let pendingCount = 0;
   let totalHours = 0;
 
-  days.forEach(day => {
-    const container = document.querySelector(`[data-kronos-day="${day}"]`);
-    if (!container) return;
-    const items = APP_STATE.kronos_week[day] || [];
+  // Generate 28 scrollable days around kronosAnchorDate (-7 days past to +20 days future)
+  const daysToShow = [];
+  const base = new Date(kronosAnchorDate);
+  base.setHours(0, 0, 0, 0);
 
-    if (items.length === 0) {
-      container.innerHTML = `<div style="font-size: 11.5px; color: #94a3b8; text-align: center; padding: 24px 0;">No sessions</div>`;
-    } else {
-      container.innerHTML = items.map(item => {
-        const isPending = (item.status || "").toLowerCase() === "pending";
-        if (isPending) pendingCount++;
-        totalHours += 1;
-        return `
-          <div class="kronos-session-card ${isPending ? 'is-pending' : ''}" data-session-click="${item.id}" data-day="${day}">
-            <div class="kronos-card-header">
-              <span class="kronos-session-time">${item.time}</span>
-              <span class="badge-pill ${isPending ? 'pending' : 'confirmed'}" style="font-size: 10px; padding: 2px 7px;">${item.status}</span>
-            </div>
-            <div class="kronos-session-info">${item.student} · ${item.program}</div>
-            <div class="kronos-card-actions">
-              ${isPending ? `<button type="button" class="btn-xs btn-xs-success" data-action="approve-session" data-id="${item.id}" data-day="${day}">Approve</button>` : ''}
-              <button type="button" class="btn-xs btn-xs-danger" data-action="delete-session" data-id="${item.id}" data-day="${day}">Delete</button>
-            </div>
-          </div>
-        `;
-      }).join("");
-    }
-  });
+  for (let offset = -7; offset <= 20; offset++) {
+    const d = new Date(base);
+    d.setDate(base.getDate() + offset);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const iso = `${yyyy}-${mm}-${dd}`;
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    daysToShow.push({
+      dateObj: d,
+      iso: iso,
+      dayName: dayNames[d.getDay()],
+      dayNum: d.getDate(),
+      monthName: monthNames[d.getMonth()],
+      isToday: iso === todayStr,
+      isPast: iso < todayStr
+    });
+  }
 
-  // Update teacher hours & pending approval indicators
+  // Update subtitle
+  const subTitle = document.getElementById("kronosWeekSubtitle");
+  if (subTitle && daysToShow.length) {
+    const startD = daysToShow[0];
+    const endD = daysToShow[daysToShow.length - 1];
+    subTitle.textContent = `Schedule from ${startD.dayNum} ${startD.monthName} to ${endD.dayNum} ${endD.monthName} ${endD.dateObj.getFullYear()}. Browse past & upcoming dates. Past dates are view-only.`;
+  }
+
+  grid.innerHTML = daysToShow.map(dayInfo => {
+    const items = getSessionsForDate(dayInfo.iso);
+    const colClass = dayInfo.isToday ? "col-today" : (dayInfo.isPast ? "col-past" : "col-future");
+
+    const sessionsHtml = items.length === 0
+      ? `<div style="font-size: 11.5px; color: #94a3b8; text-align: center; padding: 24px 0;">No sessions</div>`
+      : items.map(item => {
+          const isPending = (item.status || "").toLowerCase() === "pending";
+          if (isPending) pendingCount++;
+          totalHours += 1;
+          return `
+            <div class="kronos-session-card ${isPending ? 'is-pending' : ''}" data-session-click="${item.id}" data-date="${dayInfo.iso}">
+              <div class="kronos-card-header">
+                <span class="kronos-session-time">${item.time}</span>
+                <span class="badge-pill ${isPending ? 'pending' : 'confirmed'}" style="font-size: 10px; padding: 2px 7px;">${item.status}</span>
+              </div>
+              <div class="kronos-session-info">${item.student} · ${item.program}</div>
+              <div class="kronos-card-actions">
+                ${isPending ? `<button type="button" class="btn-xs btn-xs-success" data-action="approve-session" data-id="${item.id}">Approve</button>` : ''}
+                <button type="button" class="btn-xs btn-xs-danger" data-action="delete-session" data-id="${item.id}">Delete</button>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+    return `
+      <div class="kronos-day-col ${colClass}" data-kronos-col="${dayInfo.iso}">
+        <div class="kronos-day-header">
+          <span>${dayInfo.dayName} ${dayInfo.dayNum} ${dayInfo.monthName}</span>
+          ${dayInfo.isToday ? `<span class="today-badge">(Today)</span>` : (dayInfo.isPast ? `<span class="badge-pill overdue" style="font-size: 10px; padding: 1px 6px;">Past</span>` : '')}
+        </div>
+        <div class="kronos-day-sessions" data-kronos-date="${dayInfo.iso}">
+          ${sessionsHtml}
+        </div>
+        ${dayInfo.isPast ? `
+          <button type="button" class="btn-add-session-day btn-disabled-past" disabled title="Past date — booking disabled">Booking closed</button>
+        ` : `
+          <button type="button" class="btn-add-session-day" data-add-to-date="${dayInfo.iso}">+ Add Session</button>
+        `}
+      </div>
+    `;
+  }).join("");
+
+  // Update teacher hours & stats
   const hoursEl = document.querySelector("#btnApproveTimesheet")?.previousElementSibling?.previousElementSibling?.previousElementSibling?.previousElementSibling;
   const pendingTextEl = document.querySelector("#btnApproveTimesheet")?.previousElementSibling?.previousElementSibling?.previousElementSibling;
-  if (hoursEl) hoursEl.textContent = `Chihab · ${(totalHours * 1.5).toFixed(1)} h this week`;
+  if (hoursEl) hoursEl.textContent = `Chihab · ${(totalHours * 1.5).toFixed(1)} h scheduled`;
   if (pendingTextEl) pendingTextEl.textContent = `${pendingCount} sessions waiting for approval`;
 }
 
@@ -868,15 +977,12 @@ function setupEvents() {
     if (btnDelSession) {
       e.stopPropagation();
       const id = btnDelSession.dataset.id;
-      const day = btnDelSession.dataset.day;
-      if (APP_STATE.kronos_week[day]) {
-        const idx = APP_STATE.kronos_week[day].findIndex(s => s.id === id);
-        if (idx !== -1) {
-          const removed = APP_STATE.kronos_week[day].splice(idx, 1)[0];
-          saveWorkspaceState();
-          renderCurrentView();
-          showToast(`Session for ${removed.student} (${removed.time}) deleted successfully!`, "success");
-        }
+      const found = findSessionAndBucket(id);
+      if (found) {
+        const removed = APP_STATE.kronos_week[found.bucket].splice(found.index, 1)[0];
+        saveWorkspaceState();
+        renderCurrentView();
+        showToast(`Session for ${removed.student} (${removed.time}) deleted successfully!`, "success");
       }
       return;
     }
@@ -886,15 +992,12 @@ function setupEvents() {
     if (btnApproveSession) {
       e.stopPropagation();
       const id = btnApproveSession.dataset.id;
-      const day = btnApproveSession.dataset.day;
-      if (APP_STATE.kronos_week[day]) {
-        const session = APP_STATE.kronos_week[day].find(s => s.id === id);
-        if (session) {
-          session.status = "Confirmed";
-          saveWorkspaceState();
-          renderCurrentView();
-          showToast(`Session for ${session.student} on ${day.toUpperCase()} is now Confirmed!`, "success");
-        }
+      const found = findSessionAndBucket(id);
+      if (found) {
+        found.session.status = "Confirmed";
+        saveWorkspaceState();
+        renderCurrentView();
+        showToast(`Session for ${found.session.student} is now Confirmed!`, "success");
       }
       return;
     }
@@ -903,15 +1006,29 @@ function setupEvents() {
     const sessionCard = e.target.closest('[data-session-click]');
     if (sessionCard && !e.target.closest('.kronos-card-actions')) {
       const id = sessionCard.dataset.sessionClick;
-      const day = sessionCard.dataset.day;
-      const session = APP_STATE.kronos_week[day]?.find(s => s.id === id);
-      if (session) {
-        editingSessionContext = { id, day };
+      const found = findSessionAndBucket(id);
+      if (found) {
+        const { bucket, session } = found;
+        editingSessionContext = { id, bucket };
         document.getElementById("editSessionId").value = session.id;
-        document.getElementById("editSessionDay").value = day;
+        document.getElementById("editSessionDay").value = bucket;
         document.getElementById("editSessionStudent").value = session.student;
         document.getElementById("editSessionProgram").value = session.program;
-        document.getElementById("editSessionDaySelect").value = day;
+
+        const legacyReverseMap = {
+          "mon": "2026-11-16",
+          "tue": "2026-11-17",
+          "wed": "2026-11-18",
+          "thu": "2026-11-19",
+          "fri": "2026-11-20",
+          "sat": "2026-11-21",
+          "sun": "2026-11-22"
+        };
+        const editDateInput = document.getElementById("editSessionDate");
+        if (editDateInput) {
+          editDateInput.value = session.date || legacyReverseMap[bucket] || bucket;
+        }
+
         document.getElementById("editSessionTime").value = session.time;
         document.getElementById("editSessionStatus").value = session.status;
         openModal("modalEditSession");
@@ -919,11 +1036,19 @@ function setupEvents() {
       return;
     }
 
-    // 4. Quick Add Session to specific day
-    const btnAddDay = e.target.closest('[data-add-to-day]');
-    if (btnAddDay) {
-      const day = btnAddDay.dataset.addToDay;
-      document.getElementById("sessionDay").value = day;
+    // 4. Quick Add Session to specific date
+    const btnAddDate = e.target.closest('[data-add-to-date]');
+    if (btnAddDate) {
+      const dateVal = btnAddDate.dataset.addToDate;
+      if (dateVal < TODAY_ISO) {
+        showToast("Cannot book sessions on past dates. Booking is disabled.", "error");
+        return;
+      }
+      const sessionDateInput = document.getElementById("sessionDate");
+      if (sessionDateInput) {
+        sessionDateInput.value = dateVal;
+        sessionDateInput.min = TODAY_ISO;
+      }
       openModal("modalBookSession");
       return;
     }
@@ -1389,6 +1514,54 @@ function setupEvents() {
     });
   }
 
+  // Kronos Scroll & Date Navigation Buttons
+  const btnScrollLeft = document.getElementById("kronosScrollLeft");
+  if (btnScrollLeft) {
+    btnScrollLeft.addEventListener("click", () => {
+      const container = document.getElementById("kronosScrollContainer");
+      if (container) container.scrollBy({ left: -420, behavior: "smooth" });
+    });
+  }
+
+  const btnScrollRight = document.getElementById("kronosScrollRight");
+  if (btnScrollRight) {
+    btnScrollRight.addEventListener("click", () => {
+      const container = document.getElementById("kronosScrollContainer");
+      if (container) container.scrollBy({ left: 420, behavior: "smooth" });
+    });
+  }
+
+  const btnToday = document.getElementById("kronosTodayBtn");
+  if (btnToday) {
+    btnToday.addEventListener("click", () => {
+      kronosAnchorDate = new Date(2026, 10, 18);
+      renderKronos();
+      setTimeout(scrollKronosToToday, 60);
+    });
+  }
+
+  const jumpInput = document.getElementById("kronosJumpDate");
+  if (jumpInput) {
+    jumpInput.addEventListener("change", (e) => {
+      const targetDate = e.target.value;
+      if (!targetDate) return;
+      kronosAnchorDate = new Date(targetDate + "T12:00:00");
+      renderKronos();
+      setTimeout(() => {
+        const col = document.querySelector(`[data-kronos-col="${targetDate}"]`);
+        const container = document.getElementById("kronosScrollContainer");
+        if (col && container) {
+          container.scrollTo({
+            left: col.offsetLeft - (container.clientWidth / 2) + (col.offsetWidth / 2),
+            behavior: "smooth"
+          });
+          col.style.boxShadow = "0 0 0 3px var(--admin-primary)";
+          setTimeout(() => { col.style.boxShadow = ""; }, 1500);
+        }
+      }, 80);
+    });
+  }
+
   // Submit Book Session
   const formBookSession = document.getElementById("formBookSession");
   if (formBookSession) {
@@ -1396,9 +1569,14 @@ function setupEvents() {
       e.preventDefault();
       const student = document.getElementById("sessionStudentName").value.trim();
       const prog = document.getElementById("sessionProgram").value.trim();
-      const day = document.getElementById("sessionDay").value;
+      const dateVal = document.getElementById("sessionDate").value;
       const time = document.getElementById("sessionTime").value.trim();
       const teacher = document.getElementById("sessionTeacher").value.trim() || "Chihab";
+
+      if (dateVal < TODAY_ISO) {
+        showToast("Cannot book sessions on past dates. Booking is disabled for past dates.", "error");
+        return;
+      }
 
       const newSession = {
         id: `sess-${Date.now()}`,
@@ -1406,16 +1584,17 @@ function setupEvents() {
         student: student,
         program: prog,
         teacher: teacher,
-        status: "Confirmed"
+        status: "Confirmed",
+        date: dateVal
       };
 
-      APP_STATE.kronos_week[day] = APP_STATE.kronos_week[day] || [];
-      APP_STATE.kronos_week[day].push(newSession);
+      APP_STATE.kronos_week[dateVal] = APP_STATE.kronos_week[dateVal] || [];
+      APP_STATE.kronos_week[dateVal].push(newSession);
       saveWorkspaceState();
       renderCurrentView();
       closeModal("modalBookSession");
       formBookSession.reset();
-      showToast(`Session booked for ${student} on ${day.toUpperCase()} at ${time}.`, "success");
+      showToast(`Session booked for ${student} on ${dateVal} at ${time}.`, "success");
     });
   }
 
@@ -1425,30 +1604,30 @@ function setupEvents() {
     formEditSession.addEventListener("submit", (e) => {
       e.preventDefault();
       if (!editingSessionContext) return;
-      const { id, day: origDay } = editingSessionContext;
-      const newDay = document.getElementById("editSessionDaySelect").value;
+      const { id } = editingSessionContext;
+      const newDate = document.getElementById("editSessionDate").value;
       const newStudent = document.getElementById("editSessionStudent").value.trim();
       const newProg = document.getElementById("editSessionProgram").value.trim();
       const newTime = document.getElementById("editSessionTime").value.trim();
       const newStatus = document.getElementById("editSessionStatus").value;
 
-      // Remove from origDay
-      const idx = APP_STATE.kronos_week[origDay]?.findIndex(s => s.id === id);
-      if (idx !== -1) {
-        const [session] = APP_STATE.kronos_week[origDay].splice(idx, 1);
+      const found = findSessionAndBucket(id);
+      if (found) {
+        APP_STATE.kronos_week[found.bucket].splice(found.index, 1);
+        const session = found.session;
         session.student = newStudent;
         session.program = newProg;
         session.time = newTime;
         session.status = newStatus;
+        session.date = newDate;
 
-        // Add to newDay
-        APP_STATE.kronos_week[newDay] = APP_STATE.kronos_week[newDay] || [];
-        APP_STATE.kronos_week[newDay].push(session);
+        APP_STATE.kronos_week[newDate] = APP_STATE.kronos_week[newDate] || [];
+        APP_STATE.kronos_week[newDate].push(session);
 
         saveWorkspaceState();
         renderCurrentView();
         closeModal("modalEditSession");
-        showToast(`Session updated successfully!`, "success");
+        showToast("Session updated successfully!", "success");
       }
     });
   }
@@ -1458,10 +1637,10 @@ function setupEvents() {
   if (btnModalDeleteSession) {
     btnModalDeleteSession.addEventListener("click", () => {
       if (!editingSessionContext) return;
-      const { id, day } = editingSessionContext;
-      const idx = APP_STATE.kronos_week[day]?.findIndex(s => s.id === id);
-      if (idx !== -1) {
-        APP_STATE.kronos_week[day].splice(idx, 1);
+      const { id } = editingSessionContext;
+      const found = findSessionAndBucket(id);
+      if (found) {
+        APP_STATE.kronos_week[found.bucket].splice(found.index, 1);
         saveWorkspaceState();
         renderCurrentView();
         closeModal("modalEditSession");
@@ -1577,4 +1756,5 @@ document.addEventListener("DOMContentLoaded", () => {
   setupEvents();
   renderCurrentView();
   checkSupabaseAuth();
+  setTimeout(scrollKronosToToday, 100);
 });

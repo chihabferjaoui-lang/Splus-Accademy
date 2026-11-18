@@ -124,47 +124,29 @@
         <header class="admin-view-header">
           <div class="admin-view-titles">
             <h1>Schedule</h1>
-            <p>Week of 16 to 20 November. Students see their own sessions on their dashboard.</p>
+            <p id="kronosWeekSubtitle">Multi-week calendar. Scroll horizontally to browse dates. Past dates are view-only with booking disabled.</p>
           </div>
           <div class="admin-view-actions">
+            <div class="kronos-nav-bar">
+              <button type="button" class="table-pagination-btn" id="kronosScrollLeft" title="Scroll earlier">◀ Earlier</button>
+              <button type="button" class="table-pagination-btn" id="kronosTodayBtn" style="font-weight: 700;">Today</button>
+              <button type="button" class="table-pagination-btn" id="kronosScrollRight" title="Scroll later">Later ▶</button>
+              <div style="display: flex; align-items: center; gap: 6px; margin-left: 6px;">
+                <span style="font-size: 12px; color: var(--admin-muted); font-weight: 600;">Jump:</span>
+                <input type="date" id="kronosJumpDate" class="table-search-input" style="width: 140px; padding: 4px 8px; font-size: 12px;">
+              </div>
+            </div>
             <button type="button" class="btn-sample-toggle active" data-toggle-sample>Sample data</button>
             <button type="button" class="btn-admin-primary" data-modal-open="book_session">Book session</button>
           </div>
         </header>
 
         <div class="grid-2col-70-30">
-          <!-- Calendar columns Mon-Fri -->
-          <div class="admin-card">
-            <div class="kronos-week-calendar" id="kronosWeekGrid">
-              <!-- Monday -->
-              <div class="kronos-day-col">
-                <div class="kronos-day-header">Mon 16</div>
-                <div class="kronos-day-sessions" data-kronos-day="mon"></div>
-                <button type="button" class="btn-add-session-day" data-add-to-day="mon">+ Add Session</button>
-              </div>
-              <!-- Tuesday (Today) -->
-              <div class="kronos-day-col col-today">
-                <div class="kronos-day-header">Tue 17 <span class="today-badge">(today)</span></div>
-                <div class="kronos-day-sessions" data-kronos-day="tue"></div>
-                <button type="button" class="btn-add-session-day" data-add-to-day="tue">+ Add Session</button>
-              </div>
-              <!-- Wednesday -->
-              <div class="kronos-day-col">
-                <div class="kronos-day-header">Wed 18</div>
-                <div class="kronos-day-sessions" data-kronos-day="wed"></div>
-                <button type="button" class="btn-add-session-day" data-add-to-day="wed">+ Add Session</button>
-              </div>
-              <!-- Thursday -->
-              <div class="kronos-day-col">
-                <div class="kronos-day-header">Thu 19</div>
-                <div class="kronos-day-sessions" data-kronos-day="thu"></div>
-                <button type="button" class="btn-add-session-day" data-add-to-day="thu">+ Add Session</button>
-              </div>
-              <!-- Friday -->
-              <div class="kronos-day-col">
-                <div class="kronos-day-header">Fri 20</div>
-                <div class="kronos-day-sessions" data-kronos-day="fri"></div>
-                <button type="button" class="btn-add-session-day" data-add-to-day="fri">+ Add Session</button>
+          <!-- Calendar columns container with smooth horizontal scrolling -->
+          <div class="admin-card" style="overflow: hidden;">
+            <div class="kronos-calendar-scroll-wrap" id="kronosScrollContainer">
+              <div class="kronos-week-calendar" id="kronosWeekGrid">
+                <!-- Dynamically populated day columns via renderKronos() -->
               </div>
             </div>
           </div>
@@ -590,14 +572,8 @@
           <input type="text" id="editSessionProgram" class="admin-input" required>
         </div>
         <div class="admin-field-group">
-          <label>Day of Week</label>
-          <select id="editSessionDaySelect" class="admin-select" required>
-            <option value="mon">Monday 16</option>
-            <option value="tue">Tuesday 17 (today)</option>
-            <option value="wed">Wednesday 18</option>
-            <option value="thu">Thursday 19</option>
-            <option value="fri">Friday 20</option>
-          </select>
+          <label>Session Date</label>
+          <input type="date" id="editSessionDate" class="admin-input" required>
         </div>
         <div class="admin-field-group">
           <label>Time</label>
@@ -635,14 +611,9 @@
           <input type="text" id="sessionProgram" class="admin-input" placeholder="e.g. Business English, Tutoring" required>
         </div>
         <div class="admin-field-group">
-          <label>Day of Week</label>
-          <select id="sessionDay" class="admin-select" required>
-            <option value="mon">Monday 16</option>
-            <option value="tue" selected>Tuesday 17 (today)</option>
-            <option value="wed">Wednesday 18</option>
-            <option value="thu">Thursday 19</option>
-            <option value="fri">Friday 20</option>
-          </select>
+          <label>Session Date</label>
+          <input type="date" id="sessionDate" class="admin-input" required>
+          <span style="font-size: 11.5px; color: var(--admin-muted); margin-top: 4px; display: block;">Booking is restricted to today and future dates. Past dates are disabled.</span>
         </div>
         <div class="admin-field-group">
           <label>Time</label>
