@@ -531,6 +531,35 @@ function renderNotifications() {
 
 // RENDER: APPLICATIONS
 function renderApplications() {
+  const bTbody = document.querySelector('[data-tbody="booking_requests"]');
+  if (bTbody) {
+    const list = APP_STATE.booking_requests || [];
+    if (list.length === 0) {
+      bTbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--admin-muted); padding: 18px;">No online booking requests yet. Submissions from booking.html will appear here automatically.</td></tr>`;
+    } else {
+      bTbody.innerHTML = list.map(req => {
+        const isPending = (req.status || "").toLowerCase() === "pending";
+        return `
+          <tr>
+            <td style="font-weight: 700; color: var(--admin-primary);">${req.reference}</td>
+            <td style="font-weight: 600;">${req.name}</td>
+            <td>${req.email || "—"}</td>
+            <td>${req.phone || "—"}</td>
+            <td>${req.program || "English Course"}</td>
+            <td>${req.preferredDate || ""} ${req.preferredTime || ""}</td>
+            <td><span class="badge-pill ${isPending ? 'pending' : 'confirmed'}">${req.status}</span></td>
+            <td>
+              <div class="table-actions-cell">
+                ${isPending ? `<button type="button" class="btn-xs btn-xs-success" data-action="approve-booking" data-ref="${req.reference}">Approve to Kronos</button>` : ''}
+                <button type="button" class="btn-xs btn-xs-danger" data-action="delete-booking" data-ref="${req.reference}">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+  }
+
   const sTbody = document.querySelector('[data-tbody="student_applications"]');
   if (sTbody) {
     sTbody.innerHTML = APP_STATE.student_applications.map(app => `
@@ -826,10 +855,62 @@ function setupEvents() {
       return;
     }
 
+    // 14. Approve Booking Request
+    const btnApproveBooking = e.target.closest('[data-action="approve-booking"]');
+    if (btnApproveBooking) {
+      e.stopPropagation();
+      const ref = btnApproveBooking.dataset.ref;
+      const req = (APP_STATE.booking_requests || []).find(r => r.reference === ref);
+      if (req) {
+        req.status = "Confirmed";
+        Object.keys(APP_STATE.kronos_week).forEach(day => {
+          (APP_STATE.kronos_week[day] || []).forEach(sess => {
+            if (sess.reference === ref) sess.status = "Confirmed";
+          });
+        });
+        saveWorkspaceState();
+        renderCurrentView();
+        showToast(`Booking ${ref} for ${req.name} approved & confirmed in Kronos!`, "success");
+      }
+      return;
+    }
+
+    // 15. Delete Booking Request
+    const btnDeleteBooking = e.target.closest('[data-action="delete-booking"]');
+    if (btnDeleteBooking) {
+      e.stopPropagation();
+      const ref = btnDeleteBooking.dataset.ref;
+      if (APP_STATE.booking_requests) {
+        const idx = APP_STATE.booking_requests.findIndex(r => r.reference === ref);
+        if (idx !== -1) {
+          APP_STATE.booking_requests.splice(idx, 1);
+          Object.keys(APP_STATE.kronos_week).forEach(day => {
+            APP_STATE.kronos_week[day] = (APP_STATE.kronos_week[day] || []).filter(s => s.reference !== ref);
+          });
+          saveWorkspaceState();
+          renderCurrentView();
+          showToast(`Booking request ${ref} removed.`, "success");
+        }
+      }
+      return;
+    }
+
     // 13. Click backdrop to close
     if (e.target.classList.contains('admin-modal-backdrop')) {
       e.target.hidden = true;
     }
+  });
+
+  // Cross-tab real-time sync for online bookings and applications
+  window.addEventListener("storage", (e) => {
+    if (e.key === STORAGE_KEY) {
+      APP_STATE = loadWorkspaceState();
+      renderCurrentView();
+    }
+  });
+  window.addEventListener("splus-data-updated", () => {
+    APP_STATE = loadWorkspaceState();
+    renderCurrentView();
   });
 
   // Customer Card Actions in Era

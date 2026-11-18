@@ -878,7 +878,7 @@ body{font-family:Arial,sans-serif;background:#f5f6fb;margin:0;padding:30px;color
         const button = event.currentTarget;
         const status = document.getElementById('bookingSubmitStatus');
         button.disabled = true;
-        status.textContent = 'Complete the security check to submit your request.';
+        status.textContent = 'Submitting your booking request...';
         try {
           const result = await submitPublicRequest('submit-booking-request', {
             programSlug: state.program.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
