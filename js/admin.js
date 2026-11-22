@@ -180,12 +180,62 @@ const SAMPLE_COLLECTIONS = [
   "class_slots",
   "newsletter_subscribers"
 ];
+const TODAY_SAMPLE_SESSIONS = [
+  { id: "sess-today-1", time: "09:30", student: "Sara B.", program: "Business English", teacher: "Chihab", status: "Confirmed" },
+  { id: "sess-today-2", time: "14:00", student: "Omar K.", program: "Exam Preparation", teacher: "Chihab", status: "Pending" },
+  { id: "sess-today-3", time: "17:30", student: "Lina M.", program: "Day-to-Day English", teacher: "Chihab", status: "Confirmed" }
+];
+
+function isoDateString(date) {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function getCurrentWeekISOByBucket() {
+  const today = new Date(`${getTodayISO()}T00:00:00`);
+  const mondayOffset = today.getDay() === 0 ? -6 : 1 - today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + mondayOffset);
+  const buckets = ["mon", "tue", "wed", "thu", "fri"];
+  const result = {};
+  buckets.forEach((bucket, index) => {
+    const day = new Date(monday);
+    day.setDate(monday.getDate() + index);
+    result[bucket] = isoDateString(day);
+  });
+  return result;
+}
 
 function cloneDefaultWorkspaceData() {
   const data = JSON.parse(JSON.stringify(DEFAULT_WORKSPACE_DATA));
   Object.values(data.kronos_week || {}).forEach(list => {
     (list || []).forEach(item => { item[SAMPLE_TAG] = true; });
   });
+
+  // Mirror weekday samples onto the current week so the calendar and overview
+  // show demo sessions immediately, even when the saved fallback keys are old.
+  const weekDates = getCurrentWeekISOByBucket();
+  Object.entries(weekDates).forEach(([bucket, iso]) => {
+    const datedSessions = (data.kronos_week[bucket] || []).map(item => ({
+      ...item,
+      id: `${item.id}-${iso}`,
+      date: iso,
+      [SAMPLE_TAG]: true
+    }));
+    data.kronos_week[iso] = (data.kronos_week[iso] || []).concat(datedSessions);
+  });
+
+  const todayKey = getTodayISO();
+  if (!Object.values(weekDates).includes(todayKey)) {
+    data.kronos_week[todayKey] = TODAY_SAMPLE_SESSIONS.map(item => ({
+      ...item,
+      date: todayKey,
+      [SAMPLE_TAG]: true
+    }));
+  }
+
   SAMPLE_COLLECTIONS.forEach(key => {
     (data[key] || []).forEach(item => { item[SAMPLE_TAG] = true; });
   });
