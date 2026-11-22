@@ -537,10 +537,15 @@
           </div>
           <div class="admin-view-actions">
             <button type="button" class="btn-sample-toggle active" data-toggle-sample>Sample data</button>
+            <button type="button" class="btn-admin-primary" data-modal-open="new_newsletter_subscriber">+ Add subscriber</button>
+            <button type="button" class="btn-xs btn-xs-primary" data-action="export-newsletter-csv">Export CSV</button>
           </div>
         </header>
 
         <div class="admin-card">
+          <div class="admin-table-toolbar" style="display:flex;align-items:center;gap:10px;padding:10px 0 6px;">
+            <input type="text" class="table-search-input" data-search-table="newsletter_subscribers" placeholder="Search subscribers..." aria-label="Search subscribers">
+          </div>
           <div class="admin-table-wrap">
             <table class="admin-table">
               <thead>
@@ -548,6 +553,7 @@
                   <th>Email</th>
                   <th>Consent Recorded</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody data-tbody="newsletter_subscribers">
@@ -555,9 +561,29 @@
               </tbody>
             </table>
           </div>
+          <div class="table-pagination-bar" data-pagination="newsletter_subscribers"></div>
         </div>
       </section>
     </main>
+  </div>
+
+  <!-- Modal: Add Newsletter Subscriber -->
+  <div class="admin-modal-backdrop" id="modalNewsletterSubscriber" hidden>
+    <div class="admin-modal-card">
+      <div class="admin-modal-header">
+        <h2 id="modalNewsletterSubscriberTitle">Add Subscriber</h2>
+        <button type="button" class="admin-modal-close" data-modal-close>&times;</button>
+      </div>
+      <form id="formNewsletterSubscriber">
+        <div class="admin-field-group">
+          <label for="newsletterSubscriberEmail">Email address</label>
+          <input type="email" id="newsletterSubscriberEmail" class="admin-input" maxlength="254" required>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px;">
+          <button type="submit" class="btn-admin-primary" style="flex:1;">Add Subscriber</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- MODALS -->
@@ -910,6 +936,6 @@
   </div>
 
   <script src="js/supabase-config.js"></script>
-  <script type="module" src="js/admin.js"></script>
+  <script type="module" src="js/admin.js?v=newsletter-20261122b"></script>
 </body>
 </html>
