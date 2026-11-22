@@ -47,7 +47,7 @@ Deno.serve(async (request) => {
     const supabase = createServiceClient();
     const { data: program, error: programError } = await supabase
       .from("programs")
-      .select("id")
+      .select("id,name")
       .eq("slug", programSlug)
       .eq("active", true)
       .maybeSingle();
@@ -56,12 +56,13 @@ Deno.serve(async (request) => {
       return jsonResponse({ error: "Choose an available program." }, 400, cors);
     }
 
+    const email = readEmail(body);
     const { data, error: insertError } = await supabase
       .from("booking_requests")
       .insert({
         program_id: program.id,
         full_name: fullName,
-        email: readEmail(body),
+        email,
         phone,
         requested_date: requestedDate,
         requested_time: requestedTime,
@@ -71,7 +72,55 @@ Deno.serve(async (request) => {
       .single();
     if (insertError) throw insertError;
 
-    return jsonResponse({ ok: true, reference: data.reference }, 201, cors);
+    const reference = data.reference;
+    const sentAt = new Date().toISOString();
+    const bookingBody = `${fullName} requested ${program.name} for ${requestedDate} at ${requestedTime}. Reference: ${reference}.`;
+
+    try {
+      // Notify every admin workspace in-app. Service role bypasses RLS here.
+      const { data: adminRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin");
+      const adminIds = [...new Set((adminRoles || []).map((role: { user_id: string }) => role.user_id))];
+      if (adminIds.length) {
+        await supabase.from("notifications").insert(
+          adminIds.map((recipientId: string) => ({
+            recipient_id: recipientId,
+            channel: "in_app",
+            delivery_status: "sent",
+            locale: "en",
+            title: "New booking request",
+            body: bookingBody,
+            sent_at: sentAt,
+          }))
+        );
+      }
+
+      // Notify the submitter if they already have a student profile.
+      if (email) {
+        const { data: student } = await supabase
+          .from("profiles")
+          .select("id,preferred_locale")
+          .eq("email", email.trim().toLowerCase())
+          .maybeSingle();
+        if (student) {
+          await supabase.from("notifications").insert({
+            recipient_id: student.id,
+            channel: "in_app",
+            delivery_status: "sent",
+            locale: student.preferred_locale || "en",
+            title: "Booking request received",
+            body: `We received your ${program.name} booking request for ${requestedDate} at ${requestedTime}. Reference: ${reference}.`,
+            sent_at: sentAt,
+          });
+        }
+      }
+    } catch (notificationError) {
+      console.error("Could not create booking notifications:", notificationError);
+    }
+
+    return jsonResponse({ ok: true, reference }, 201, cors);
   } catch (caught) {
     return errorResponse(caught, cors);
   }
