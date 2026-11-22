@@ -1,4 +1,4 @@
-import { submitPublicRequest } from "./public-submissions.js";
+import { submitPublicRequest } from "./public-submissions.js?v=newsletter-fallback-1";
 
 const form = document.querySelector("[data-newsletter-form]");
 const message = document.querySelector("[data-newsletter-message]");
