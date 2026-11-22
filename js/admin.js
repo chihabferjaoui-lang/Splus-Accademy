@@ -197,6 +197,9 @@ function loadWorkspaceState() {
   state.class_slots.forEach((slot, i) => {
     if (!slot.id) slot.id = `slot-${i}-${Date.now()}`;
   });
+  if (!Array.isArray(state.newsletter_subscribers)) {
+    state.newsletter_subscribers = JSON.parse(JSON.stringify(DEFAULT_WORKSPACE_DATA.newsletter_subscribers || []));
+  }
   return state;
 }
 
@@ -206,7 +209,7 @@ function saveWorkspaceState() {
   try {
     // Bound collections to prevent QuotaExceededError under extreme volume
     const MAX_ITEMS = 500;
-    ['student_applications', 'teacher_applications', 'booking_requests', 'era_invoices', 'notifications'].forEach(key => {
+    ['student_applications', 'teacher_applications', 'booking_requests', 'era_invoices', 'notifications', 'newsletter_subscribers'].forEach(key => {
       if (Array.isArray(APP_STATE[key]) && APP_STATE[key].length > MAX_ITEMS) {
         APP_STATE[key] = APP_STATE[key].slice(0, MAX_ITEMS);
       }
@@ -215,7 +218,7 @@ function saveWorkspaceState() {
   } catch (e) {
     console.error("Save state error, attempting aggressive pruning:", e);
     try {
-      ['student_applications', 'teacher_applications', 'booking_requests', 'era_invoices', 'notifications'].forEach(key => {
+      ['student_applications', 'teacher_applications', 'booking_requests', 'era_invoices', 'notifications', 'newsletter_subscribers'].forEach(key => {
         if (Array.isArray(APP_STATE[key])) {
           APP_STATE[key] = APP_STATE[key].slice(0, 100);
         }
@@ -312,7 +315,8 @@ const PAGINATION = {
   student_applications: { page: 1, pageSize: 8, search: "" },
   teacher_applications: { page: 1, pageSize: 8, search: "" },
   era_invoices: { page: 1, pageSize: 8, search: "" },
-  customers: { page: 1, pageSize: 8, search: "" }
+  customers: { page: 1, pageSize: 8, search: "" },
+  newsletter_subscribers: { page: 1, pageSize: 8, search: "" }
 };
 
 function renderPaginationBar(tableKey, totalItems) {
@@ -957,16 +961,147 @@ function deleteClassSlot(id) {
 }
 
 // RENDER: NEWSLETTER
+function formatNewsletterDate(value) {
+  if (!value) return "—";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString("fr-FR");
+}
+
 function renderNewsletter() {
   const tbody = document.querySelector('[data-tbody="newsletter_subscribers"]');
   if (!tbody) return;
-  tbody.innerHTML = APP_STATE.newsletter_subscribers.map(sub => `
+  const cfg = PAGINATION.newsletter_subscribers;
+  let list = Array.isArray(APP_STATE.newsletter_subscribers) ? APP_STATE.newsletter_subscribers : [];
+  if (cfg.search) {
+    const s = cfg.search.toLowerCase();
+    list = list.filter(sub => (sub.email || "").toLowerCase().includes(s) || (sub.status || "").toLowerCase().includes(s));
+  }
+  renderPaginationBar("newsletter_subscribers", list.length);
+  const start = (cfg.page - 1) * cfg.pageSize;
+  const page = list.slice(start, start + cfg.pageSize);
+  if (page.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--admin-muted); padding: 18px;">${cfg.search ? "No matching subscribers found." : "No newsletter subscribers yet."}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = page.map(sub => {
+    const isActive = (sub.status || "").toLowerCase() === "active";
+    return `
     <tr>
       <td style="font-weight: 600;">${sub.email}</td>
-      <td style="color: var(--admin-muted);">${sub.date}</td>
-      <td><span class="badge-pill confirmed">${sub.status}</span></td>
-    </tr>
-  `).join("");
+      <td style="color: var(--admin-muted);">${formatNewsletterDate(sub.date)}</td>
+      <td><span class="badge-pill ${isActive ? "confirmed" : "overdue"}">${sub.status || "Active"}</span></td>
+      <td>
+        <div class="table-actions-cell">
+          <button type="button" class="btn-xs btn-xs-danger" data-action="delete-newsletter-subscriber" data-email="${sub.email}">Delete</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+function deleteNewsletterSubscriber(email) {
+  const idx = (APP_STATE.newsletter_subscribers || []).findIndex(s => s.email === email);
+  if (idx === -1) return;
+  APP_STATE.newsletter_subscribers.splice(idx, 1);
+  saveWorkspaceState();
+  renderNewsletter();
+  showToast(`Subscriber ${email} deleted.`, "success");
+  if (supabase) {
+    supabase.from("newsletter_subscribers").delete().eq("email", email)
+      .then(({ error }) => { if (error) console.warn("Could not delete subscriber in Supabase:", error); });
+  }
+}
+
+async function loadNewsletterFromSupabase() {
+  if (!supabase) return;
+  try {
+    const { data: userRes } = await supabase.auth.getUser();
+    if (!userRes?.user) return;
+    const { data, error } = await supabase
+      .from("newsletter_subscribers")
+      .select("email,consented_at,unsubscribed_at")
+      .order("consented_at", { ascending: false });
+    if (error) throw error;
+    const remote = (data || []).map(row => ({
+      email: row.email,
+      date: row.consented_at,
+      status: row.unsubscribed_at ? "Unsubscribed" : "Active"
+    }));
+    const local = Array.isArray(APP_STATE.newsletter_subscribers) ? APP_STATE.newsletter_subscribers : [];
+    const byEmail = new Map(local.map(sub => [sub.email, sub]));
+    remote.forEach(sub => byEmail.set(sub.email, sub));
+    APP_STATE.newsletter_subscribers = [...byEmail.values()];
+    saveWorkspaceState();
+    renderNewsletter();
+  } catch (error) {
+    console.log("Newsletter Supabase sync skipped:", error);
+  }
+}
+
+async function loadSupabaseNotifications() {
+  if (!supabase) return;
+  try {
+    const { data: userRes } = await supabase.auth.getUser();
+    const userId = userRes?.user?.id;
+    if (!userId) return;
+    const { data, error } = await supabase
+      .from("notifications")
+      .select("id,title,body,channel,delivery_status,sent_at,created_at,read_at")
+      .eq("recipient_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    if (!data || !data.length) return;
+
+    const existing = Array.isArray(APP_STATE.notifications) ? APP_STATE.notifications : [];
+    const knownIds = new Set(existing.map(n => n.id).filter(Boolean));
+    const emailFromBody = (body) => {
+      const match = String(body || "").match(/^([^\s]+)\s/);
+      return match ? match[1] : "Admin";
+    };
+    const remote = data
+      .filter(row => !knownIds.has(row.id))
+      .map(row => ({
+        id: row.id,
+        target: row.title === "New newsletter subscriber" ? emailFromBody(row.body) : "Supabase",
+        channel: row.channel === "in_app" ? "In-app" : row.channel,
+        topic: `${row.title}${row.body ? ` — ${row.body}` : ""}`,
+        scheduled: formatNewsletterDate(row.sent_at || row.created_at),
+        attempts: row.delivery_status === "sent" ? 1 : 0,
+        status: row.read_at ? "Read" : "Unread"
+      }));
+
+    if (!remote.length) return;
+    APP_STATE.notifications = [...remote, ...existing].slice(0, 200);
+    saveWorkspaceState();
+    renderNotifications();
+  } catch (error) {
+    console.log("Supabase notification sync skipped:", error);
+  }
+}
+
+function exportNewsletterCsv() {
+  const list = Array.isArray(APP_STATE.newsletter_subscribers) ? APP_STATE.newsletter_subscribers : [];
+  if (!list.length) {
+    showToast("No subscribers to export.", "error");
+    return;
+  }
+  const escapeCell = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+  const rows = [
+    ["Email", "Consent Recorded", "Status"],
+    ...list.map(sub => [sub.email, formatNewsletterDate(sub.date), sub.status || "Active"])
+  ];
+  const csv = "\uFEFF" + rows.map(row => row.map(escapeCell).join(",")).join("\r\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `newsletter-subscribers-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  showToast("Subscriber list exported as CSV.", "success");
 }
 
 // Populate Arabic Invoice Modal
@@ -1019,6 +1154,7 @@ function setupEvents() {
         PAGINATION[tableKey].search = e.target.value.trim();
         PAGINATION[tableKey].page = 1;
         if (tableKey === "era_invoices") renderEra();
+        else if (tableKey === "newsletter_subscribers") renderNewsletter();
         else renderApplications();
       }
     });
@@ -1241,6 +1377,11 @@ function setupEvents() {
         document.getElementById("btnClassSlotSubmit").textContent = "Add Slot";
         document.getElementById("btnDeleteClassSlotModal").style.display = "none";
         openModal("modalClassSlot");
+      }
+      if (modalTarget === "new_newsletter_subscriber") {
+        document.getElementById("modalNewsletterSubscriberTitle").textContent = "Add Subscriber";
+        document.getElementById("formNewsletterSubscriber").reset();
+        openModal("modalNewsletterSubscriber");
       }
       return;
     }
@@ -1601,7 +1742,28 @@ function setupEvents() {
         saveWorkspaceState();
         renderNotifications();
         showToast("Notification deleted.", "success");
+        if (notification.id && supabase) {
+          supabase.from("notifications").delete().eq("id", notification.id)
+            .then(({ error }) => { if (error) console.warn("Could not delete notification in Supabase:", error); });
+        }
       }
+      return;
+    }
+
+    // 26. Export newsletter subscribers as CSV
+    const btnExportNewsletter = e.target.closest('[data-action="export-newsletter-csv"]');
+    if (btnExportNewsletter) {
+      e.stopPropagation();
+      exportNewsletterCsv();
+      return;
+    }
+
+    // 27. Delete newsletter subscriber
+    const btnDeleteNewsletter = e.target.closest('[data-action="delete-newsletter-subscriber"]');
+    if (btnDeleteNewsletter) {
+      e.stopPropagation();
+      const email = btnDeleteNewsletter.dataset.email;
+      if (email && confirm(`Delete newsletter subscriber ${email}?`)) deleteNewsletterSubscriber(email);
       return;
     }
   });
@@ -1821,6 +1983,42 @@ function setupEvents() {
       if (!confirm(`Delete class slot "${slot.program}" at ${slot.starts}?`)) return;
       closeModal("modalClassSlot");
       deleteClassSlot(id);
+    });
+  }
+
+  // Newsletter subscriber add form
+  const formNewsletterSubscriber = document.getElementById("formNewsletterSubscriber");
+  if (formNewsletterSubscriber) {
+    formNewsletterSubscriber.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = document.getElementById("newsletterSubscriberEmail").value.trim().toLowerCase();
+      if (!email) return;
+      APP_STATE.newsletter_subscribers = Array.isArray(APP_STATE.newsletter_subscribers) ? APP_STATE.newsletter_subscribers : [];
+      const existing = APP_STATE.newsletter_subscribers.find(s => s.email === email);
+      if (existing) {
+        existing.date = new Date().toISOString();
+        existing.status = "Active";
+      } else {
+        APP_STATE.newsletter_subscribers.unshift({
+          email,
+          date: new Date().toISOString(),
+          status: "Active"
+        });
+      }
+      saveWorkspaceState();
+      renderNewsletter();
+      closeModal("modalNewsletterSubscriber");
+      formNewsletterSubscriber.reset();
+      showToast(`Subscriber ${email} added.`, "success");
+
+      if (supabase) {
+        supabase.from("newsletter_subscribers").upsert({
+          email,
+          consented_at: new Date().toISOString(),
+          unsubscribed_at: null
+        }, { onConflict: "email" })
+          .then(({ error }) => { if (error) console.warn("Could not save subscriber in Supabase:", error); });
+      }
     });
   }
 
@@ -2111,5 +2309,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupEvents();
   renderCurrentView();
   checkSupabaseAuth();
+  loadNewsletterFromSupabase();
+  loadSupabaseNotifications();
   setTimeout(scrollKronosToToday, 100);
 });

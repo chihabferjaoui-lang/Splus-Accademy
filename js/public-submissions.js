@@ -59,6 +59,7 @@ function syncSubmissionToWorkspace(functionName, payload, reference) {
       student_applications: [],
       teacher_applications: [],
       notifications: [],
+      newsletter_subscribers: [],
       customers: []
     };
   }
@@ -162,6 +163,32 @@ function syncSubmissionToWorkspace(functionName, payload, reference) {
       status: "Under Review",
       submitted: new Date().toLocaleDateString("fr-FR")
     });
+  } else if (functionName === "subscribe-newsletter") {
+    // Keep the admin workspace in sync even when the hosted edge function is unavailable.
+    const email = String(payload.email || "").trim().toLowerCase();
+    store.newsletter_subscribers = Array.isArray(store.newsletter_subscribers) ? store.newsletter_subscribers : [];
+    const existing = store.newsletter_subscribers.find(sub => sub.email === email);
+    if (existing) {
+      existing.date = new Date().toISOString();
+      existing.status = "Active";
+    } else {
+      store.newsletter_subscribers.unshift({
+        email,
+        date: new Date().toISOString(),
+        status: "Active"
+      });
+    }
+
+    store.notifications = store.notifications || [];
+    store.notifications.unshift({
+      id: `local-news-${Date.now()}`,
+      target: email,
+      channel: "Newsletter",
+      topic: `New newsletter subscriber: ${email}`,
+      scheduled: "Immediate",
+      attempts: 1,
+      status: "Received"
+    });
   }
 
   // Bound collection sizes to ensure local storage never hits QuotaExceededError under high volume
@@ -178,6 +205,9 @@ function syncSubmissionToWorkspace(functionName, payload, reference) {
   if (store.notifications && store.notifications.length > 200) {
     store.notifications = store.notifications.slice(0, 200);
   }
+  if (store.newsletter_subscribers && store.newsletter_subscribers.length > MAX_RECORDS) {
+    store.newsletter_subscribers = store.newsletter_subscribers.slice(0, MAX_RECORDS);
+  }
 
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
@@ -188,6 +218,7 @@ function syncSubmissionToWorkspace(functionName, payload, reference) {
       store.student_applications = (store.student_applications || []).slice(0, 100);
       store.teacher_applications = (store.teacher_applications || []).slice(0, 100);
       store.booking_requests = (store.booking_requests || []).slice(0, 100);
+      store.newsletter_subscribers = (store.newsletter_subscribers || []).slice(0, 100);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
       window.dispatchEvent(new CustomEvent("splus-data-updated"));
     } catch (criticalErr) {
@@ -215,6 +246,7 @@ export async function submitPublicRequest(functionName, payload, captchaContaine
     // Try posting to Supabase Edge function if available
     let edgeSuccess = false;
     let edgeRef = generatedRef;
+    let submissionError = null;
     if (config.url && config.publishableKey) {
       try {
         const response = await fetch(`${config.url.replace(/\/$/, "")}/functions/v1/${functionName}`, {
@@ -229,17 +261,32 @@ export async function submitPublicRequest(functionName, payload, captchaContaine
           const resJson = await response.json();
           edgeSuccess = true;
           if (resJson && resJson.reference) edgeRef = resJson.reference;
+        } else {
+          let message = `The request could not be completed (${response.status}).`;
+          try {
+            const errorJson = await response.json();
+            if (errorJson && errorJson.error) message = errorJson.error;
+          } catch (_) {
+            // Keep the HTTP status message when the error body is not JSON.
+          }
+          submissionError = new Error(message);
         }
       } catch (netErr) {
         console.log("Edge function offline, syncing to backend workspace storage:", netErr);
+        submissionError = new Error("The online service is unavailable. Please try again.");
       }
     }
 
-    // Always sync locally to backend workspace store so it appears in Kronos and admin dashboard immediately!
+    // Always sync locally to backend workspace store so it appears in the admin dashboard immediately.
     const finalRef = edgeRef || generatedRef;
     syncSubmissionToWorkspace(functionName, payload, finalRef);
 
-    return { reference: finalRef, success: true };
+    // Newsletter signups must be really persisted; do not report false success.
+    if (functionName === "subscribe-newsletter" && submissionError) {
+      throw submissionError;
+    }
+
+    return { reference: finalRef, success: true, edgeSuccess };
   } finally {
     if (captchaContainer) {
       widgetId ??= captchaContainer.dataset.widgetId;
