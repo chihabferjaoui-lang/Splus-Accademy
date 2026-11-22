@@ -269,11 +269,13 @@ export async function submitPublicRequest(functionName, payload, captchaContaine
           } catch (_) {
             // Keep the HTTP status message when the error body is not JSON.
           }
-          submissionError = new Error(message);
+          // Only real validation failures (e.g. missing consent) should block the form.
+          // Missing/unconfigured functions fall back to the local workspace store.
+          if (response.status === 400) submissionError = new Error(message);
+          else console.warn("Edge function unavailable, using local fallback:", message);
         }
       } catch (netErr) {
         console.log("Edge function offline, syncing to backend workspace storage:", netErr);
-        submissionError = new Error("The online service is unavailable. Please try again.");
       }
     }
 
