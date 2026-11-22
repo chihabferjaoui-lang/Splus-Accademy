@@ -24,13 +24,41 @@ Deno.serve(async (request) => {
     }
 
     const email = readEmail(body);
-    const { error: insertError } = await createServiceClient()
+    const service = createServiceClient();
+    const now = new Date().toISOString();
+    const { error: insertError } = await service
       .from("newsletter_subscribers")
       .upsert(
-        { email, consented_at: new Date().toISOString(), unsubscribed_at: null },
+        { email, consented_at: now, unsubscribed_at: null },
         { onConflict: "email" },
       );
     if (insertError) throw insertError;
+
+    // Notify every admin in-app so signups are visible in the workspace.
+    try {
+      const { data: admins, error: adminsError } = await service
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin");
+      if (adminsError) throw adminsError;
+      if (admins && admins.length) {
+        const { error: notificationError } = await service
+          .from("notifications")
+          .insert(admins.map((admin) => ({
+            recipient_id: admin.user_id,
+            channel: "in_app",
+            delivery_status: "sent",
+            locale: "en",
+            title: "New newsletter subscriber",
+            body: `${email} joined the academy newsletter.`,
+            sent_at: now,
+          })));
+        if (notificationError) throw notificationError;
+      }
+    } catch (notificationError) {
+      // The subscription is already saved; a missing notice must not fail the signup.
+      console.error("Could not create admin newsletter notification:", notificationError);
+    }
 
     return jsonResponse({ ok: true }, 201, cors);
   } catch (caught) {
