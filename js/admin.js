@@ -167,6 +167,128 @@ const DEFAULT_WORKSPACE_DATA = {
   ]
 };
 
+// Sample data helpers. Default rows are tagged so sample data can be removed
+// without deleting records that were entered by the admin.
+const SAMPLE_TAG = "_sample";
+const SAMPLE_COLLECTIONS = [
+  "era_invoices",
+  "genius_lessons",
+  "customers",
+  "notifications",
+  "student_applications",
+  "teacher_applications",
+  "class_slots",
+  "newsletter_subscribers"
+];
+
+function cloneDefaultWorkspaceData() {
+  const data = JSON.parse(JSON.stringify(DEFAULT_WORKSPACE_DATA));
+  Object.values(data.kronos_week || {}).forEach(list => {
+    (list || []).forEach(item => { item[SAMPLE_TAG] = true; });
+  });
+  SAMPLE_COLLECTIONS.forEach(key => {
+    (data[key] || []).forEach(item => { item[SAMPLE_TAG] = true; });
+  });
+  return data;
+}
+
+function sampleIdentity(item, key) {
+  if (!item) return "";
+  if (key === "customers") return item.custNo || item.email || "";
+  if (key === "notifications") return item.topic || "";
+  if (key === "class_slots") return item.id || `${item.program || ""}|${item.starts || ""}|${item.ends || ""}`;
+  if (key === "newsletter_subscribers") return item.email || "";
+  return item.id || item.email || "";
+}
+
+function buildSampleIdentities() {
+  const defaults = cloneDefaultWorkspaceData();
+  const identities = {};
+  SAMPLE_COLLECTIONS.forEach(key => {
+    identities[key] = new Set((defaults[key] || []).map(item => sampleIdentity(item, key)).filter(Boolean));
+  });
+  identities.kronos_week = new Set(
+    Object.values(defaults.kronos_week || {})
+      .flat()
+      .map(item => sampleIdentity(item, "kronos_week"))
+      .filter(Boolean)
+  );
+  return identities;
+}
+
+const SAMPLE_IDENTITIES = buildSampleIdentities();
+
+function isSampleRecord(item, key) {
+  if (!item) return false;
+  if (item[SAMPLE_TAG]) return true;
+  return SAMPLE_IDENTITIES[key]?.has(sampleIdentity(item, key)) || false;
+}
+
+function adoptLegacySampleFlags(state) {
+  if (!state || !state.kronos_week) return;
+  Object.keys(state.kronos_week).forEach(day => {
+    (state.kronos_week[day] || []).forEach(item => {
+      if (isSampleRecord(item, "kronos_week")) item[SAMPLE_TAG] = true;
+    });
+  });
+  SAMPLE_COLLECTIONS.forEach(key => {
+    (state[key] || []).forEach(item => {
+      if (isSampleRecord(item, key)) item[SAMPLE_TAG] = true;
+    });
+  });
+}
+
+function hasSampleData(state = APP_STATE) {
+  if (!state || !state.kronos_week) return false;
+  const hasTaggedSession = Object.values(state.kronos_week).some(list =>
+    (list || []).some(item => isSampleRecord(item, "kronos_week"))
+  );
+  if (hasTaggedSession) return true;
+  return SAMPLE_COLLECTIONS.some(key =>
+    (state[key] || []).some(item => isSampleRecord(item, key))
+  );
+}
+
+function loadSampleData() {
+  const samples = cloneDefaultWorkspaceData();
+  APP_STATE.kronos_week = APP_STATE.kronos_week || {};
+  Object.keys(samples.kronos_week).forEach(day => {
+    const target = APP_STATE.kronos_week[day] || (APP_STATE.kronos_week[day] = []);
+    samples.kronos_week[day].forEach(item => {
+      if (!target.some(existing => sampleIdentity(existing, "kronos_week") === sampleIdentity(item, "kronos_week"))) {
+        target.push(item);
+      }
+    });
+  });
+  SAMPLE_COLLECTIONS.forEach(key => {
+    const target = Array.isArray(APP_STATE[key]) ? APP_STATE[key] : (APP_STATE[key] = []);
+    (samples[key] || []).forEach(item => {
+      if (!target.some(existing => sampleIdentity(existing, key) === sampleIdentity(item, key))) {
+        target.push(item);
+      }
+    });
+  });
+  if (!selectedGeniusLesson) selectedGeniusLesson = APP_STATE.genius_lessons[0] || null;
+  if (!selectedEraInvoice) selectedEraInvoice = APP_STATE.era_invoices[0] || null;
+}
+
+function clearSampleData() {
+  if (!APP_STATE.kronos_week) APP_STATE.kronos_week = {};
+  Object.keys(APP_STATE.kronos_week).forEach(day => {
+    APP_STATE.kronos_week[day] = (APP_STATE.kronos_week[day] || [])
+      .filter(item => !isSampleRecord(item, "kronos_week"));
+  });
+  SAMPLE_COLLECTIONS.forEach(key => {
+    APP_STATE[key] = (APP_STATE[key] || []).filter(item => !isSampleRecord(item, key));
+  });
+  if (!APP_STATE.genius_lessons.includes(selectedGeniusLesson)) {
+    selectedGeniusLesson = APP_STATE.genius_lessons[0] || null;
+  }
+  if (!APP_STATE.era_invoices.includes(selectedEraInvoice)) {
+    selectedEraInvoice = APP_STATE.era_invoices[0] || null;
+  }
+}
+
 // State Store loaded from localStorage
 const STORAGE_KEY = "splus_workspace_store_v1";
 
@@ -184,8 +306,16 @@ function loadWorkspaceState() {
     console.warn("Storage parse error:", e);
   }
   if (!state) {
-    state = JSON.parse(JSON.stringify(DEFAULT_WORKSPACE_DATA));
+    state = cloneDefaultWorkspaceData();
   }
+  const defaults = cloneDefaultWorkspaceData();
+  Object.keys(defaults.kronos_week).forEach(day => {
+    if (!Array.isArray(state.kronos_week[day])) state.kronos_week[day] = [];
+  });
+  SAMPLE_COLLECTIONS.forEach(key => {
+    if (!Array.isArray(state[key])) state[key] = defaults[key];
+  });
+  adoptLegacySampleFlags(state);
   // Ensure IDs exist on applications and bookings
   (state.student_applications || []).forEach((app, i) => {
     if (!app.id) app.id = `stu-${i}-${Date.now()}`;
@@ -198,7 +328,7 @@ function loadWorkspaceState() {
     if (!slot.id) slot.id = `slot-${i}-${Date.now()}`;
   });
   if (!Array.isArray(state.newsletter_subscribers)) {
-    state.newsletter_subscribers = JSON.parse(JSON.stringify(DEFAULT_WORKSPACE_DATA.newsletter_subscribers || []));
+    state.newsletter_subscribers = defaults.newsletter_subscribers;
   }
   return state;
 }
@@ -307,6 +437,16 @@ function showToast(message, type = "success") {
   setTimeout(() => {
     toastEl.className = "admin-toast-message";
   }, 4000);
+}
+
+function syncSampleToggleButtons() {
+  const enabled = hasSampleData();
+  sampleToggles.forEach(button => {
+    button.classList.toggle("active", enabled);
+    button.setAttribute("aria-pressed", String(enabled));
+    button.title = enabled ? "Remove sample data and keep your own entries" : "Load sample data";
+    button.setAttribute("aria-label", enabled ? "Remove sample data" : "Load sample data");
+  });
 }
 
 // Pagination & Search Filter State for High Volume Scaling
@@ -1160,27 +1300,25 @@ function setupEvents() {
     });
   });
 
-  // Sample data toggle / Clear data toggle
+  // Sample data toggle: load on first click, remove only sample rows on second click.
   sampleToggles.forEach(toggle => {
     toggle.addEventListener("click", () => {
-      const confirmClear = confirm("Do you want to clear fictitious demo data and start with an empty real workspace? (Cancel will reset back to sample demonstration data)");
-      if (confirmClear) {
-        APP_STATE.kronos_week = { mon: [], tue: [], wed: [], thu: [], fri: [] };
-        APP_STATE.era_invoices = [];
-        APP_STATE.genius_lessons = [];
-        selectedGeniusLesson = null;
-        selectedEraInvoice = null;
+      if (hasSampleData()) {
+        const removeSamples = confirm("Remove sample data and keep your own entries?");
+        if (!removeSamples) return;
+        clearSampleData();
         saveWorkspaceState();
+        syncSampleToggleButtons();
         renderCurrentView();
-        showToast("Cleared fictitious data! You now have an empty, real workspace ready for your entries.", "success");
-      } else {
-        APP_STATE = JSON.parse(JSON.stringify(DEFAULT_WORKSPACE_DATA));
-        selectedGeniusLesson = APP_STATE.genius_lessons[0];
-        selectedEraInvoice = APP_STATE.era_invoices[0];
-        saveWorkspaceState();
-        renderCurrentView();
-        showToast("Reset to sample demonstration data.", "success");
+        showToast("Sample data removed. Your own entries were kept.", "success");
+        return;
       }
+
+      loadSampleData();
+      saveWorkspaceState();
+      syncSampleToggleButtons();
+      renderCurrentView();
+      showToast("Sample data loaded across the workspace.", "success");
     });
   });
 
@@ -2307,6 +2445,7 @@ async function checkSupabaseAuth() {
 // Initial Boot
 document.addEventListener("DOMContentLoaded", () => {
   setupEvents();
+  syncSampleToggleButtons();
   renderCurrentView();
   checkSupabaseAuth();
   loadNewsletterFromSupabase();
