@@ -389,6 +389,7 @@
                   <th>Scheduled For</th>
                   <th>Attempts</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody data-tbody="notifications_list">
@@ -502,6 +503,7 @@
           </div>
           <div class="admin-view-actions">
             <button type="button" class="btn-sample-toggle active" data-toggle-sample>Sample data</button>
+            <button type="button" class="btn-admin-primary" data-modal-open="new_class_slot">+ Add slot</button>
           </div>
         </header>
 
@@ -515,6 +517,7 @@
                   <th>Ends (Local)</th>
                   <th>Capacity</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody data-tbody="class_slots">
@@ -861,6 +864,46 @@
         <div style="display:flex;gap:10px;margin-top:14px;">
           <button type="submit" class="btn-admin-primary" style="flex:1;" id="btnCustomerSubmit">Save Customer</button>
           <button type="button" class="btn-admin-danger" id="btnDeleteCustomerModal" style="flex:1;display:none;">Delete Customer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Class Slot -->
+  <div class="admin-modal-backdrop" id="modalClassSlot" hidden>
+    <div class="admin-modal-card">
+      <div class="admin-modal-header">
+        <h2 id="modalClassSlotTitle">Edit Class Slot</h2>
+        <button type="button" class="admin-modal-close" data-modal-close>&times;</button>
+      </div>
+      <form id="formClassSlot">
+        <input type="hidden" id="editClassSlotId">
+        <div class="admin-field-group">
+          <label for="classSlotProgram">Program</label>
+          <input type="text" id="classSlotProgram" class="admin-input" required>
+        </div>
+        <div class="admin-field-group">
+          <label for="classSlotStarts">Starts (Local)</label>
+          <input type="time" id="classSlotStarts" class="admin-input" required>
+        </div>
+        <div class="admin-field-group">
+          <label for="classSlotEnds">Ends (Local)</label>
+          <input type="time" id="classSlotEnds" class="admin-input" required>
+        </div>
+        <div class="admin-field-group">
+          <label for="classSlotCapacity">Capacity</label>
+          <input type="text" id="classSlotCapacity" class="admin-input" placeholder="e.g. 8 / 10" required>
+        </div>
+        <div class="admin-field-group">
+          <label for="classSlotStatus">Status</label>
+          <select id="classSlotStatus" class="admin-select">
+            <option value="Active">Active</option>
+            <option value="Full">Full</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px;">
+          <button type="submit" class="btn-admin-primary" id="btnClassSlotSubmit" style="flex:1;">Save Changes</button>
+          <button type="button" class="btn-admin-danger" id="btnDeleteClassSlotModal" style="flex:1;">Delete Slot</button>
         </div>
       </form>
     </div>
