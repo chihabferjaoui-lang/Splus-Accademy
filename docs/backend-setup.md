@@ -14,6 +14,8 @@ The website's public application, booking-request, and newsletter forms now call
 
 The student login, student account, admin login, and admin workspace pages are now part of the site, but they are not active until a Supabase project is provisioned and configured. Apply all migrations in timestamp order. The admin workspace uses the Supabase database directly with row-level security; it is not a substitute for assigning the first admin role.
 
+The newsletter workspace uses `20261122100000_newsletter_admin_crud.sql` to grant admins insert/delete access to subscribers in addition to the existing select/update grant. Redeploy `subscribe-newsletter` after changing it so public signups also create admin in-app notices.
+
 The academy does not yet have a Moroccan merchant-acquiring account. Contact CMI or the academy's bank to obtain its e-commerce merchant agreement and integration documentation. Confirm hosted checkout, MAD settlement to the academy's bank account, 3-D Secure, and the provider's notification/signature mechanism. The intended product is a single, non-renewing 30-day course payment; no card number or security code is stored by S+ Academy.
 
 CMI's current e-commerce overview describes local and international card acceptance, 3-D Secure, and card storage for repeat purchases. It does not by itself establish the exact merchant API or webhook contract needed for this site:
