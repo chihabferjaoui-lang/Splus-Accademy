@@ -193,6 +193,10 @@ function loadWorkspaceState() {
   (state.teacher_applications || []).forEach((app, i) => {
     if (!app.id) app.id = `tea-${i}-${Date.now()}`;
   });
+  if (!Array.isArray(state.class_slots)) state.class_slots = [];
+  state.class_slots.forEach((slot, i) => {
+    if (!slot.id) slot.id = `slot-${i}-${Date.now()}`;
+  });
   return state;
 }
 
@@ -750,7 +754,11 @@ function renderCustomers() {
 function renderNotifications() {
   const tbody = document.querySelector('[data-tbody="notifications_list"]');
   if (!tbody) return;
-  tbody.innerHTML = APP_STATE.notifications.map(n => `
+  if (!Array.isArray(APP_STATE.notifications) || APP_STATE.notifications.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--admin-muted); padding: 18px;">No notifications yet.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = APP_STATE.notifications.map((n, index) => `
     <tr>
       <td style="font-weight: 600;">${n.target}</td>
       <td><span class="badge-pill sent">${n.channel}</span></td>
@@ -758,6 +766,11 @@ function renderNotifications() {
       <td style="color: var(--admin-muted);">${n.scheduled}</td>
       <td>${n.attempts}</td>
       <td><span class="badge-pill confirmed">${n.status}</span></td>
+      <td>
+        <div class="table-actions-cell">
+          <button type="button" class="btn-xs btn-xs-danger" data-action="delete-notification" data-index="${index}">Delete</button>
+        </div>
+      </td>
     </tr>
   `).join("");
 }
@@ -913,6 +926,10 @@ function renderApplications() {
 function renderClassSlots() {
   const tbody = document.querySelector('[data-tbody="class_slots"]');
   if (!tbody) return;
+  if (!Array.isArray(APP_STATE.class_slots) || APP_STATE.class_slots.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--admin-muted); padding: 18px;">No class slots configured yet.</td></tr>`;
+    return;
+  }
   tbody.innerHTML = APP_STATE.class_slots.map(slot => `
     <tr>
       <td style="font-weight: 600;">${slot.program}</td>
@@ -920,8 +937,23 @@ function renderClassSlots() {
       <td>${slot.ends}</td>
       <td>${slot.capacity}</td>
       <td><span class="badge-pill ${slot.status === 'Active' ? 'confirmed' : 'overdue'}">${slot.status}</span></td>
+      <td>
+        <div class="table-actions-cell">
+          <button type="button" class="btn-xs btn-xs-primary" data-action="edit-class-slot" data-id="${slot.id}">Edit</button>
+          <button type="button" class="btn-xs btn-xs-danger" data-action="delete-class-slot" data-id="${slot.id}">Delete</button>
+        </div>
+      </td>
     </tr>
   `).join("");
+}
+
+function deleteClassSlot(id) {
+  const idx = APP_STATE.class_slots.findIndex(s => s.id === id);
+  if (idx === -1) return;
+  const removed = APP_STATE.class_slots.splice(idx, 1)[0];
+  saveWorkspaceState();
+  renderClassSlots();
+  showToast(`Class slot ${removed.program} (${removed.starts}) deleted.`, "success");
 }
 
 // RENDER: NEWSLETTER
@@ -1201,6 +1233,15 @@ function setupEvents() {
         if (delBtn) delBtn.style.display = "none";
         openModal("modalCustomer");
       }
+      if (modalTarget === "new_class_slot") {
+        document.getElementById("modalClassSlotTitle").textContent = "Add Class Slot";
+        document.getElementById("editClassSlotId").value = "";
+        document.getElementById("formClassSlot").reset();
+        document.getElementById("classSlotStatus").value = "Active";
+        document.getElementById("btnClassSlotSubmit").textContent = "Add Slot";
+        document.getElementById("btnDeleteClassSlotModal").style.display = "none";
+        openModal("modalClassSlot");
+      }
       return;
     }
 
@@ -1224,6 +1265,61 @@ function setupEvents() {
             if (sess.reference === ref) sess.status = "Confirmed";
           });
         });
+
+        // Admin-side notice for the approval.
+        APP_STATE.notifications = APP_STATE.notifications || [];
+        APP_STATE.notifications.unshift({
+          target: req.name,
+          channel: "Booking Approved",
+          topic: `Booking Confirmed: ${req.program || "Program"} (${ref})`,
+          scheduled: "Immediate",
+          attempts: 1,
+          status: "Sent"
+        });
+
+        // Update the queued student notice so it reads as approved on their dashboard.
+        try {
+          const studentKey = "splus_student_notifications_v1";
+          const studentNotifications = JSON.parse(localStorage.getItem(studentKey) || "[]");
+          if (Array.isArray(studentNotifications)) {
+            const email = (req.email || "").trim().toLowerCase();
+            studentNotifications.forEach(item => {
+              if (item.reference === ref || (email && (item.email || "").trim().toLowerCase() === email)) {
+                item.title = "Booking confirmed";
+                item.body = `Your ${req.program || "program"} booking has been confirmed. Reference: ${ref}.`;
+                item.status = "approved";
+                item.read_at = null;
+              }
+            });
+            localStorage.setItem(studentKey, JSON.stringify(studentNotifications.slice(0, 100)));
+          }
+        } catch (e) {
+          console.warn("Could not update local student notification:", e);
+        }
+
+        // Best-effort Supabase sync: mark request accepted and notify the student in-app.
+        if (supabase) {
+          supabase.from("booking_requests").update({ status: "accepted" }).eq("reference", ref)
+            .then(({ error }) => { if (error) console.warn("Could not sync booking approval:", error); });
+          const email = (req.email || "").trim().toLowerCase();
+          if (email) {
+            supabase.from("profiles").select("id,preferred_locale").eq("email", email).maybeSingle()
+              .then(({ data: student }) => {
+                if (!student) return;
+                return supabase.from("notifications").insert({
+                  recipient_id: student.id,
+                  channel: "in_app",
+                  delivery_status: "sent",
+                  locale: student.preferred_locale || "en",
+                  title: "Booking confirmed",
+                  body: `Your ${req.program || "program"} booking has been confirmed. Reference: ${ref}.`,
+                  sent_at: new Date().toISOString()
+                }).then(({ error }) => { if (error) console.warn("Could not create approval notification:", error); });
+              })
+              .catch(err => console.warn("Could not look up student for approval notice:", err));
+          }
+        }
+
         saveWorkspaceState();
         renderCurrentView();
         showToast(`Booking ${ref} for ${req.name} approved & confirmed in Kronos!`, "success");
@@ -1462,6 +1558,52 @@ function setupEvents() {
       }
       return;
     }
+
+    // 23. Edit Class Slot
+    const btnEditClassSlot = e.target.closest('[data-action="edit-class-slot"]');
+    if (btnEditClassSlot) {
+      e.stopPropagation();
+      const slot = APP_STATE.class_slots.find(s => s.id === btnEditClassSlot.dataset.id);
+      if (slot) {
+        document.getElementById("modalClassSlotTitle").textContent = "Edit Class Slot";
+        document.getElementById("editClassSlotId").value = slot.id;
+        document.getElementById("classSlotProgram").value = slot.program || "";
+        document.getElementById("classSlotStarts").value = slot.starts || "";
+        document.getElementById("classSlotEnds").value = slot.ends || "";
+        document.getElementById("classSlotCapacity").value = slot.capacity || "";
+        document.getElementById("classSlotStatus").value = slot.status === "Full" ? "Full" : "Active";
+        document.getElementById("btnClassSlotSubmit").textContent = "Save Changes";
+        document.getElementById("btnDeleteClassSlotModal").style.display = "";
+        openModal("modalClassSlot");
+      }
+      return;
+    }
+
+    // 24. Delete Class Slot (table button)
+    const btnDeleteClassSlot = e.target.closest('[data-action="delete-class-slot"]');
+    if (btnDeleteClassSlot) {
+      e.stopPropagation();
+      const slot = APP_STATE.class_slots.find(s => s.id === btnDeleteClassSlot.dataset.id);
+      if (slot && confirm(`Delete class slot "${slot.program}" at ${slot.starts}?`)) {
+        deleteClassSlot(slot.id);
+      }
+      return;
+    }
+
+    // 25. Delete Notification
+    const btnDeleteNotification = e.target.closest('[data-action="delete-notification"]');
+    if (btnDeleteNotification) {
+      e.stopPropagation();
+      const index = Number(btnDeleteNotification.dataset.index);
+      const notification = (APP_STATE.notifications || [])[index];
+      if (notification && confirm(`Delete notification: ${notification.topic}?`)) {
+        APP_STATE.notifications.splice(index, 1);
+        saveWorkspaceState();
+        renderNotifications();
+        showToast("Notification deleted.", "success");
+      }
+      return;
+    }
   });
 
   // Cross-tab real-time sync for online bookings and applications
@@ -1629,6 +1771,56 @@ function setupEvents() {
         closeModal("modalCustomer");
         showToast(`Customer ${removed.name} deleted.`, "success");
       }
+    });
+  }
+
+  // ── CLASS SLOTS: Edit / Delete ──
+  const formClassSlot = document.getElementById("formClassSlot");
+  if (formClassSlot) {
+    formClassSlot.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const id = document.getElementById("editClassSlotId").value;
+      const program = document.getElementById("classSlotProgram").value.trim();
+      const starts = document.getElementById("classSlotStarts").value;
+      const ends = document.getElementById("classSlotEnds").value;
+      const capacity = document.getElementById("classSlotCapacity").value.trim();
+      const status = document.getElementById("classSlotStatus").value;
+      const slot = id ? APP_STATE.class_slots.find(s => s.id === id) : null;
+
+      if (slot) {
+        slot.program = program;
+        slot.starts = starts;
+        slot.ends = ends;
+        slot.capacity = capacity;
+        slot.status = status;
+      } else {
+        APP_STATE.class_slots.unshift({
+          id: `slot-${Date.now()}`,
+          program,
+          starts,
+          ends,
+          capacity,
+          status
+        });
+      }
+      saveWorkspaceState();
+      renderClassSlots();
+      closeModal("modalClassSlot");
+      showToast(slot
+        ? `Class slot ${slot.program} updated successfully.`
+        : `Class slot ${program} added successfully.`, "success");
+    });
+  }
+
+  const btnDeleteClassSlotModal = document.getElementById("btnDeleteClassSlotModal");
+  if (btnDeleteClassSlotModal) {
+    btnDeleteClassSlotModal.addEventListener("click", () => {
+      const id = document.getElementById("editClassSlotId").value;
+      const slot = APP_STATE.class_slots.find(s => s.id === id);
+      if (!slot) return;
+      if (!confirm(`Delete class slot "${slot.program}" at ${slot.starts}?`)) return;
+      closeModal("modalClassSlot");
+      deleteClassSlot(id);
     });
   }
 

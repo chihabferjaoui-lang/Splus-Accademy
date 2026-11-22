@@ -13,6 +13,33 @@ const localeSelect = profileForm.elements.locale;
 let currentUser;
 let studentModulesAvailable = false;
 
+const LOCAL_NOTIFICATIONS_KEY = "splus_student_notifications_v1";
+
+function readLocalNotifications() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(LOCAL_NOTIFICATIONS_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeLocalNotifications(notifications) {
+  try {
+    localStorage.setItem(LOCAL_NOTIFICATIONS_KEY, JSON.stringify(notifications.slice(0, 100)));
+  } catch (error) {
+    console.warn("Could not save local notifications:", error);
+  }
+}
+
+function localNotificationsForCurrentUser() {
+  const email = (currentUser?.email || "").trim().toLowerCase();
+  if (!email) return [];
+  return readLocalNotifications()
+    .filter((notification) => (notification.email || "").trim().toLowerCase() === email)
+    .map(({ id, title, body, read_at, created_at }) => ({ id, title, body, read_at, created_at }));
+}
+
 function showMessage(text, kind = "info") {
   message.textContent = text;
   message.dataset.kind = kind;
@@ -253,12 +280,19 @@ function renderNotifications(notifications) {
       button.addEventListener("click", async () => {
         button.disabled = true;
         try {
-          const { error } = await getSupabaseClient()
-            .from("notifications")
-            .update({ read_at: new Date().toISOString() })
-            .eq("id", notification.id)
-            .eq("recipient_id", currentUser.id);
-          if (error) throw error;
+          if (String(notification.id).startsWith("local-")) {
+            const all = readLocalNotifications();
+            const item = all.find((entry) => entry.id === notification.id);
+            if (item) item.read_at = new Date().toISOString();
+            writeLocalNotifications(all);
+          } else {
+            const { error } = await getSupabaseClient()
+              .from("notifications")
+              .update({ read_at: new Date().toISOString() })
+              .eq("id", notification.id)
+              .eq("recipient_id", currentUser.id);
+            if (error) throw error;
+          }
           await loadNotifications();
         } catch (error) {
           showMessage(`Could not update the notification: ${error.message}`, "error");
@@ -276,15 +310,20 @@ function renderNotifications(notifications) {
       if (!window.confirm("Delete this notification? This action cannot be undone.")) return;
       deleteButton.disabled = true;
       try {
-        const { data, error } = await getSupabaseClient()
-          .from("notifications")
-          .delete()
-          .eq("id", notification.id)
-          .eq("recipient_id", currentUser.id)
-          .eq("channel", "in_app")
-          .select("id");
-        if (error) throw error;
-        if (!data?.length) throw new Error("The notification could not be found or deleted.");
+        if (String(notification.id).startsWith("local-")) {
+          const remaining = readLocalNotifications().filter((entry) => entry.id !== notification.id);
+          writeLocalNotifications(remaining);
+        } else {
+          const { data, error } = await getSupabaseClient()
+            .from("notifications")
+            .delete()
+            .eq("id", notification.id)
+            .eq("recipient_id", currentUser.id)
+            .eq("channel", "in_app")
+            .select("id");
+          if (error) throw error;
+          if (!data?.length) throw new Error("The notification could not be found or deleted.");
+        }
         await loadNotifications();
       } catch (error) {
         showMessage(`Could not delete the notification: ${error.message}`, "error");
@@ -306,7 +345,9 @@ async function loadNotifications() {
     .order("created_at", { ascending: false })
     .limit(50);
   if (error) throw error;
-  renderNotifications(data);
+  const merged = [...(data || []), ...localNotificationsForCurrentUser()];
+  merged.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  renderNotifications(merged.slice(0, 50));
 }
 
 function invoiceItemsDetails(items) {

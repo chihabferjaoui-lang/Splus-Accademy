@@ -117,6 +117,27 @@ function syncSubmissionToWorkspace(functionName, payload, reference) {
       attempts: 1,
       status: "Received"
     });
+
+    // Queue an in-app notice for the student who submitted the booking.
+    // It appears on the student dashboard once they sign in with this email.
+    try {
+      const studentKey = "splus_student_notifications_v1";
+      const studentNotifications = JSON.parse(localStorage.getItem(studentKey) || "[]");
+      const list = Array.isArray(studentNotifications) ? studentNotifications : [];
+      list.unshift({
+        id: `local-${Date.now()}`,
+        email: payload.email || "",
+        reference,
+        title: "Booking request received",
+        body: `We received your ${progTitle} booking request for ${payload.requestedDate || "a date to be confirmed"} at ${payload.requestedTime || "a time to be confirmed"}. Reference: ${reference}.`,
+        status: "pending",
+        created_at: new Date().toISOString(),
+        read_at: null
+      });
+      localStorage.setItem(studentKey, JSON.stringify(list.slice(0, 100)));
+    } catch (e) {
+      console.warn("Could not queue student booking notification:", e);
+    }
   } else if (functionName === "submit-student-application") {
     store.student_applications = store.student_applications || [];
     store.student_applications.unshift({
