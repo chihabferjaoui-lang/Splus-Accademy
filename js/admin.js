@@ -167,178 +167,6 @@ const DEFAULT_WORKSPACE_DATA = {
   ]
 };
 
-// Sample data helpers. Default rows are tagged so sample data can be removed
-// without deleting records that were entered by the admin.
-const SAMPLE_TAG = "_sample";
-const SAMPLE_COLLECTIONS = [
-  "era_invoices",
-  "genius_lessons",
-  "customers",
-  "notifications",
-  "student_applications",
-  "teacher_applications",
-  "class_slots",
-  "newsletter_subscribers"
-];
-const TODAY_SAMPLE_SESSIONS = [
-  { id: "sess-today-1", time: "09:30", student: "Sara B.", program: "Business English", teacher: "Chihab", status: "Confirmed" },
-  { id: "sess-today-2", time: "14:00", student: "Omar K.", program: "Exam Preparation", teacher: "Chihab", status: "Pending" },
-  { id: "sess-today-3", time: "17:30", student: "Lina M.", program: "Day-to-Day English", teacher: "Chihab", status: "Confirmed" }
-];
-
-function isoDateString(date) {
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-function getCurrentWeekISOByBucket() {
-  const today = new Date(`${getTodayISO()}T00:00:00`);
-  const mondayOffset = today.getDay() === 0 ? -6 : 1 - today.getDay();
-  const monday = new Date(today);
-  monday.setDate(today.getDate() + mondayOffset);
-  const buckets = ["mon", "tue", "wed", "thu", "fri"];
-  const result = {};
-  buckets.forEach((bucket, index) => {
-    const day = new Date(monday);
-    day.setDate(monday.getDate() + index);
-    result[bucket] = isoDateString(day);
-  });
-  return result;
-}
-
-function cloneDefaultWorkspaceData() {
-  const data = JSON.parse(JSON.stringify(DEFAULT_WORKSPACE_DATA));
-  Object.values(data.kronos_week || {}).forEach(list => {
-    (list || []).forEach(item => { item[SAMPLE_TAG] = true; });
-  });
-
-  // Mirror weekday samples onto the current week so the calendar and overview
-  // show demo sessions immediately, even when the saved fallback keys are old.
-  const weekDates = getCurrentWeekISOByBucket();
-  Object.entries(weekDates).forEach(([bucket, iso]) => {
-    const datedSessions = (data.kronos_week[bucket] || []).map(item => ({
-      ...item,
-      id: `${item.id}-${iso}`,
-      date: iso,
-      [SAMPLE_TAG]: true
-    }));
-    data.kronos_week[iso] = (data.kronos_week[iso] || []).concat(datedSessions);
-  });
-
-  const todayKey = getTodayISO();
-  if (!Object.values(weekDates).includes(todayKey)) {
-    data.kronos_week[todayKey] = TODAY_SAMPLE_SESSIONS.map(item => ({
-      ...item,
-      date: todayKey,
-      [SAMPLE_TAG]: true
-    }));
-  }
-
-  SAMPLE_COLLECTIONS.forEach(key => {
-    (data[key] || []).forEach(item => { item[SAMPLE_TAG] = true; });
-  });
-  return data;
-}
-
-function sampleIdentity(item, key) {
-  if (!item) return "";
-  if (key === "customers") return item.custNo || item.email || "";
-  if (key === "notifications") return item.topic || "";
-  if (key === "class_slots") return item.id || `${item.program || ""}|${item.starts || ""}|${item.ends || ""}`;
-  if (key === "newsletter_subscribers") return item.email || "";
-  return item.id || item.email || "";
-}
-
-function buildSampleIdentities() {
-  const defaults = cloneDefaultWorkspaceData();
-  const identities = {};
-  SAMPLE_COLLECTIONS.forEach(key => {
-    identities[key] = new Set((defaults[key] || []).map(item => sampleIdentity(item, key)).filter(Boolean));
-  });
-  identities.kronos_week = new Set(
-    Object.values(defaults.kronos_week || {})
-      .flat()
-      .map(item => sampleIdentity(item, "kronos_week"))
-      .filter(Boolean)
-  );
-  return identities;
-}
-
-const SAMPLE_IDENTITIES = buildSampleIdentities();
-
-function isSampleRecord(item, key) {
-  if (!item) return false;
-  if (item[SAMPLE_TAG]) return true;
-  return SAMPLE_IDENTITIES[key]?.has(sampleIdentity(item, key)) || false;
-}
-
-function adoptLegacySampleFlags(state) {
-  if (!state || !state.kronos_week) return;
-  Object.keys(state.kronos_week).forEach(day => {
-    (state.kronos_week[day] || []).forEach(item => {
-      if (isSampleRecord(item, "kronos_week")) item[SAMPLE_TAG] = true;
-    });
-  });
-  SAMPLE_COLLECTIONS.forEach(key => {
-    (state[key] || []).forEach(item => {
-      if (isSampleRecord(item, key)) item[SAMPLE_TAG] = true;
-    });
-  });
-}
-
-function hasSampleData(state = APP_STATE) {
-  if (!state || !state.kronos_week) return false;
-  const hasTaggedSession = Object.values(state.kronos_week).some(list =>
-    (list || []).some(item => isSampleRecord(item, "kronos_week"))
-  );
-  if (hasTaggedSession) return true;
-  return SAMPLE_COLLECTIONS.some(key =>
-    (state[key] || []).some(item => isSampleRecord(item, key))
-  );
-}
-
-function loadSampleData() {
-  const samples = cloneDefaultWorkspaceData();
-  APP_STATE.kronos_week = APP_STATE.kronos_week || {};
-  Object.keys(samples.kronos_week).forEach(day => {
-    const target = APP_STATE.kronos_week[day] || (APP_STATE.kronos_week[day] = []);
-    samples.kronos_week[day].forEach(item => {
-      if (!target.some(existing => sampleIdentity(existing, "kronos_week") === sampleIdentity(item, "kronos_week"))) {
-        target.push(item);
-      }
-    });
-  });
-  SAMPLE_COLLECTIONS.forEach(key => {
-    const target = Array.isArray(APP_STATE[key]) ? APP_STATE[key] : (APP_STATE[key] = []);
-    (samples[key] || []).forEach(item => {
-      if (!target.some(existing => sampleIdentity(existing, key) === sampleIdentity(item, key))) {
-        target.push(item);
-      }
-    });
-  });
-  if (!selectedGeniusLesson) selectedGeniusLesson = APP_STATE.genius_lessons[0] || null;
-  if (!selectedEraInvoice) selectedEraInvoice = APP_STATE.era_invoices[0] || null;
-}
-
-function clearSampleData() {
-  if (!APP_STATE.kronos_week) APP_STATE.kronos_week = {};
-  Object.keys(APP_STATE.kronos_week).forEach(day => {
-    APP_STATE.kronos_week[day] = (APP_STATE.kronos_week[day] || [])
-      .filter(item => !isSampleRecord(item, "kronos_week"));
-  });
-  SAMPLE_COLLECTIONS.forEach(key => {
-    APP_STATE[key] = (APP_STATE[key] || []).filter(item => !isSampleRecord(item, key));
-  });
-  if (!APP_STATE.genius_lessons.includes(selectedGeniusLesson)) {
-    selectedGeniusLesson = APP_STATE.genius_lessons[0] || null;
-  }
-  if (!APP_STATE.era_invoices.includes(selectedEraInvoice)) {
-    selectedEraInvoice = APP_STATE.era_invoices[0] || null;
-  }
-}
-
 // State Store loaded from localStorage
 const STORAGE_KEY = "splus_workspace_store_v1";
 
@@ -356,16 +184,8 @@ function loadWorkspaceState() {
     console.warn("Storage parse error:", e);
   }
   if (!state) {
-    state = cloneDefaultWorkspaceData();
+    state = JSON.parse(JSON.stringify(DEFAULT_WORKSPACE_DATA));
   }
-  const defaults = cloneDefaultWorkspaceData();
-  Object.keys(defaults.kronos_week).forEach(day => {
-    if (!Array.isArray(state.kronos_week[day])) state.kronos_week[day] = [];
-  });
-  SAMPLE_COLLECTIONS.forEach(key => {
-    if (!Array.isArray(state[key])) state[key] = defaults[key];
-  });
-  adoptLegacySampleFlags(state);
   // Ensure IDs exist on applications and bookings
   (state.student_applications || []).forEach((app, i) => {
     if (!app.id) app.id = `stu-${i}-${Date.now()}`;
@@ -373,13 +193,6 @@ function loadWorkspaceState() {
   (state.teacher_applications || []).forEach((app, i) => {
     if (!app.id) app.id = `tea-${i}-${Date.now()}`;
   });
-  if (!Array.isArray(state.class_slots)) state.class_slots = [];
-  state.class_slots.forEach((slot, i) => {
-    if (!slot.id) slot.id = `slot-${i}-${Date.now()}`;
-  });
-  if (!Array.isArray(state.newsletter_subscribers)) {
-    state.newsletter_subscribers = defaults.newsletter_subscribers;
-  }
   return state;
 }
 
@@ -389,7 +202,7 @@ function saveWorkspaceState() {
   try {
     // Bound collections to prevent QuotaExceededError under extreme volume
     const MAX_ITEMS = 500;
-    ['student_applications', 'teacher_applications', 'booking_requests', 'era_invoices', 'notifications', 'newsletter_subscribers'].forEach(key => {
+    ['student_applications', 'teacher_applications', 'booking_requests', 'era_invoices', 'notifications'].forEach(key => {
       if (Array.isArray(APP_STATE[key]) && APP_STATE[key].length > MAX_ITEMS) {
         APP_STATE[key] = APP_STATE[key].slice(0, MAX_ITEMS);
       }
@@ -398,7 +211,7 @@ function saveWorkspaceState() {
   } catch (e) {
     console.error("Save state error, attempting aggressive pruning:", e);
     try {
-      ['student_applications', 'teacher_applications', 'booking_requests', 'era_invoices', 'notifications', 'newsletter_subscribers'].forEach(key => {
+      ['student_applications', 'teacher_applications', 'booking_requests', 'era_invoices', 'notifications'].forEach(key => {
         if (Array.isArray(APP_STATE[key])) {
           APP_STATE[key] = APP_STATE[key].slice(0, 100);
         }
@@ -489,24 +302,13 @@ function showToast(message, type = "success") {
   }, 4000);
 }
 
-function syncSampleToggleButtons() {
-  const enabled = hasSampleData();
-  sampleToggles.forEach(button => {
-    button.classList.toggle("active", enabled);
-    button.setAttribute("aria-pressed", String(enabled));
-    button.title = enabled ? "Remove sample data and keep your own entries" : "Load sample data";
-    button.setAttribute("aria-label", enabled ? "Remove sample data" : "Load sample data");
-  });
-}
-
 // Pagination & Search Filter State for High Volume Scaling
 const PAGINATION = {
   booking_requests: { page: 1, pageSize: 8, search: "" },
   student_applications: { page: 1, pageSize: 8, search: "" },
   teacher_applications: { page: 1, pageSize: 8, search: "" },
   era_invoices: { page: 1, pageSize: 8, search: "" },
-  customers: { page: 1, pageSize: 8, search: "" },
-  newsletter_subscribers: { page: 1, pageSize: 8, search: "" }
+  customers: { page: 1, pageSize: 8, search: "" }
 };
 
 function renderPaginationBar(tableKey, totalItems) {
@@ -948,11 +750,7 @@ function renderCustomers() {
 function renderNotifications() {
   const tbody = document.querySelector('[data-tbody="notifications_list"]');
   if (!tbody) return;
-  if (!Array.isArray(APP_STATE.notifications) || APP_STATE.notifications.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--admin-muted); padding: 18px;">No notifications yet.</td></tr>`;
-    return;
-  }
-  tbody.innerHTML = APP_STATE.notifications.map((n, index) => `
+  tbody.innerHTML = APP_STATE.notifications.map(n => `
     <tr>
       <td style="font-weight: 600;">${n.target}</td>
       <td><span class="badge-pill sent">${n.channel}</span></td>
@@ -960,11 +758,6 @@ function renderNotifications() {
       <td style="color: var(--admin-muted);">${n.scheduled}</td>
       <td>${n.attempts}</td>
       <td><span class="badge-pill confirmed">${n.status}</span></td>
-      <td>
-        <div class="table-actions-cell">
-          <button type="button" class="btn-xs btn-xs-danger" data-action="delete-notification" data-index="${index}">Delete</button>
-        </div>
-      </td>
     </tr>
   `).join("");
 }
@@ -1120,10 +913,6 @@ function renderApplications() {
 function renderClassSlots() {
   const tbody = document.querySelector('[data-tbody="class_slots"]');
   if (!tbody) return;
-  if (!Array.isArray(APP_STATE.class_slots) || APP_STATE.class_slots.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--admin-muted); padding: 18px;">No class slots configured yet.</td></tr>`;
-    return;
-  }
   tbody.innerHTML = APP_STATE.class_slots.map(slot => `
     <tr>
       <td style="font-weight: 600;">${slot.program}</td>
@@ -1131,167 +920,21 @@ function renderClassSlots() {
       <td>${slot.ends}</td>
       <td>${slot.capacity}</td>
       <td><span class="badge-pill ${slot.status === 'Active' ? 'confirmed' : 'overdue'}">${slot.status}</span></td>
-      <td>
-        <div class="table-actions-cell">
-          <button type="button" class="btn-xs btn-xs-primary" data-action="edit-class-slot" data-id="${slot.id}">Edit</button>
-          <button type="button" class="btn-xs btn-xs-danger" data-action="delete-class-slot" data-id="${slot.id}">Delete</button>
-        </div>
-      </td>
     </tr>
   `).join("");
 }
 
-function deleteClassSlot(id) {
-  const idx = APP_STATE.class_slots.findIndex(s => s.id === id);
-  if (idx === -1) return;
-  const removed = APP_STATE.class_slots.splice(idx, 1)[0];
-  saveWorkspaceState();
-  renderClassSlots();
-  showToast(`Class slot ${removed.program} (${removed.starts}) deleted.`, "success");
-}
-
 // RENDER: NEWSLETTER
-function formatNewsletterDate(value) {
-  if (!value) return "—";
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-  return parsed.toLocaleDateString("fr-FR");
-}
-
 function renderNewsletter() {
   const tbody = document.querySelector('[data-tbody="newsletter_subscribers"]');
   if (!tbody) return;
-  const cfg = PAGINATION.newsletter_subscribers;
-  let list = Array.isArray(APP_STATE.newsletter_subscribers) ? APP_STATE.newsletter_subscribers : [];
-  if (cfg.search) {
-    const s = cfg.search.toLowerCase();
-    list = list.filter(sub => (sub.email || "").toLowerCase().includes(s) || (sub.status || "").toLowerCase().includes(s));
-  }
-  renderPaginationBar("newsletter_subscribers", list.length);
-  const start = (cfg.page - 1) * cfg.pageSize;
-  const page = list.slice(start, start + cfg.pageSize);
-  if (page.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--admin-muted); padding: 18px;">${cfg.search ? "No matching subscribers found." : "No newsletter subscribers yet."}</td></tr>`;
-    return;
-  }
-  tbody.innerHTML = page.map(sub => {
-    const isActive = (sub.status || "").toLowerCase() === "active";
-    return `
+  tbody.innerHTML = APP_STATE.newsletter_subscribers.map(sub => `
     <tr>
       <td style="font-weight: 600;">${sub.email}</td>
-      <td style="color: var(--admin-muted);">${formatNewsletterDate(sub.date)}</td>
-      <td><span class="badge-pill ${isActive ? "confirmed" : "overdue"}">${sub.status || "Active"}</span></td>
-      <td>
-        <div class="table-actions-cell">
-          <button type="button" class="btn-xs btn-xs-danger" data-action="delete-newsletter-subscriber" data-email="${sub.email}">Delete</button>
-        </div>
-      </td>
-    </tr>`;
-  }).join("");
-}
-
-function deleteNewsletterSubscriber(email) {
-  const idx = (APP_STATE.newsletter_subscribers || []).findIndex(s => s.email === email);
-  if (idx === -1) return;
-  APP_STATE.newsletter_subscribers.splice(idx, 1);
-  saveWorkspaceState();
-  renderNewsletter();
-  showToast(`Subscriber ${email} deleted.`, "success");
-  if (supabase) {
-    supabase.from("newsletter_subscribers").delete().eq("email", email)
-      .then(({ error }) => { if (error) console.warn("Could not delete subscriber in Supabase:", error); });
-  }
-}
-
-async function loadNewsletterFromSupabase() {
-  if (!supabase) return;
-  try {
-    const { data: userRes } = await supabase.auth.getUser();
-    if (!userRes?.user) return;
-    const { data, error } = await supabase
-      .from("newsletter_subscribers")
-      .select("email,consented_at,unsubscribed_at")
-      .order("consented_at", { ascending: false });
-    if (error) throw error;
-    const remote = (data || []).map(row => ({
-      email: row.email,
-      date: row.consented_at,
-      status: row.unsubscribed_at ? "Unsubscribed" : "Active"
-    }));
-    const local = Array.isArray(APP_STATE.newsletter_subscribers) ? APP_STATE.newsletter_subscribers : [];
-    const byEmail = new Map(local.map(sub => [sub.email, sub]));
-    remote.forEach(sub => byEmail.set(sub.email, sub));
-    APP_STATE.newsletter_subscribers = [...byEmail.values()];
-    saveWorkspaceState();
-    renderNewsletter();
-  } catch (error) {
-    console.log("Newsletter Supabase sync skipped:", error);
-  }
-}
-
-async function loadSupabaseNotifications() {
-  if (!supabase) return;
-  try {
-    const { data: userRes } = await supabase.auth.getUser();
-    const userId = userRes?.user?.id;
-    if (!userId) return;
-    const { data, error } = await supabase
-      .from("notifications")
-      .select("id,title,body,channel,delivery_status,sent_at,created_at,read_at")
-      .eq("recipient_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(100);
-    if (error) throw error;
-    if (!data || !data.length) return;
-
-    const existing = Array.isArray(APP_STATE.notifications) ? APP_STATE.notifications : [];
-    const knownIds = new Set(existing.map(n => n.id).filter(Boolean));
-    const emailFromBody = (body) => {
-      const match = String(body || "").match(/^([^\s]+)\s/);
-      return match ? match[1] : "Admin";
-    };
-    const remote = data
-      .filter(row => !knownIds.has(row.id))
-      .map(row => ({
-        id: row.id,
-        target: row.title === "New newsletter subscriber" ? emailFromBody(row.body) : "Supabase",
-        channel: row.channel === "in_app" ? "In-app" : row.channel,
-        topic: `${row.title}${row.body ? ` — ${row.body}` : ""}`,
-        scheduled: formatNewsletterDate(row.sent_at || row.created_at),
-        attempts: row.delivery_status === "sent" ? 1 : 0,
-        status: row.read_at ? "Read" : "Unread"
-      }));
-
-    if (!remote.length) return;
-    APP_STATE.notifications = [...remote, ...existing].slice(0, 200);
-    saveWorkspaceState();
-    renderNotifications();
-  } catch (error) {
-    console.log("Supabase notification sync skipped:", error);
-  }
-}
-
-function exportNewsletterCsv() {
-  const list = Array.isArray(APP_STATE.newsletter_subscribers) ? APP_STATE.newsletter_subscribers : [];
-  if (!list.length) {
-    showToast("No subscribers to export.", "error");
-    return;
-  }
-  const escapeCell = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
-  const rows = [
-    ["Email", "Consent Recorded", "Status"],
-    ...list.map(sub => [sub.email, formatNewsletterDate(sub.date), sub.status || "Active"])
-  ];
-  const csv = "\uFEFF" + rows.map(row => row.map(escapeCell).join(",")).join("\r\n");
-  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `newsletter-subscribers-${new Date().toISOString().slice(0, 10)}.csv`;
-  document.body.append(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-  showToast("Subscriber list exported as CSV.", "success");
+      <td style="color: var(--admin-muted);">${sub.date}</td>
+      <td><span class="badge-pill confirmed">${sub.status}</span></td>
+    </tr>
+  `).join("");
 }
 
 // Populate Arabic Invoice Modal
@@ -1344,31 +987,32 @@ function setupEvents() {
         PAGINATION[tableKey].search = e.target.value.trim();
         PAGINATION[tableKey].page = 1;
         if (tableKey === "era_invoices") renderEra();
-        else if (tableKey === "newsletter_subscribers") renderNewsletter();
         else renderApplications();
       }
     });
   });
 
-  // Sample data toggle: load on first click, remove only sample rows on second click.
+  // Sample data toggle / Clear data toggle
   sampleToggles.forEach(toggle => {
     toggle.addEventListener("click", () => {
-      if (hasSampleData()) {
-        const removeSamples = confirm("Remove sample data and keep your own entries?");
-        if (!removeSamples) return;
-        clearSampleData();
+      const confirmClear = confirm("Do you want to clear fictitious demo data and start with an empty real workspace? (Cancel will reset back to sample demonstration data)");
+      if (confirmClear) {
+        APP_STATE.kronos_week = { mon: [], tue: [], wed: [], thu: [], fri: [] };
+        APP_STATE.era_invoices = [];
+        APP_STATE.genius_lessons = [];
+        selectedGeniusLesson = null;
+        selectedEraInvoice = null;
         saveWorkspaceState();
-        syncSampleToggleButtons();
         renderCurrentView();
-        showToast("Sample data removed. Your own entries were kept.", "success");
-        return;
+        showToast("Cleared fictitious data! You now have an empty, real workspace ready for your entries.", "success");
+      } else {
+        APP_STATE = JSON.parse(JSON.stringify(DEFAULT_WORKSPACE_DATA));
+        selectedGeniusLesson = APP_STATE.genius_lessons[0];
+        selectedEraInvoice = APP_STATE.era_invoices[0];
+        saveWorkspaceState();
+        renderCurrentView();
+        showToast("Reset to sample demonstration data.", "success");
       }
-
-      loadSampleData();
-      saveWorkspaceState();
-      syncSampleToggleButtons();
-      renderCurrentView();
-      showToast("Sample data loaded across the workspace.", "success");
     });
   });
 
@@ -1557,20 +1201,6 @@ function setupEvents() {
         if (delBtn) delBtn.style.display = "none";
         openModal("modalCustomer");
       }
-      if (modalTarget === "new_class_slot") {
-        document.getElementById("modalClassSlotTitle").textContent = "Add Class Slot";
-        document.getElementById("editClassSlotId").value = "";
-        document.getElementById("formClassSlot").reset();
-        document.getElementById("classSlotStatus").value = "Active";
-        document.getElementById("btnClassSlotSubmit").textContent = "Add Slot";
-        document.getElementById("btnDeleteClassSlotModal").style.display = "none";
-        openModal("modalClassSlot");
-      }
-      if (modalTarget === "new_newsletter_subscriber") {
-        document.getElementById("modalNewsletterSubscriberTitle").textContent = "Add Subscriber";
-        document.getElementById("formNewsletterSubscriber").reset();
-        openModal("modalNewsletterSubscriber");
-      }
       return;
     }
 
@@ -1581,7 +1211,7 @@ function setupEvents() {
       return;
     }
 
-    // 14. Approve Booking Request
+    // 14. Approve Booking Request -> Transfer/confirm on exact requested date in Kronos
     const btnApproveBooking = e.target.closest('[data-action="approve-booking"]');
     if (btnApproveBooking) {
       e.stopPropagation();
@@ -1589,69 +1219,42 @@ function setupEvents() {
       const req = (APP_STATE.booking_requests || []).find(r => r.reference === ref);
       if (req) {
         req.status = "Confirmed";
-        Object.keys(APP_STATE.kronos_week).forEach(day => {
-          (APP_STATE.kronos_week[day] || []).forEach(sess => {
-            if (sess.reference === ref) sess.status = "Confirmed";
+        const targetDate = /^\d{4}-\d{2}-\d{2}$/.test(req.preferredDate || "") ? req.preferredDate : TODAY_ISO;
+        const targetTime = (req.preferredTime && req.preferredTime !== "Flexible") ? req.preferredTime : "14:00";
+
+        let existingSession = null;
+        Object.keys(APP_STATE.kronos_week).forEach(bucket => {
+          const list = APP_STATE.kronos_week[bucket] || [];
+          const idx = list.findIndex(sess => sess.reference === ref);
+          if (idx !== -1) {
+            existingSession = list.splice(idx, 1)[0];
+          }
+        });
+
+        APP_STATE.kronos_week[targetDate] = APP_STATE.kronos_week[targetDate] || [];
+        if (existingSession) {
+          existingSession.status = "Confirmed";
+          existingSession.date = targetDate;
+          existingSession.time = targetTime || existingSession.time;
+          APP_STATE.kronos_week[targetDate].push(existingSession);
+        } else {
+          APP_STATE.kronos_week[targetDate].push({
+            id: `sess-booking-${Date.now()}`,
+            time: targetTime,
+            student: req.name || "Student",
+            program: req.program || "English Course",
+            teacher: "Chihab",
+            status: "Confirmed",
+            date: targetDate,
+            reference: req.reference,
+            phone: req.phone || "",
+            email: req.email || ""
           });
-        });
-
-        // Admin-side notice for the approval.
-        APP_STATE.notifications = APP_STATE.notifications || [];
-        APP_STATE.notifications.unshift({
-          target: req.name,
-          channel: "Booking Approved",
-          topic: `Booking Confirmed: ${req.program || "Program"} (${ref})`,
-          scheduled: "Immediate",
-          attempts: 1,
-          status: "Sent"
-        });
-
-        // Update the queued student notice so it reads as approved on their dashboard.
-        try {
-          const studentKey = "splus_student_notifications_v1";
-          const studentNotifications = JSON.parse(localStorage.getItem(studentKey) || "[]");
-          if (Array.isArray(studentNotifications)) {
-            const email = (req.email || "").trim().toLowerCase();
-            studentNotifications.forEach(item => {
-              if (item.reference === ref || (email && (item.email || "").trim().toLowerCase() === email)) {
-                item.title = "Booking confirmed";
-                item.body = `Your ${req.program || "program"} booking has been confirmed. Reference: ${ref}.`;
-                item.status = "approved";
-                item.read_at = null;
-              }
-            });
-            localStorage.setItem(studentKey, JSON.stringify(studentNotifications.slice(0, 100)));
-          }
-        } catch (e) {
-          console.warn("Could not update local student notification:", e);
-        }
-
-        // Best-effort Supabase sync: mark request accepted and notify the student in-app.
-        if (supabase) {
-          supabase.from("booking_requests").update({ status: "accepted" }).eq("reference", ref)
-            .then(({ error }) => { if (error) console.warn("Could not sync booking approval:", error); });
-          const email = (req.email || "").trim().toLowerCase();
-          if (email) {
-            supabase.from("profiles").select("id,preferred_locale").eq("email", email).maybeSingle()
-              .then(({ data: student }) => {
-                if (!student) return;
-                return supabase.from("notifications").insert({
-                  recipient_id: student.id,
-                  channel: "in_app",
-                  delivery_status: "sent",
-                  locale: student.preferred_locale || "en",
-                  title: "Booking confirmed",
-                  body: `Your ${req.program || "program"} booking has been confirmed. Reference: ${ref}.`,
-                  sent_at: new Date().toISOString()
-                }).then(({ error }) => { if (error) console.warn("Could not create approval notification:", error); });
-              })
-              .catch(err => console.warn("Could not look up student for approval notice:", err));
-          }
         }
 
         saveWorkspaceState();
         renderCurrentView();
-        showToast(`Booking ${ref} for ${req.name} approved & confirmed in Kronos!`, "success");
+        showToast(`Booking ${ref} for ${req.name} approved & added to Kronos on ${targetDate}!`, "success");
       }
       return;
     }
@@ -1703,29 +1306,39 @@ function setupEvents() {
       if (app) {
         app.status = "Approved";
 
-        // Determine schedule day from preferredSchedule
-        let targetDay = "tue";
-        const schedLower = (app.schedule || "").toLowerCase();
-        if (schedLower.includes("mon")) targetDay = "mon";
-        else if (schedLower.includes("wed")) targetDay = "wed";
-        else if (schedLower.includes("thu")) targetDay = "thu";
-        else if (schedLower.includes("fri")) targetDay = "fri";
+        // Determine dynamic target ISO date from preferredDate or preferredSchedule
+        let targetDate = TODAY_ISO;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(app.preferredDate || "")) {
+          targetDate = app.preferredDate;
+        } else {
+          const schedLower = (app.schedule || "").toLowerCase();
+          const weekdayMap = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
+          const matchedDay = Object.keys(weekdayMap).find(k => schedLower.includes(k));
+          if (matchedDay !== undefined) {
+            const d = new Date();
+            d.setHours(12, 0, 0, 0);
+            const diff = (weekdayMap[matchedDay] - d.getDay() + 7) % 7;
+            d.setDate(d.getDate() + diff);
+            targetDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+          }
+        }
 
         // Create confirmed session in Kronos
         const newSession = {
           id: `sess-app-${Date.now()}`,
-          time: "14:00",
+          time: app.preferredTime || "14:00",
           student: app.name,
           program: app.program || "English Program",
           teacher: "Chihab",
           status: "Confirmed",
+          date: targetDate,
           reference: `APP-${Date.now().toString().slice(-4)}`,
           phone: app.phone || "",
           email: app.email || ""
         };
 
-        APP_STATE.kronos_week[targetDay] = APP_STATE.kronos_week[targetDay] || [];
-        APP_STATE.kronos_week[targetDay].push(newSession);
+        APP_STATE.kronos_week[targetDate] = APP_STATE.kronos_week[targetDate] || [];
+        APP_STATE.kronos_week[targetDate].push(newSession);
 
         // Add to Customers list
         const custNo = `C-0000${Math.floor(30 + Math.random() * 50)}`;
@@ -1885,73 +1498,6 @@ function setupEvents() {
         renderCustomers();
         showToast(`Customer ${removed.name} (${removed.custNo}) deleted.`, "success");
       }
-      return;
-    }
-
-    // 23. Edit Class Slot
-    const btnEditClassSlot = e.target.closest('[data-action="edit-class-slot"]');
-    if (btnEditClassSlot) {
-      e.stopPropagation();
-      const slot = APP_STATE.class_slots.find(s => s.id === btnEditClassSlot.dataset.id);
-      if (slot) {
-        document.getElementById("modalClassSlotTitle").textContent = "Edit Class Slot";
-        document.getElementById("editClassSlotId").value = slot.id;
-        document.getElementById("classSlotProgram").value = slot.program || "";
-        document.getElementById("classSlotStarts").value = slot.starts || "";
-        document.getElementById("classSlotEnds").value = slot.ends || "";
-        document.getElementById("classSlotCapacity").value = slot.capacity || "";
-        document.getElementById("classSlotStatus").value = slot.status === "Full" ? "Full" : "Active";
-        document.getElementById("btnClassSlotSubmit").textContent = "Save Changes";
-        document.getElementById("btnDeleteClassSlotModal").style.display = "";
-        openModal("modalClassSlot");
-      }
-      return;
-    }
-
-    // 24. Delete Class Slot (table button)
-    const btnDeleteClassSlot = e.target.closest('[data-action="delete-class-slot"]');
-    if (btnDeleteClassSlot) {
-      e.stopPropagation();
-      const slot = APP_STATE.class_slots.find(s => s.id === btnDeleteClassSlot.dataset.id);
-      if (slot && confirm(`Delete class slot "${slot.program}" at ${slot.starts}?`)) {
-        deleteClassSlot(slot.id);
-      }
-      return;
-    }
-
-    // 25. Delete Notification
-    const btnDeleteNotification = e.target.closest('[data-action="delete-notification"]');
-    if (btnDeleteNotification) {
-      e.stopPropagation();
-      const index = Number(btnDeleteNotification.dataset.index);
-      const notification = (APP_STATE.notifications || [])[index];
-      if (notification && confirm(`Delete notification: ${notification.topic}?`)) {
-        APP_STATE.notifications.splice(index, 1);
-        saveWorkspaceState();
-        renderNotifications();
-        showToast("Notification deleted.", "success");
-        if (notification.id && supabase) {
-          supabase.from("notifications").delete().eq("id", notification.id)
-            .then(({ error }) => { if (error) console.warn("Could not delete notification in Supabase:", error); });
-        }
-      }
-      return;
-    }
-
-    // 26. Export newsletter subscribers as CSV
-    const btnExportNewsletter = e.target.closest('[data-action="export-newsletter-csv"]');
-    if (btnExportNewsletter) {
-      e.stopPropagation();
-      exportNewsletterCsv();
-      return;
-    }
-
-    // 27. Delete newsletter subscriber
-    const btnDeleteNewsletter = e.target.closest('[data-action="delete-newsletter-subscriber"]');
-    if (btnDeleteNewsletter) {
-      e.stopPropagation();
-      const email = btnDeleteNewsletter.dataset.email;
-      if (email && confirm(`Delete newsletter subscriber ${email}?`)) deleteNewsletterSubscriber(email);
       return;
     }
   });
@@ -2120,92 +1666,6 @@ function setupEvents() {
         renderCustomers();
         closeModal("modalCustomer");
         showToast(`Customer ${removed.name} deleted.`, "success");
-      }
-    });
-  }
-
-  // ── CLASS SLOTS: Edit / Delete ──
-  const formClassSlot = document.getElementById("formClassSlot");
-  if (formClassSlot) {
-    formClassSlot.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const id = document.getElementById("editClassSlotId").value;
-      const program = document.getElementById("classSlotProgram").value.trim();
-      const starts = document.getElementById("classSlotStarts").value;
-      const ends = document.getElementById("classSlotEnds").value;
-      const capacity = document.getElementById("classSlotCapacity").value.trim();
-      const status = document.getElementById("classSlotStatus").value;
-      const slot = id ? APP_STATE.class_slots.find(s => s.id === id) : null;
-
-      if (slot) {
-        slot.program = program;
-        slot.starts = starts;
-        slot.ends = ends;
-        slot.capacity = capacity;
-        slot.status = status;
-      } else {
-        APP_STATE.class_slots.unshift({
-          id: `slot-${Date.now()}`,
-          program,
-          starts,
-          ends,
-          capacity,
-          status
-        });
-      }
-      saveWorkspaceState();
-      renderClassSlots();
-      closeModal("modalClassSlot");
-      showToast(slot
-        ? `Class slot ${slot.program} updated successfully.`
-        : `Class slot ${program} added successfully.`, "success");
-    });
-  }
-
-  const btnDeleteClassSlotModal = document.getElementById("btnDeleteClassSlotModal");
-  if (btnDeleteClassSlotModal) {
-    btnDeleteClassSlotModal.addEventListener("click", () => {
-      const id = document.getElementById("editClassSlotId").value;
-      const slot = APP_STATE.class_slots.find(s => s.id === id);
-      if (!slot) return;
-      if (!confirm(`Delete class slot "${slot.program}" at ${slot.starts}?`)) return;
-      closeModal("modalClassSlot");
-      deleteClassSlot(id);
-    });
-  }
-
-  // Newsletter subscriber add form
-  const formNewsletterSubscriber = document.getElementById("formNewsletterSubscriber");
-  if (formNewsletterSubscriber) {
-    formNewsletterSubscriber.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const email = document.getElementById("newsletterSubscriberEmail").value.trim().toLowerCase();
-      if (!email) return;
-      APP_STATE.newsletter_subscribers = Array.isArray(APP_STATE.newsletter_subscribers) ? APP_STATE.newsletter_subscribers : [];
-      const existing = APP_STATE.newsletter_subscribers.find(s => s.email === email);
-      if (existing) {
-        existing.date = new Date().toISOString();
-        existing.status = "Active";
-      } else {
-        APP_STATE.newsletter_subscribers.unshift({
-          email,
-          date: new Date().toISOString(),
-          status: "Active"
-        });
-      }
-      saveWorkspaceState();
-      renderNewsletter();
-      closeModal("modalNewsletterSubscriber");
-      formNewsletterSubscriber.reset();
-      showToast(`Subscriber ${email} added.`, "success");
-
-      if (supabase) {
-        supabase.from("newsletter_subscribers").upsert({
-          email,
-          consented_at: new Date().toISOString(),
-          unsubscribed_at: null
-        }, { onConflict: "email" })
-          .then(({ error }) => { if (error) console.warn("Could not save subscriber in Supabase:", error); });
       }
     });
   }
@@ -2495,10 +1955,7 @@ async function checkSupabaseAuth() {
 // Initial Boot
 document.addEventListener("DOMContentLoaded", () => {
   setupEvents();
-  syncSampleToggleButtons();
   renderCurrentView();
   checkSupabaseAuth();
-  loadNewsletterFromSupabase();
-  loadSupabaseNotifications();
   setTimeout(scrollKronosToToday, 100);
 });

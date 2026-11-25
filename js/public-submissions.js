@@ -59,42 +59,16 @@ function syncSubmissionToWorkspace(functionName, payload, reference) {
       student_applications: [],
       teacher_applications: [],
       notifications: [],
-      newsletter_subscribers: [],
       customers: []
     };
   }
 
   if (functionName === "submit-booking-request") {
-    // 1. Calculate Day of Week
-    let dayKey = "tue";
-    if (payload.requestedDate) {
-      const d = new Date(payload.requestedDate + "T12:00:00");
-      const dayMap = { 1: "mon", 2: "tue", 3: "wed", 4: "thu", 5: "fri" };
-      dayKey = dayMap[d.getDay()] || "tue";
-    }
-
     const progTitle = (payload.programSlug || "English Course")
       .replace(/-/g, " ")
       .replace(/\b\w/g, c => c.toUpperCase());
 
-    // 2. Add to Kronos as Pending session
-    store.kronos_week = store.kronos_week || { mon: [], tue: [], wed: [], thu: [], fri: [] };
-    store.kronos_week[dayKey] = store.kronos_week[dayKey] || [];
-    
-    const newSession = {
-      id: `sess-booking-${Date.now()}`,
-      time: payload.requestedTime || "14:00",
-      student: payload.fullName || "Prospective Student",
-      program: progTitle,
-      teacher: "Chihab",
-      status: "Pending",
-      reference: reference,
-      phone: payload.phone || "",
-      email: payload.email || ""
-    };
-    store.kronos_week[dayKey].push(newSession);
-
-    // 3. Add to Booking Requests
+    // Add to Booking Requests (Applications) — transferred to Kronos upon admin approval
     store.booking_requests = store.booking_requests || [];
     store.booking_requests.unshift({
       reference: reference,
@@ -108,37 +82,16 @@ function syncSubmissionToWorkspace(functionName, payload, reference) {
       submitted: new Date().toLocaleDateString("fr-FR")
     });
 
-    // 4. Add Notification
+    // Add Notification
     store.notifications = store.notifications || [];
     store.notifications.unshift({
       target: payload.fullName,
       channel: "Online Booking",
-      topic: `New Booking Request: ${progTitle} (${payload.requestedTime || ""})`,
+      topic: `New Booking Request: ${progTitle} (${payload.requestedDate || "Flexible"} ${payload.requestedTime || ""})`.trim(),
       scheduled: "Immediate",
       attempts: 1,
       status: "Received"
     });
-
-    // Queue an in-app notice for the student who submitted the booking.
-    // It appears on the student dashboard once they sign in with this email.
-    try {
-      const studentKey = "splus_student_notifications_v1";
-      const studentNotifications = JSON.parse(localStorage.getItem(studentKey) || "[]");
-      const list = Array.isArray(studentNotifications) ? studentNotifications : [];
-      list.unshift({
-        id: `local-${Date.now()}`,
-        email: payload.email || "",
-        reference,
-        title: "Booking request received",
-        body: `We received your ${progTitle} booking request for ${payload.requestedDate || "a date to be confirmed"} at ${payload.requestedTime || "a time to be confirmed"}. Reference: ${reference}.`,
-        status: "pending",
-        created_at: new Date().toISOString(),
-        read_at: null
-      });
-      localStorage.setItem(studentKey, JSON.stringify(list.slice(0, 100)));
-    } catch (e) {
-      console.warn("Could not queue student booking notification:", e);
-    }
   } else if (functionName === "submit-student-application") {
     store.student_applications = store.student_applications || [];
     store.student_applications.unshift({
@@ -163,32 +116,6 @@ function syncSubmissionToWorkspace(functionName, payload, reference) {
       status: "Under Review",
       submitted: new Date().toLocaleDateString("fr-FR")
     });
-  } else if (functionName === "subscribe-newsletter") {
-    // Keep the admin workspace in sync even when the hosted edge function is unavailable.
-    const email = String(payload.email || "").trim().toLowerCase();
-    store.newsletter_subscribers = Array.isArray(store.newsletter_subscribers) ? store.newsletter_subscribers : [];
-    const existing = store.newsletter_subscribers.find(sub => sub.email === email);
-    if (existing) {
-      existing.date = new Date().toISOString();
-      existing.status = "Active";
-    } else {
-      store.newsletter_subscribers.unshift({
-        email,
-        date: new Date().toISOString(),
-        status: "Active"
-      });
-    }
-
-    store.notifications = store.notifications || [];
-    store.notifications.unshift({
-      id: `local-news-${Date.now()}`,
-      target: email,
-      channel: "Newsletter",
-      topic: `New newsletter subscriber: ${email}`,
-      scheduled: "Immediate",
-      attempts: 1,
-      status: "Received"
-    });
   }
 
   // Bound collection sizes to ensure local storage never hits QuotaExceededError under high volume
@@ -205,9 +132,6 @@ function syncSubmissionToWorkspace(functionName, payload, reference) {
   if (store.notifications && store.notifications.length > 200) {
     store.notifications = store.notifications.slice(0, 200);
   }
-  if (store.newsletter_subscribers && store.newsletter_subscribers.length > MAX_RECORDS) {
-    store.newsletter_subscribers = store.newsletter_subscribers.slice(0, MAX_RECORDS);
-  }
 
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
@@ -218,7 +142,6 @@ function syncSubmissionToWorkspace(functionName, payload, reference) {
       store.student_applications = (store.student_applications || []).slice(0, 100);
       store.teacher_applications = (store.teacher_applications || []).slice(0, 100);
       store.booking_requests = (store.booking_requests || []).slice(0, 100);
-      store.newsletter_subscribers = (store.newsletter_subscribers || []).slice(0, 100);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
       window.dispatchEvent(new CustomEvent("splus-data-updated"));
     } catch (criticalErr) {
@@ -246,7 +169,6 @@ export async function submitPublicRequest(functionName, payload, captchaContaine
     // Try posting to Supabase Edge function if available
     let edgeSuccess = false;
     let edgeRef = generatedRef;
-    let submissionError = null;
     if (config.url && config.publishableKey) {
       try {
         const response = await fetch(`${config.url.replace(/\/$/, "")}/functions/v1/${functionName}`, {
@@ -261,34 +183,17 @@ export async function submitPublicRequest(functionName, payload, captchaContaine
           const resJson = await response.json();
           edgeSuccess = true;
           if (resJson && resJson.reference) edgeRef = resJson.reference;
-        } else {
-          let message = `The request could not be completed (${response.status}).`;
-          try {
-            const errorJson = await response.json();
-            if (errorJson && errorJson.error) message = errorJson.error;
-          } catch (_) {
-            // Keep the HTTP status message when the error body is not JSON.
-          }
-          // Only real validation failures (e.g. missing consent) should block the form.
-          // Missing/unconfigured functions fall back to the local workspace store.
-          if (response.status === 400) submissionError = new Error(message);
-          else console.warn("Edge function unavailable, using local fallback:", message);
         }
       } catch (netErr) {
         console.log("Edge function offline, syncing to backend workspace storage:", netErr);
       }
     }
 
-    // Always sync locally to backend workspace store so it appears in the admin dashboard immediately.
+    // Always sync locally to backend workspace store so it appears in Kronos and admin dashboard immediately!
     const finalRef = edgeRef || generatedRef;
     syncSubmissionToWorkspace(functionName, payload, finalRef);
 
-    // Newsletter signups must be really persisted; do not report false success.
-    if (functionName === "subscribe-newsletter" && submissionError) {
-      throw submissionError;
-    }
-
-    return { reference: finalRef, success: true, edgeSuccess };
+    return { reference: finalRef, success: true };
   } finally {
     if (captchaContainer) {
       widgetId ??= captchaContainer.dataset.widgetId;
