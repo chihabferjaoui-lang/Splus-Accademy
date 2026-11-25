@@ -253,6 +253,7 @@ let selectedGeniusLesson = APP_STATE.genius_lessons[0] || null;
 let selectedGeniusCourse = APP_STATE.genius_courses[0] || null;
 let activeGeniusTab = "lessons";
 let draftLessonExercises = [];
+let draftLessonAttachment = null;
 let selectedEraInvoice = APP_STATE.era_invoices[0] || null;
 let editingSessionContext = null;
 
@@ -1408,6 +1409,13 @@ function setupEvents() {
       if (modalTarget === "book_session") openModal("modalBookSession");
       if (modalTarget === "new_lesson") {
         draftLessonExercises = [];
+        draftLessonAttachment = null;
+        const previewEl = document.getElementById("newLessonFilePreview");
+        const statusEl = document.getElementById("newLessonOcrStatus");
+        const fileEl = document.getElementById("newLessonFileInput");
+        if (previewEl) { previewEl.innerHTML = ""; previewEl.style.display = "none"; }
+        if (statusEl) { statusEl.textContent = ""; statusEl.style.display = "none"; }
+        if (fileEl) fileEl.value = "";
         renderNewLessonExercisesDraft();
         openModal("modalNewLesson");
       }
@@ -1949,11 +1957,17 @@ function setupEvents() {
           const exHtml = (d.exercises || []).length
             ? `<h4 style="margin:14px 0 6px;">Exercises</h4><ol style="padding-left:18px;margin:0;">${d.exercises.map(ex => `<li><span class="badge-pill sent">${ex.type}</span> <strong>${ex.prompt}</strong>${ex.answer ? `<div style="color:var(--admin-muted);font-size:12.5px;">Answer/Options: ${ex.answer}</div>` : ""}</li>`).join("")}</ol>`
             : `<p style="color:var(--admin-muted);margin-top:10px;">No exercises attached.</p>`;
+          const attHtml = d.attachment && d.attachment.dataUrl
+            ? (d.attachment.type === "image"
+              ? `<div style="margin-top:14px;"><h4 style="margin:0 0 6px;">Attached Book Page / Worksheet (${d.attachment.name})</h4><img src="${d.attachment.dataUrl}" alt="${d.attachment.name}" style="max-width:100%;border-radius:8px;border:1px solid var(--admin-border);"></div>`
+              : `<div style="margin-top:14px;"><a href="${d.attachment.dataUrl}" download="${d.attachment.name}" class="btn-admin-outline" style="display:inline-block;">Download Attached File (${d.attachment.name})</a></div>`)
+            : (d.attachment ? `<div style="margin-top:12px;color:var(--admin-muted);">Attached file: ${d.attachment.name}</div>` : "");
           bodyEl.innerHTML = `
             <div><strong>Learner:</strong> ${d.learner} · <strong>Level:</strong> ${d.level || "B1"} · <strong>Due:</strong> ${d.dueDate || "—"}</div>
             ${d.format ? `<div style="color:var(--admin-muted);margin-top:4px;">Format: ${d.format}</div>` : ""}
             ${d.description ? `<p style="margin-top:8px;">${d.description}</p>` : ""}
-            ${d.notes ? `<p style="margin-top:8px;">${d.notes}</p>` : ""}
+            ${d.notes ? `<p style="margin-top:8px;white-space:pre-line;">${d.notes}</p>` : ""}
+            ${attHtml}
             ${lessonsHtml}
             ${exHtml}
           `;
@@ -2004,6 +2018,7 @@ function setupEvents() {
         duration: selectedGeniusLesson?.duration || "45 min",
         format: selectedGeniusLesson?.format || "Structured Lesson",
         notes: selectedGeniusLesson?.notes || "",
+        attachment: selectedGeniusLesson?.attachment ? JSON.parse(JSON.stringify(selectedGeniusLesson.attachment)) : null,
         exercises: selectedGeniusLesson?.exercises ? JSON.parse(JSON.stringify(selectedGeniusLesson.exercises)) : [],
         dueDate: dueDate,
         sentAt: new Date().toLocaleDateString("fr-FR")
@@ -2183,6 +2198,151 @@ function setupEvents() {
       saveWorkspaceState();
       renderCurrentView();
       showToast(`Full course "${selectedGeniusCourse.title}" sent to ${learner}!`, "success");
+    });
+  }
+
+  // Create Lesson modal: Import from Book Page / File (Image, PDF, Text) + OCR Exercise Extractor
+  function parseExercisesFromText(rawText) {
+    const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const extracted = [];
+    for (const line of lines) {
+      const isNumbered = /^(\d+[\.\)]|Q\d+[:\.]|[a-dA-D][\.\)])\s+/.test(line);
+      const isBlank = /_{2,}|\(\s*\.\.\.\s*\)/.test(line);
+      const isQuestion = line.endsWith("?") && line.length > 10;
+      if (isNumbered || isBlank || isQuestion) {
+        const cleanPrompt = line.replace(/^(\d+[\.\)]|Q\d+[:\.]|[a-dA-D][\.\)])\s+/, "");
+        if (cleanPrompt.length >= 6) {
+          extracted.push({
+            id: `lex-${Date.now()}-${extracted.length}`,
+            type: isBlank ? "Fill in the Blank" : (cleanPrompt.includes("A)") || cleanPrompt.includes("a)") ? "Multiple Choice" : "Writing Prompt"),
+            prompt: cleanPrompt,
+            answer: ""
+          });
+        }
+      }
+      if (extracted.length >= 15) break;
+    }
+    return extracted;
+  }
+
+  function compressImageToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = reject;
+        img.onload = () => {
+          const maxW = 1200;
+          const scale = img.width > maxW ? maxW / img.width : 1;
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL("image/jpeg", 0.78));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function runClientOcr(dataUrl, statusEl) {
+    try {
+      if (statusEl) {
+        statusEl.style.display = "block";
+        statusEl.textContent = "Reading book page text & exercises (OCR)...";
+      }
+      if (!window.Tesseract) {
+        await new Promise((res, rej) => {
+          const s = document.createElement("script");
+          s.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+          s.onload = res;
+          s.onerror = rej;
+          document.head.appendChild(s);
+        });
+      }
+      const result = await window.Tesseract.recognize(dataUrl, "eng");
+      const text = (result?.data?.text || "").trim();
+      if (text) {
+        const notesEl = document.getElementById("newLessonNotes");
+        if (notesEl) {
+          notesEl.value = notesEl.value ? `${notesEl.value}\n\n${text}` : text;
+        }
+        const parsed = parseExercisesFromText(text);
+        if (parsed.length > 0) {
+          draftLessonExercises.push(...parsed);
+          renderNewLessonExercisesDraft();
+        }
+        if (statusEl) {
+          statusEl.textContent = `Extracted ${text.split(/\s+/).length} words and ${parsed.length} exercise(s) from the image!`;
+        }
+      } else if (statusEl) {
+        statusEl.textContent = "Book page image attached. No readable text detected — you can add exercises manually below.";
+      }
+    } catch (err) {
+      console.warn("OCR fallback:", err);
+      if (statusEl) {
+        statusEl.style.display = "block";
+        statusEl.textContent = "Book page image attached as lesson material (add exercises manually below if needed).";
+      }
+    }
+  }
+
+  const newLessonFileInput = document.getElementById("newLessonFileInput");
+  if (newLessonFileInput) {
+    newLessonFileInput.addEventListener("change", async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const previewEl = document.getElementById("newLessonFilePreview");
+      const statusEl = document.getElementById("newLessonOcrStatus");
+      const titleEl = document.getElementById("newLessonTitle");
+      const formatEl = document.getElementById("newLessonFormat");
+
+      if (titleEl && !titleEl.value.trim()) {
+        titleEl.value = file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ");
+      }
+      if (formatEl) formatEl.value = "Imported Book Page / File";
+
+      if (file.type.startsWith("image/")) {
+        const dataUrl = await compressImageToDataUrl(file);
+        draftLessonAttachment = { name: file.name, type: "image", dataUrl };
+        if (previewEl) {
+          previewEl.style.display = "block";
+          previewEl.innerHTML = `<img src="${dataUrl}" alt="${file.name}" style="max-height:160px;border-radius:8px;border:1px solid var(--admin-border);">`;
+        }
+        await runClientOcr(dataUrl, statusEl);
+      } else if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUrl = file.size <= 1500000 ? reader.result : null;
+          draftLessonAttachment = { name: file.name, type: "pdf", dataUrl };
+          if (previewEl) {
+            previewEl.style.display = "block";
+            previewEl.innerHTML = `<div style="font-size:12.5px;padding:6px 10px;background:#fff;border-radius:6px;border:1px solid var(--admin-border);">PDF attached: <strong>${file.name}</strong></div>`;
+          }
+          if (statusEl) {
+            statusEl.style.display = "block";
+            statusEl.textContent = file.size <= 1500000 ? "PDF attached to lesson." : "PDF filename attached (file >1.5MB, keeping metadata only).";
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        const text = await file.text();
+        draftLessonAttachment = { name: file.name, type: "text", dataUrl: null };
+        const notesEl = document.getElementById("newLessonNotes");
+        if (notesEl) notesEl.value = text.slice(0, 4000);
+        const parsed = parseExercisesFromText(text);
+        if (parsed.length > 0) {
+          draftLessonExercises.push(...parsed);
+          renderNewLessonExercisesDraft();
+        }
+        if (statusEl) {
+          statusEl.style.display = "block";
+          statusEl.textContent = `Imported text & extracted ${parsed.length} exercise(s) from ${file.name}!`;
+        }
+      }
     });
   }
 
@@ -2400,12 +2560,14 @@ function setupEvents() {
         program: prog,
         duration,
         notes,
+        attachment: draftLessonAttachment ? JSON.parse(JSON.stringify(draftLessonAttachment)) : null,
         exercises: JSON.parse(JSON.stringify(draftLessonExercises))
       };
 
       APP_STATE.genius_lessons.unshift(newLesson);
       selectedGeniusLesson = newLesson;
       draftLessonExercises = [];
+      draftLessonAttachment = null;
       saveWorkspaceState();
       renderCurrentView();
       closeModal("modalNewLesson");

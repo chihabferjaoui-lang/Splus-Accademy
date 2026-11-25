@@ -798,10 +798,19 @@
         <button type="button" class="admin-modal-close" data-modal-close>&times;</button>
       </div>
       <form id="formNewLesson">
+        <div style="margin-bottom:14px;padding:12px;background:#f5f3ff;border:1.5px dashed var(--admin-primary);border-radius:10px;">
+          <label for="newLessonFileInput" style="font-weight:700;font-size:13.5px;display:block;margin-bottom:4px;color:var(--admin-primary);">Import from Book Page / File (Image, PDF, or Text)</label>
+          <p style="font-size:12px;color:var(--admin-muted);margin:0 0 8px 0;">Upload a photo/scan of a Cambridge book page, PDF, or text file. The site attaches the material and automatically extracts text &amp; exercises into the lesson.</p>
+          <input type="file" id="newLessonFileInput" class="admin-input" accept="image/*,.pdf,.txt,.md" style="padding:6px;background:#fff;">
+          <div id="newLessonOcrStatus" style="font-size:12px;color:var(--admin-primary);margin-top:6px;display:none;"></div>
+          <div id="newLessonFilePreview" style="margin-top:8px;display:none;"></div>
+        </div>
+
         <div class="admin-field-group">
           <label>How do you want to create this lesson?</label>
           <select id="newLessonFormat" class="admin-select" required>
             <option value="Structured Lesson + Exercises">Structured Lesson + Exercises</option>
+            <option value="Imported Book Page / File">Imported Book Page / File</option>
             <option value="Speaking & Conversation Practice">Speaking &amp; Conversation Practice</option>
             <option value="Grammar & Vocabulary Drill">Grammar &amp; Vocabulary Drill</option>
             <option value="Reading & Comprehension">Reading &amp; Comprehension</option>
