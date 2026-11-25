@@ -719,6 +719,27 @@ body{font-family:Arial,sans-serif;background:#f5f6fb;margin:0;padding:30px;color
     }
 
     function renderPDFActions() {
+      const emailSubject = `Booking Request ${state.reference} - ${state.program || 'English Course'}`;
+      const emailBody = [
+        `Hello S+ Academy,`,
+        ``,
+        `I have just submitted a booking request and would like to proceed with the following course:`,
+        ``,
+        `- Reference Number: ${state.reference}`,
+        `- Course / Program: ${state.program || 'English Course'}`,
+        `- Preferred Date: ${state.date || state.dateISO || 'Flexible'}`,
+        `- Preferred Time: ${state.time || state.time24 || 'Flexible'} (${state.timezone || ''})`,
+        `- Student Name: ${state.name || ''}`,
+        `- Email: ${state.email || ''}`,
+        `- Phone: ${state.phone || ''}`,
+        ``,
+        `Please let me know the next steps to confirm my spot.`,
+        ``,
+        `Best regards,`,
+        `${state.name || ''}`
+      ].join('\n');
+      const mailtoHref = `mailto:contact.englishcourse94@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+
       resultArea.innerHTML = `
         <div class="result-box">
           <h4>Booking request receipt ready</h4>
@@ -726,7 +747,7 @@ body{font-family:Arial,sans-serif;background:#f5f6fb;margin:0;padding:30px;color
           <p>You may print or save this receipt for your records. You do not need to email it to S+ Academy.</p>
           <div class="result-actions">
             <button class="btn btn-primary" id="viewPdfBtn">Print / Save receipt</button>
-            <a class="btn btn-outline" href="mailto:contact.englishcourse94@gmail.com?subject=Booking%20Request%20${encodeURIComponent(state.reference)}">Contact Academy</a>
+            <a class="btn btn-outline" href="${mailtoHref}">Contact Academy</a>
           </div>
           <div class="note">The receipt includes your unique reference number. Your booking is not confirmed or paid.</div>
         </div>`;
@@ -774,6 +795,9 @@ body{font-family:Arial,sans-serif;background:#f5f6fb;margin:0;padding:30px;color
       document.getElementById('dateNext').addEventListener('click', () => {
         const value = document.getElementById('dateInput').value;
         if (!value) return alert('Please choose a date.');
+        if (value < getTodayDateString()) {
+          return alert('Past dates cannot be selected. Please choose today or a future date.');
+        }
         state.dateISO = value;
         state.date = formatDateForDisplay(value);
         user(state.date);
