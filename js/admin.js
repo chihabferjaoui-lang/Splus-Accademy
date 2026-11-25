@@ -579,20 +579,18 @@ function renderKronos() {
 // RENDER: GENIUS LESSONS, COURSE DESIGNER & DISPATCHES
 function populateGeniusLearnerSelects() {
   const customers = APP_STATE.customers || [];
-  const optionsHtml = [
-    `<option value="All Learners">All Learners (${customers.length})</option>`,
-    ...customers.map(c => `<option value="${c.name}">${c.name} (${c.custNo})</option>`)
-  ].join("");
+  const datalist = document.getElementById("geniusLearnersDatalist");
+  if (datalist) {
+    datalist.innerHTML = [
+      `<option value="All Learners">All Learners (${customers.length})</option>`,
+      ...customers.map(c => `<option value="${c.name}">${c.custNo || ""} · ${c.email || ""}</option>`)
+    ].join("");
+  }
 
   ["geniusStudentSelect", "courseSendStudentSelect"].forEach(id => {
-    const sel = document.getElementById(id);
-    if (!sel) return;
-    const prev = sel.value;
-    sel.innerHTML = optionsHtml;
-    if (prev && Array.from(sel.options).some(o => o.value === prev)) {
-      sel.value = prev;
-    } else if (customers[0]) {
-      sel.value = customers[0].name;
+    const input = document.getElementById(id);
+    if (input && !input.value && customers[0]) {
+      input.value = customers[0].name;
     }
   });
 }
