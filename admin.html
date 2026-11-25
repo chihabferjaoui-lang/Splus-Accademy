@@ -169,73 +169,231 @@
         </div>
       </section>
 
-      <!-- VIEW 3: GENIUS · LESSONS -->
+      <!-- VIEW 3: GENIUS · LESSONS & COURSE DESIGNER -->
       <section class="admin-view-panel" data-admin-panel="genius" hidden>
         <header class="admin-view-header">
           <div class="admin-view-titles">
-            <h1>Lesson library</h1>
-            <p>Admins build lessons here. Teachers pick one and push it to their students.</p>
+            <h1>Genius · Lessons &amp; Course Designer</h1>
+            <p>Build individual lessons or design complete courses with exercises, then push them directly to learners.</p>
           </div>
           <div class="admin-view-actions">
-            <button type="button" class="btn-sample-toggle active" data-toggle-sample>Sample data</button>
-            <button type="button" class="btn-admin-primary" data-modal-open="new_lesson">New lesson</button>
+            <button type="button" class="btn-admin-outline" id="btnGeniusNewCourse">+ New course</button>
+            <button type="button" class="btn-admin-primary" data-modal-open="new_lesson">Create lesson</button>
           </div>
         </header>
 
-        <div class="grid-2col-65-35">
-          <!-- Lesson table -->
+        <div class="genius-subtabs" style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;">
+          <button type="button" class="btn-admin-primary genius-tab-btn active" data-genius-tab="lessons">Lessons</button>
+          <button type="button" class="btn-admin-outline genius-tab-btn" data-genius-tab="courses">Course Designer</button>
+          <button type="button" class="btn-admin-outline genius-tab-btn" data-genius-tab="dispatches">Sent to Learners</button>
+        </div>
+
+        <!-- GENIUS TAB 1: LESSONS -->
+        <div data-genius-panel="lessons">
+          <div class="grid-2col-65-35">
+            <!-- Lesson table -->
+            <div class="admin-card">
+              <div class="admin-table-wrap">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Lesson</th>
+                      <th>Level</th>
+                      <th>Program</th>
+                      <th>Duration</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody data-tbody="genius_lessons">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Push to learner Card -->
+            <div class="admin-card">
+              <h2 class="admin-card-title">Push lesson to learner</h2>
+              <div style="font-weight: 650; font-size: 13px; margin-bottom: 12px; color: var(--admin-muted);" id="geniusSelectedLessonTitle">
+                Selected: Writing Business Emails
+              </div>
+
+              <div class="admin-field-group">
+                <label for="geniusPushLessonName">Lesson name</label>
+                <input type="text" id="geniusPushLessonName" class="admin-input" placeholder="Type or select a lesson name...">
+              </div>
+
+              <div class="admin-field-group">
+                <label for="geniusStudentSelect">Learner</label>
+                <select id="geniusStudentSelect" class="admin-select">
+                  <!-- Populated dynamically from Customers -->
+                </select>
+              </div>
+
+              <div class="admin-field-group">
+                <label for="geniusDueDate">Due date</label>
+                <input type="text" id="geniusDueDate" class="admin-input" value="Fri 20 Nov">
+              </div>
+
+              <div style="font-size: 13px; color: var(--admin-muted); margin-top: 14px;">The learner sees this on their dashboard:</div>
+              <div class="genius-preview-box">
+                <div class="genius-preview-title" id="geniusPreviewTitle">New lesson: Writing Business Emails</div>
+                <div class="genius-preview-meta" id="geniusPreviewMeta">About 45 min · due Fri 20 Nov</div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button type="button" class="btn-admin-primary btn-full" id="btnPushLesson">Push lesson to learner</button>
+                <button type="button" class="btn-admin-danger btn-full" id="btnDeleteLesson">Delete selected lesson</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GENIUS TAB 2: COURSE DESIGNER -->
+        <div data-genius-panel="courses" hidden>
+          <div class="grid-2col-35-65" style="display:grid;grid-template-columns:minmax(260px,1fr) 2fr;gap:20px;align-items:start;">
+            <!-- Saved Courses List -->
+            <div class="admin-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                <h2 class="admin-card-title" style="margin:0;">Courses</h2>
+                <button type="button" class="btn-xs btn-xs-primary" id="btnCourseCreateQuick">+ New</button>
+              </div>
+              <div id="geniusCoursesList" style="display:flex;flex-direction:column;gap:10px;">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+
+            <!-- Course Studio Editor -->
+            <div class="admin-card" id="geniusCourseEditorCard">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+                <h2 class="admin-card-title" style="margin:0;">Course Studio</h2>
+                <div style="display:flex;gap:8px;">
+                  <button type="button" class="btn-admin-primary" id="btnSaveCourse">Save Course</button>
+                  <button type="button" class="btn-admin-danger" id="btnDeleteCourse">Delete Course</button>
+                </div>
+              </div>
+
+              <input type="hidden" id="courseEditId">
+              <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;">
+                <div class="admin-field-group">
+                  <label for="courseTitleInput">Course Title</label>
+                  <input type="text" id="courseTitleInput" class="admin-input" placeholder="e.g. Business English Mastery">
+                </div>
+                <div class="admin-field-group">
+                  <label for="courseLevelSelect">Level (CEFR)</label>
+                  <select id="courseLevelSelect" class="admin-select">
+                    <option value="A1">A1</option>
+                    <option value="A2">A2</option>
+                    <option value="B1" selected>B1</option>
+                    <option value="B2">B2</option>
+                    <option value="C1">C1</option>
+                    <option value="C2">C2</option>
+                  </select>
+                </div>
+                <div class="admin-field-group">
+                  <label for="courseProgramInput">Program</label>
+                  <input type="text" id="courseProgramInput" class="admin-input" placeholder="Business English">
+                </div>
+              </div>
+
+              <div class="admin-field-group">
+                <label for="courseDescInput">Course Overview &amp; Objectives</label>
+                <textarea id="courseDescInput" class="admin-input" rows="2" placeholder="Describe what the learner will achieve in this course..."></textarea>
+              </div>
+
+              <!-- Course Lessons / Modules -->
+              <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--admin-border);">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                  <h3 style="margin:0;font-size:15px;font-weight:700;">1. Course Lessons / Modules</h3>
+                </div>
+                <div id="courseLessonsBuilderList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+                <div style="display:grid;grid-template-columns:2fr 1fr 2fr auto;gap:8px;align-items:end;">
+                  <div>
+                    <label style="font-size:11.5px;color:var(--admin-muted);display:block;margin-bottom:4px;">Lesson Title</label>
+                    <input type="text" id="courseAddLessonTitle" class="admin-input" placeholder="e.g. Module 1: Formal Emails">
+                  </div>
+                  <div>
+                    <label style="font-size:11.5px;color:var(--admin-muted);display:block;margin-bottom:4px;">Duration</label>
+                    <input type="text" id="courseAddLessonDuration" class="admin-input" placeholder="45 min" value="45 min">
+                  </div>
+                  <div>
+                    <label style="font-size:11.5px;color:var(--admin-muted);display:block;margin-bottom:4px;">Lesson Content / Notes</label>
+                    <input type="text" id="courseAddLessonNotes" class="admin-input" placeholder="Key grammar, vocabulary, or link...">
+                  </div>
+                  <button type="button" class="btn-admin-outline" id="btnAddLessonToCourse">+ Add Lesson</button>
+                </div>
+              </div>
+
+              <!-- Course Exercises -->
+              <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--admin-border);">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                  <h3 style="margin:0;font-size:15px;font-weight:700;">2. Course Exercises &amp; Practice</h3>
+                </div>
+                <div id="courseExercisesBuilderList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+                <div style="display:grid;grid-template-columns:1.2fr 2fr 1.5fr auto;gap:8px;align-items:end;">
+                  <div>
+                    <label style="font-size:11.5px;color:var(--admin-muted);display:block;margin-bottom:4px;">Exercise Type</label>
+                    <select id="courseAddExType" class="admin-select">
+                      <option value="Multiple Choice">Multiple Choice</option>
+                      <option value="Fill in the Blank">Fill in the Blank</option>
+                      <option value="Writing Prompt">Writing Prompt</option>
+                      <option value="Speaking Task">Speaking Task</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="font-size:11.5px;color:var(--admin-muted);display:block;margin-bottom:4px;">Question / Prompt</label>
+                    <input type="text" id="courseAddExPrompt" class="admin-input" placeholder="e.g. Write a follow-up email to a client...">
+                  </div>
+                  <div>
+                    <label style="font-size:11.5px;color:var(--admin-muted);display:block;margin-bottom:4px;">Options / Answer Key</label>
+                    <input type="text" id="courseAddExAnswer" class="admin-input" placeholder="A) ... B) ... or Answer">
+                  </div>
+                  <button type="button" class="btn-admin-outline" id="btnAddExToCourse">+ Add Exercise</button>
+                </div>
+              </div>
+
+              <!-- Send Whole Course to Learner -->
+              <div style="margin-top:20px;padding:16px;background:#f8fafc;border:1px solid var(--admin-border);border-radius:10px;">
+                <h3 style="margin:0 0 10px 0;font-size:15px;font-weight:700;">3. Send Entire Course to Learner</h3>
+                <div style="display:grid;grid-template-columns:1.5fr 1fr auto;gap:10px;align-items:end;">
+                  <div>
+                    <label style="font-size:12px;color:var(--admin-muted);display:block;margin-bottom:4px;" for="courseSendStudentSelect">Select Learner</label>
+                    <select id="courseSendStudentSelect" class="admin-select"></select>
+                  </div>
+                  <div>
+                    <label style="font-size:12px;color:var(--admin-muted);display:block;margin-bottom:4px;" for="courseSendDueDate">Due / Start Date</label>
+                    <input type="text" id="courseSendDueDate" class="admin-input" value="Fri 20 Nov">
+                  </div>
+                  <button type="button" class="btn-admin-primary" id="btnSendWholeCourse">Send Whole Course</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GENIUS TAB 3: SENT TO LEARNERS -->
+        <div data-genius-panel="dispatches" hidden>
           <div class="admin-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h2 class="admin-card-title" style="margin:0;">Dispatched Lessons &amp; Courses</h2>
+            </div>
             <div class="admin-table-wrap">
               <table class="admin-table">
                 <thead>
                   <tr>
-                    <th>Lesson</th>
-                    <th>Level</th>
-                    <th>Program</th>
-                    <th>Duration</th>
+                    <th>Learner</th>
+                    <th>Type</th>
+                    <th>Title</th>
+                    <th>Contents</th>
+                    <th>Due Date</th>
+                    <th>Sent At</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
-                <tbody data-tbody="genius_lessons">
+                <tbody data-tbody="genius_dispatches">
                   <!-- Populated dynamically -->
                 </tbody>
               </table>
-            </div>
-          </div>
-
-          <!-- Push to student Card -->
-          <div class="admin-card">
-            <h2 class="admin-card-title">Push to student</h2>
-            <div style="font-weight: 650; font-size: 14px; margin-bottom: 18px; color: var(--admin-text);" id="geniusSelectedLessonTitle">
-              Selected: Writing Business Emails
-            </div>
-
-            <div class="admin-field-group">
-              <label for="geniusStudentSelect">Student</label>
-              <select id="geniusStudentSelect" class="admin-select">
-                <option value="Sara B.">Sara B.</option>
-                <option value="Omar K.">Omar K.</option>
-                <option value="Lina M.">Lina M.</option>
-                <option value="Youssef A.">Youssef A.</option>
-                <option value="Hana R.">Hana R.</option>
-                <option value="Adam A.">Adam A.</option>
-              </select>
-            </div>
-
-            <div class="admin-field-group">
-              <label for="geniusDueDate">Due date</label>
-              <input type="text" id="geniusDueDate" class="admin-input" value="Fri 20 Nov">
-            </div>
-
-            <div style="font-size: 13px; color: var(--admin-muted); margin-top: 14px;">The student sees this on their dashboard:</div>
-            <div class="genius-preview-box">
-              <div class="genius-preview-title" id="geniusPreviewTitle">New lesson: Writing Business Emails</div>
-              <div class="genius-preview-meta" id="geniusPreviewMeta">About 45 min · due Fri 20 Nov</div>
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-              <button type="button" class="btn-admin-primary btn-full" id="btnPushLesson">Push lesson</button>
-              <button type="button" class="btn-admin-danger btn-full" id="btnDeleteLesson">Delete lesson</button>
             </div>
           </div>
         </div>
@@ -389,7 +547,6 @@
                   <th>Scheduled For</th>
                   <th>Attempts</th>
                   <th>Status</th>
-                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody data-tbody="notifications_list">
@@ -503,7 +660,6 @@
           </div>
           <div class="admin-view-actions">
             <button type="button" class="btn-sample-toggle active" data-toggle-sample>Sample data</button>
-            <button type="button" class="btn-admin-primary" data-modal-open="new_class_slot">+ Add slot</button>
           </div>
         </header>
 
@@ -517,7 +673,6 @@
                   <th>Ends (Local)</th>
                   <th>Capacity</th>
                   <th>Status</th>
-                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody data-tbody="class_slots">
@@ -537,15 +692,10 @@
           </div>
           <div class="admin-view-actions">
             <button type="button" class="btn-sample-toggle active" data-toggle-sample>Sample data</button>
-            <button type="button" class="btn-admin-primary" data-modal-open="new_newsletter_subscriber">+ Add subscriber</button>
-            <button type="button" class="btn-xs btn-xs-primary" data-action="export-newsletter-csv">Export CSV</button>
           </div>
         </header>
 
         <div class="admin-card">
-          <div class="admin-table-toolbar" style="display:flex;align-items:center;gap:10px;padding:10px 0 6px;">
-            <input type="text" class="table-search-input" data-search-table="newsletter_subscribers" placeholder="Search subscribers..." aria-label="Search subscribers">
-          </div>
           <div class="admin-table-wrap">
             <table class="admin-table">
               <thead>
@@ -553,7 +703,6 @@
                   <th>Email</th>
                   <th>Consent Recorded</th>
                   <th>Status</th>
-                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody data-tbody="newsletter_subscribers">
@@ -561,29 +710,9 @@
               </tbody>
             </table>
           </div>
-          <div class="table-pagination-bar" data-pagination="newsletter_subscribers"></div>
         </div>
       </section>
     </main>
-  </div>
-
-  <!-- Modal: Add Newsletter Subscriber -->
-  <div class="admin-modal-backdrop" id="modalNewsletterSubscriber" hidden>
-    <div class="admin-modal-card">
-      <div class="admin-modal-header">
-        <h2 id="modalNewsletterSubscriberTitle">Add Subscriber</h2>
-        <button type="button" class="admin-modal-close" data-modal-close>&times;</button>
-      </div>
-      <form id="formNewsletterSubscriber">
-        <div class="admin-field-group">
-          <label for="newsletterSubscriberEmail">Email address</label>
-          <input type="email" id="newsletterSubscriberEmail" class="admin-input" maxlength="254" required>
-        </div>
-        <div style="display:flex;gap:10px;margin-top:14px;">
-          <button type="submit" class="btn-admin-primary" style="flex:1;">Add Subscriber</button>
-        </div>
-      </form>
-    </div>
   </div>
 
   <!-- MODALS -->
@@ -662,38 +791,81 @@
     </div>
   </div>
 
-  <!-- Modal: New Lesson -->
+  <!-- Modal: Create Lesson & Exercise Designer -->
   <div class="admin-modal-backdrop" id="modalNewLesson" hidden>
-    <div class="admin-modal-card">
+    <div class="admin-modal-card" style="width:min(640px, calc(100% - 32px));max-height:90vh;overflow-y:auto;">
       <div class="admin-modal-header">
-        <h2>Create Lesson (Genius)</h2>
+        <h2>Create Lesson &amp; Exercises (Genius)</h2>
         <button type="button" class="admin-modal-close" data-modal-close>&times;</button>
       </div>
       <form id="formNewLesson">
         <div class="admin-field-group">
-          <label>Lesson Title</label>
-          <input type="text" id="newLessonTitle" class="admin-input" placeholder="e.g. Negotiation Techniques" required>
-        </div>
-        <div class="admin-field-group">
-          <label>Level (CEFR)</label>
-          <select id="newLessonLevel" class="admin-select" required>
-            <option value="A1">A1 - Beginner</option>
-            <option value="A2">A2 - Elementary</option>
-            <option value="B1" selected>B1 - Intermediate</option>
-            <option value="B2">B2 - Upper Intermediate</option>
-            <option value="C1">C1 - Advanced</option>
-            <option value="C2">C2 - Mastery</option>
+          <label>How do you want to create this lesson?</label>
+          <select id="newLessonFormat" class="admin-select" required>
+            <option value="Structured Lesson + Exercises">Structured Lesson + Exercises</option>
+            <option value="Speaking & Conversation Practice">Speaking &amp; Conversation Practice</option>
+            <option value="Grammar & Vocabulary Drill">Grammar &amp; Vocabulary Drill</option>
+            <option value="Reading & Comprehension">Reading &amp; Comprehension</option>
+            <option value="Writing Workshop">Writing Workshop</option>
           </select>
         </div>
-        <div class="admin-field-group">
-          <label>Program</label>
-          <input type="text" id="newLessonProgram" class="admin-input" value="Business English" required>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;">
+          <div class="admin-field-group">
+            <label>Lesson Title</label>
+            <input type="text" id="newLessonTitle" class="admin-input" placeholder="e.g. Negotiation Techniques" required>
+          </div>
+          <div class="admin-field-group">
+            <label>Level (CEFR)</label>
+            <select id="newLessonLevel" class="admin-select" required>
+              <option value="A1">A1 - Beginner</option>
+              <option value="A2">A2 - Elementary</option>
+              <option value="B1" selected>B1 - Intermediate</option>
+              <option value="B2">B2 - Upper Intermediate</option>
+              <option value="C1">C1 - Advanced</option>
+              <option value="C2">C2 - Mastery</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="admin-field-group">
+            <label>Program</label>
+            <input type="text" id="newLessonProgram" class="admin-input" value="Business English" required>
+          </div>
+          <div class="admin-field-group">
+            <label>Estimated Duration (e.g. 45 min)</label>
+            <input type="text" id="newLessonDuration" class="admin-input" value="45 min" required>
+          </div>
         </div>
         <div class="admin-field-group">
-          <label>Estimated Duration (e.g. 45 min)</label>
-          <input type="text" id="newLessonDuration" class="admin-input" value="45 min" required>
+          <label>Lesson Content / Teaching Notes</label>
+          <textarea id="newLessonNotes" class="admin-input" rows="2" placeholder="Explain the topic, rules, vocabulary, or instructions for the learner..."></textarea>
         </div>
-        <button type="submit" class="btn-admin-primary btn-full" style="margin-top: 10px;">Save Lesson</button>
+
+        <div style="margin-top:12px;padding:12px;background:#f8fafc;border:1px solid var(--admin-border);border-radius:10px;">
+          <div style="font-weight:700;font-size:13.5px;margin-bottom:8px;">Design Exercises for this Lesson</div>
+          <div id="newLessonExercisesList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
+          <div style="display:grid;grid-template-columns:1fr 1.5fr auto;gap:8px;align-items:end;">
+            <div>
+              <label style="font-size:11px;color:var(--admin-muted);display:block;margin-bottom:3px;">Type</label>
+              <select id="lessonExType" class="admin-select">
+                <option value="Multiple Choice">Multiple Choice</option>
+                <option value="Fill in the Blank">Fill in the Blank</option>
+                <option value="Writing Prompt">Writing Prompt</option>
+                <option value="Speaking Task">Speaking Task</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--admin-muted);display:block;margin-bottom:3px;">Question / Prompt</label>
+              <input type="text" id="lessonExPrompt" class="admin-input" placeholder="Exercise question...">
+            </div>
+            <button type="button" class="btn-admin-outline" id="btnAddLessonEx">+ Add</button>
+          </div>
+          <div style="margin-top:6px;">
+            <input type="text" id="lessonExAnswer" class="admin-input" placeholder="Options / Answer key (e.g. A) ... B) ... -> Answer: A)">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-admin-primary btn-full" style="margin-top: 14px;">Save Lesson &amp; Exercises</button>
       </form>
     </div>
   </div>
@@ -895,47 +1067,18 @@
     </div>
   </div>
 
-  <!-- Modal: Edit Class Slot -->
-  <div class="admin-modal-backdrop" id="modalClassSlot" hidden>
-    <div class="admin-modal-card">
+  <!-- Modal: Preview Dispatched Course / Lesson -->
+  <div class="admin-modal-backdrop" id="modalDispatchPreview" hidden>
+    <div class="admin-modal-card" style="width:min(680px, calc(100% - 32px));max-height:88vh;overflow-y:auto;">
       <div class="admin-modal-header">
-        <h2 id="modalClassSlotTitle">Edit Class Slot</h2>
+        <h2 id="dispatchPreviewTitle">Dispatched Material</h2>
         <button type="button" class="admin-modal-close" data-modal-close>&times;</button>
       </div>
-      <form id="formClassSlot">
-        <input type="hidden" id="editClassSlotId">
-        <div class="admin-field-group">
-          <label for="classSlotProgram">Program</label>
-          <input type="text" id="classSlotProgram" class="admin-input" required>
-        </div>
-        <div class="admin-field-group">
-          <label for="classSlotStarts">Starts (Local)</label>
-          <input type="time" id="classSlotStarts" class="admin-input" required>
-        </div>
-        <div class="admin-field-group">
-          <label for="classSlotEnds">Ends (Local)</label>
-          <input type="time" id="classSlotEnds" class="admin-input" required>
-        </div>
-        <div class="admin-field-group">
-          <label for="classSlotCapacity">Capacity</label>
-          <input type="text" id="classSlotCapacity" class="admin-input" placeholder="e.g. 8 / 10" required>
-        </div>
-        <div class="admin-field-group">
-          <label for="classSlotStatus">Status</label>
-          <select id="classSlotStatus" class="admin-select">
-            <option value="Active">Active</option>
-            <option value="Full">Full</option>
-          </select>
-        </div>
-        <div style="display:flex;gap:10px;margin-top:14px;">
-          <button type="submit" class="btn-admin-primary" id="btnClassSlotSubmit" style="flex:1;">Save Changes</button>
-          <button type="button" class="btn-admin-danger" id="btnDeleteClassSlotModal" style="flex:1;">Delete Slot</button>
-        </div>
-      </form>
+      <div id="dispatchPreviewBody" style="font-size:14px;line-height:1.6;"></div>
     </div>
   </div>
 
   <script src="js/supabase-config.js"></script>
-  <script type="module" src="js/admin.js?v=sample-toggle-20261122b"></script>
+  <script type="module" src="js/admin.js"></script>
 </body>
 </html>

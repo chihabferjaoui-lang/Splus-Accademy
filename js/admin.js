@@ -48,6 +48,24 @@ const DEFAULT_WORKSPACE_DATA = {
     { id: "les-4", title: "Ordering at a Café", level: "A2", program: "Day-to-Day English", duration: "25 min" },
     { id: "les-5", title: "Past Simple Practice", level: "A2", program: "Day-to-Day English", duration: "20 min" }
   ],
+  genius_courses: [
+    {
+      id: "crs-1",
+      title: "Business English Essentials",
+      level: "B1",
+      program: "Business English",
+      description: "Complete workplace communication pack covering emails, meetings, and client follow-ups.",
+      lessons: [
+        { id: "cl-1", title: "Module 1: Formal Email Structure", duration: "45 min", notes: "Subject lines, openings, polite requests, and sign-offs." },
+        { id: "cl-2", title: "Module 2: Running Effective Meetings", duration: "45 min", notes: "Agenda setting, agreeing/disagreeing politely, action items." }
+      ],
+      exercises: [
+        { id: "ce-1", type: "Writing Prompt", prompt: "Write a 120-word follow-up email to a client summarizing yesterday's meeting.", answer: "Include greeting, 3 action items, and clear deadline." },
+        { id: "ce-2", type: "Multiple Choice", prompt: "Which closing is most appropriate for a formal client email?", answer: "A) Best regards,  B) See ya!  C) Later  -> Answer: A" }
+      ]
+    }
+  ],
+  learner_dispatches: [],
   era_invoices: [
     {
       id: "INV-0042",
@@ -193,6 +211,13 @@ function loadWorkspaceState() {
   (state.teacher_applications || []).forEach((app, i) => {
     if (!app.id) app.id = `tea-${i}-${Date.now()}`;
   });
+  // Ensure Genius Courses & Learner Dispatches exist for older stored states
+  if (!Array.isArray(state.genius_courses)) {
+    state.genius_courses = JSON.parse(JSON.stringify(DEFAULT_WORKSPACE_DATA.genius_courses));
+  }
+  if (!Array.isArray(state.learner_dispatches)) {
+    state.learner_dispatches = [];
+  }
   return state;
 }
 
@@ -225,6 +250,9 @@ function saveWorkspaceState() {
 
 // Global Selections
 let selectedGeniusLesson = APP_STATE.genius_lessons[0] || null;
+let selectedGeniusCourse = APP_STATE.genius_courses[0] || null;
+let activeGeniusTab = "lessons";
+let draftLessonExercises = [];
 let selectedEraInvoice = APP_STATE.era_invoices[0] || null;
 let editingSessionContext = null;
 
@@ -548,55 +576,245 @@ function renderKronos() {
   if (pendingTextEl) pendingTextEl.textContent = `${pendingCount} sessions waiting for approval`;
 }
 
-// RENDER: GENIUS LESSONS
-function renderGenius() {
-  const tbody = document.querySelector('[data-tbody="genius_lessons"]');
-  if (!tbody) return;
+// RENDER: GENIUS LESSONS, COURSE DESIGNER & DISPATCHES
+function populateGeniusLearnerSelects() {
+  const customers = APP_STATE.customers || [];
+  const optionsHtml = [
+    `<option value="All Learners">All Learners (${customers.length})</option>`,
+    ...customers.map(c => `<option value="${c.name}">${c.name} (${c.custNo})</option>`)
+  ].join("");
 
-  if (APP_STATE.genius_lessons.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--admin-muted); padding: 20px;">No lessons created yet. Click "New lesson" to add one.</td></tr>`;
-    selectedGeniusLesson = null;
-    updateGeniusSelection();
+  ["geniusStudentSelect", "courseSendStudentSelect"].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = optionsHtml;
+    if (prev && Array.from(sel.options).some(o => o.value === prev)) {
+      sel.value = prev;
+    } else if (customers[0]) {
+      sel.value = customers[0].name;
+    }
+  });
+}
+
+function switchGeniusTab(tab) {
+  activeGeniusTab = tab;
+  document.querySelectorAll("[data-genius-tab]").forEach(btn => {
+    const isActive = btn.dataset.geniusTab === tab;
+    btn.classList.toggle("active", isActive);
+    btn.classList.toggle("btn-admin-primary", isActive);
+    btn.classList.toggle("btn-admin-outline", !isActive);
+  });
+  document.querySelectorAll("[data-genius-panel]").forEach(panel => {
+    panel.hidden = panel.dataset.geniusPanel !== tab;
+  });
+}
+
+function renderGenius() {
+  populateGeniusLearnerSelects();
+
+  const tbody = document.querySelector('[data-tbody="genius_lessons"]');
+  if (tbody) {
+    if (APP_STATE.genius_lessons.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--admin-muted); padding: 20px;">No lessons created yet. Click "Create lesson" to build one.</td></tr>`;
+      selectedGeniusLesson = null;
+    } else {
+      tbody.innerHTML = APP_STATE.genius_lessons.map((lesson) => {
+        const isSelected = selectedGeniusLesson && selectedGeniusLesson.id === lesson.id;
+        const exCount = Array.isArray(lesson.exercises) ? lesson.exercises.length : 0;
+        const metaTag = exCount > 0 ? ` <span style="font-size:11px;color:var(--admin-primary);">(${exCount} ex.)</span>` : "";
+        return `
+          <tr class="clickable ${isSelected ? 'row-selected' : ''}" data-lesson-id="${lesson.id}">
+            <td style="font-weight: 650;">${lesson.title}${metaTag}</td>
+            <td><span class="badge-pill sent">${lesson.level}</span></td>
+            <td>${lesson.program}</td>
+            <td style="color: var(--admin-muted);">${lesson.duration}</td>
+            <td>
+              <div class="table-actions-cell">
+                <button type="button" class="btn-xs btn-xs-primary" data-action="select-lesson" data-id="${lesson.id}">Select</button>
+                <button type="button" class="btn-xs btn-xs-danger" data-action="delete-lesson" data-id="${lesson.id}">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+  }
+
+  updateGeniusSelection(true);
+  renderGeniusCourses();
+  renderGeniusDispatches();
+}
+
+function updateGeniusSelection(syncInput = false) {
+  const titleEl = document.getElementById("geniusSelectedLessonTitle");
+  const nameInput = document.getElementById("geniusPushLessonName");
+  const previewTitle = document.getElementById("geniusPreviewTitle");
+  const previewMeta = document.getElementById("geniusPreviewMeta");
+  const dueDateInput = document.getElementById("geniusDueDate");
+
+  if (syncInput && nameInput && selectedGeniusLesson) {
+    nameInput.value = selectedGeniusLesson.title;
+  }
+
+  const typedTitle = nameInput ? nameInput.value.trim() : "";
+  const effectiveTitle = typedTitle || (selectedGeniusLesson ? selectedGeniusLesson.title : "");
+  const dueVal = dueDateInput ? dueDateInput.value : "Fri 20 Nov";
+
+  if (effectiveTitle) {
+    if (titleEl) titleEl.textContent = selectedGeniusLesson ? `Selected: ${selectedGeniusLesson.title}` : `Custom lesson`;
+    if (previewTitle) previewTitle.textContent = `New lesson: ${effectiveTitle}`;
+    const dur = selectedGeniusLesson ? selectedGeniusLesson.duration : "45 min";
+    const exCount = selectedGeniusLesson && Array.isArray(selectedGeniusLesson.exercises) ? selectedGeniusLesson.exercises.length : 0;
+    const exLabel = exCount > 0 ? ` · ${exCount} exercise${exCount > 1 ? "s" : ""}` : "";
+    if (previewMeta) previewMeta.textContent = `About ${dur}${exLabel} · due ${dueVal}`;
+  } else {
+    if (titleEl) titleEl.textContent = `No lesson selected`;
+    if (previewTitle) previewTitle.textContent = `Enter a lesson name above`;
+    if (previewMeta) previewMeta.textContent = ``;
+  }
+}
+
+function renderGeniusCourses() {
+  const listEl = document.getElementById("geniusCoursesList");
+  if (!listEl) return;
+  const courses = APP_STATE.genius_courses || [];
+  if (!selectedGeniusCourse && courses.length > 0) {
+    selectedGeniusCourse = courses[0];
+  }
+
+  if (courses.length === 0) {
+    listEl.innerHTML = `<div style="font-size:13px;color:var(--admin-muted);padding:12px 0;">No courses yet. Click "+ New" to design your first course.</div>`;
+  } else {
+    listEl.innerHTML = courses.map(c => {
+      const isSelected = selectedGeniusCourse && selectedGeniusCourse.id === c.id;
+      const lCount = (c.lessons || []).length;
+      const eCount = (c.exercises || []).length;
+      return `
+        <div class="clickable" data-select-course="${c.id}" style="padding:12px;border-radius:10px;border:1px solid ${isSelected ? 'var(--admin-primary)' : 'var(--admin-border)'};background:${isSelected ? '#f5f3ff' : '#fff'};cursor:pointer;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+            <strong style="font-size:13.5px;">${c.title}</strong>
+            <span class="badge-pill sent">${c.level || "B1"}</span>
+          </div>
+          <div style="font-size:12px;color:var(--admin-muted);margin-top:4px;">${c.program || "English"} · ${lCount} lesson(s) · ${eCount} exercise(s)</div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  loadCourseIntoEditor(selectedGeniusCourse);
+}
+
+function loadCourseIntoEditor(course) {
+  const idEl = document.getElementById("courseEditId");
+  const titleEl = document.getElementById("courseTitleInput");
+  const levelEl = document.getElementById("courseLevelSelect");
+  const progEl = document.getElementById("courseProgramInput");
+  const descEl = document.getElementById("courseDescInput");
+  const lessonsEl = document.getElementById("courseLessonsBuilderList");
+  const exEl = document.getElementById("courseExercisesBuilderList");
+
+  if (!idEl || !titleEl) return;
+  if (!course) {
+    idEl.value = "";
+    titleEl.value = "";
+    levelEl.value = "B1";
+    progEl.value = "Business English";
+    descEl.value = "";
+    if (lessonsEl) lessonsEl.innerHTML = `<div style="font-size:12.5px;color:var(--admin-muted);">Save or create a course to add lessons.</div>`;
+    if (exEl) exEl.innerHTML = `<div style="font-size:12.5px;color:var(--admin-muted);">Save or create a course to add exercises.</div>`;
     return;
   }
 
-  tbody.innerHTML = APP_STATE.genius_lessons.map((lesson) => {
-    const isSelected = selectedGeniusLesson && selectedGeniusLesson.id === lesson.id;
+  idEl.value = course.id;
+  titleEl.value = course.title || "";
+  levelEl.value = course.level || "B1";
+  progEl.value = course.program || "";
+  descEl.value = course.description || "";
+
+  if (lessonsEl) {
+    const lessons = course.lessons || [];
+    lessonsEl.innerHTML = lessons.length === 0
+      ? `<div style="font-size:12.5px;color:var(--admin-muted);">No lessons added to this course yet.</div>`
+      : lessons.map((l, idx) => `
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--admin-border);border-radius:8px;background:#fff;">
+            <div>
+              <strong style="font-size:13px;">${idx + 1}. ${l.title}</strong>
+              <span style="font-size:12px;color:var(--admin-muted);margin-left:6px;">(${l.duration || "45 min"})</span>
+              ${l.notes ? `<div style="font-size:12px;color:#475569;margin-top:2px;">${l.notes}</div>` : ""}
+            </div>
+            <button type="button" class="btn-xs btn-xs-danger" data-remove-course-lesson="${l.id}">Remove</button>
+          </div>
+        `).join("");
+  }
+
+  if (exEl) {
+    const exs = course.exercises || [];
+    exEl.innerHTML = exs.length === 0
+      ? `<div style="font-size:12.5px;color:var(--admin-muted);">No exercises added to this course yet.</div>`
+      : exs.map((ex, idx) => `
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--admin-border);border-radius:8px;background:#fff;">
+            <div>
+              <span class="badge-pill sent" style="margin-right:6px;">${ex.type}</span>
+              <strong style="font-size:13px;">${idx + 1}. ${ex.prompt}</strong>
+              ${ex.answer ? `<div style="font-size:12px;color:#475569;margin-top:2px;">Answer / Options: ${ex.answer}</div>` : ""}
+            </div>
+            <button type="button" class="btn-xs btn-xs-danger" data-remove-course-ex="${ex.id}">Remove</button>
+          </div>
+        `).join("");
+  }
+}
+
+function renderGeniusDispatches() {
+  const tbody = document.querySelector('[data-tbody="genius_dispatches"]');
+  if (!tbody) return;
+  const list = APP_STATE.learner_dispatches || [];
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--admin-muted);padding:24px;">No lessons or courses sent yet. Push a lesson or send a full course to see it here.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(d => {
+    const isCourse = d.kind === "course";
+    const summary = isCourse
+      ? `${(d.lessons || []).length} lessons · ${(d.exercises || []).length} exercises`
+      : `${d.duration || "45 min"}${(d.exercises || []).length ? ` · ${d.exercises.length} exercises` : ""}`;
     return `
-      <tr class="clickable ${isSelected ? 'row-selected' : ''}" data-lesson-id="${lesson.id}">
-        <td style="font-weight: 650;">${lesson.title}</td>
-        <td><span class="badge-pill sent">${lesson.level}</span></td>
-        <td>${lesson.program}</td>
-        <td style="color: var(--admin-muted);">${lesson.duration}</td>
+      <tr>
+        <td style="font-weight:650;">${d.learner}</td>
+        <td><span class="badge-pill ${isCourse ? 'confirmed' : 'sent'}">${isCourse ? 'Full Course' : 'Lesson'}</span></td>
+        <td style="font-weight:600;">${d.title}</td>
+        <td style="color:var(--admin-muted);font-size:12.5px;">${summary}</td>
+        <td>${d.dueDate || "—"}</td>
+        <td style="color:var(--admin-muted);font-size:12.5px;">${d.sentAt || "—"}</td>
         <td>
           <div class="table-actions-cell">
-            <button type="button" class="btn-xs btn-xs-primary" data-action="select-lesson" data-id="${lesson.id}">Select</button>
-            <button type="button" class="btn-xs btn-xs-danger" data-action="delete-lesson" data-id="${lesson.id}">Delete</button>
+            <button type="button" class="btn-xs btn-xs-primary" data-action="preview-dispatch" data-id="${d.id}">View</button>
+            <button type="button" class="btn-xs btn-xs-danger" data-action="delete-dispatch" data-id="${d.id}">Delete</button>
           </div>
         </td>
       </tr>
     `;
   }).join("");
-
-  updateGeniusSelection();
 }
 
-function updateGeniusSelection() {
-  const titleEl = document.getElementById("geniusSelectedLessonTitle");
-  const previewTitle = document.getElementById("geniusPreviewTitle");
-  const previewMeta = document.getElementById("geniusPreviewMeta");
-  const dueDateInput = document.getElementById("geniusDueDate");
-
-  if (selectedGeniusLesson) {
-    if (titleEl) titleEl.textContent = `Selected: ${selectedGeniusLesson.title}`;
-    if (previewTitle) previewTitle.textContent = `New lesson: ${selectedGeniusLesson.title}`;
-    const dueVal = dueDateInput ? dueDateInput.value : "Fri 20 Nov";
-    if (previewMeta) previewMeta.textContent = `About ${selectedGeniusLesson.duration} · due ${dueVal}`;
-  } else {
-    if (titleEl) titleEl.textContent = `No lesson selected`;
-    if (previewTitle) previewTitle.textContent = `No lesson`;
-    if (previewMeta) previewMeta.textContent = ``;
+function renderNewLessonExercisesDraft() {
+  const el = document.getElementById("newLessonExercisesList");
+  if (!el) return;
+  if (draftLessonExercises.length === 0) {
+    el.innerHTML = `<div style="font-size:12px;color:var(--admin-muted);">No exercises added yet. Add exercises below.</div>`;
+    return;
   }
+  el.innerHTML = draftLessonExercises.map((ex, idx) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 10px;background:#fff;border:1px solid var(--admin-border);border-radius:6px;font-size:12.5px;">
+      <div>
+        <span class="badge-pill sent" style="margin-right:6px;">${ex.type}</span>
+        <strong>${idx + 1}. ${ex.prompt}</strong>
+        ${ex.answer ? `<span style="color:var(--admin-muted);margin-left:6px;">(${ex.answer})</span>` : ""}
+      </div>
+      <button type="button" class="btn-xs btn-xs-danger" data-remove-draft-ex="${idx}">Remove</button>
+    </div>
+  `).join("");
 }
 
 // RENDER: ERA INVOICES
@@ -1190,7 +1408,11 @@ function setupEvents() {
     if (btnModalOpen) {
       const modalTarget = btnModalOpen.dataset.modalOpen;
       if (modalTarget === "book_session") openModal("modalBookSession");
-      if (modalTarget === "new_lesson") openModal("modalNewLesson");
+      if (modalTarget === "new_lesson") {
+        draftLessonExercises = [];
+        renderNewLessonExercisesDraft();
+        openModal("modalNewLesson");
+      }
       if (modalTarget === "new_invoice") openModal("modalNewInvoice");
       if (modalTarget === "new_customer") {
         document.getElementById("modalCustomerTitle").textContent = "Add Customer";
@@ -1670,13 +1892,323 @@ function setupEvents() {
     });
   }
 
+  // Genius: Sub-tabs, Custom Lesson Push, Course Designer, Dispatches
+  document.addEventListener("click", (e) => {
+    const tabBtn = e.target.closest("[data-genius-tab]");
+    if (tabBtn) {
+      switchGeniusTab(tabBtn.dataset.geniusTab);
+      return;
+    }
+
+    const courseItem = e.target.closest("[data-select-course]");
+    if (courseItem) {
+      const cId = courseItem.dataset.selectCourse;
+      selectedGeniusCourse = (APP_STATE.genius_courses || []).find(c => c.id === cId) || null;
+      renderGeniusCourses();
+      return;
+    }
+
+    const rmCourseLesson = e.target.closest("[data-remove-course-lesson]");
+    if (rmCourseLesson && selectedGeniusCourse) {
+      const lId = rmCourseLesson.dataset.removeCourseLesson;
+      selectedGeniusCourse.lessons = (selectedGeniusCourse.lessons || []).filter(l => l.id !== lId);
+      saveWorkspaceState();
+      renderGeniusCourses();
+      return;
+    }
+
+    const rmCourseEx = e.target.closest("[data-remove-course-ex]");
+    if (rmCourseEx && selectedGeniusCourse) {
+      const exId = rmCourseEx.dataset.removeCourseEx;
+      selectedGeniusCourse.exercises = (selectedGeniusCourse.exercises || []).filter(x => x.id !== exId);
+      saveWorkspaceState();
+      renderGeniusCourses();
+      return;
+    }
+
+    const rmDraftEx = e.target.closest("[data-remove-draft-ex]");
+    if (rmDraftEx) {
+      const idx = parseInt(rmDraftEx.dataset.removeDraftEx, 10);
+      if (!Number.isNaN(idx)) {
+        draftLessonExercises.splice(idx, 1);
+        renderNewLessonExercisesDraft();
+      }
+      return;
+    }
+
+    const btnPreviewDispatch = e.target.closest('[data-action="preview-dispatch"]');
+    if (btnPreviewDispatch) {
+      const id = btnPreviewDispatch.dataset.id;
+      const d = (APP_STATE.learner_dispatches || []).find(x => x.id === id);
+      if (d) {
+        const titleEl = document.getElementById("dispatchPreviewTitle");
+        const bodyEl = document.getElementById("dispatchPreviewBody");
+        if (titleEl) titleEl.textContent = `${d.kind === "course" ? "Course" : "Lesson"}: ${d.title} (${d.learner})`;
+        if (bodyEl) {
+          const lessonsHtml = (d.lessons || []).length
+            ? `<h4 style="margin:12px 0 6px;">Lessons</h4><ul style="padding-left:18px;margin:0;">${d.lessons.map(l => `<li><strong>${l.title}</strong> (${l.duration || "45 min"})${l.notes ? ` — ${l.notes}` : ""}</li>`).join("")}</ul>`
+            : "";
+          const exHtml = (d.exercises || []).length
+            ? `<h4 style="margin:14px 0 6px;">Exercises</h4><ol style="padding-left:18px;margin:0;">${d.exercises.map(ex => `<li><span class="badge-pill sent">${ex.type}</span> <strong>${ex.prompt}</strong>${ex.answer ? `<div style="color:var(--admin-muted);font-size:12.5px;">Answer/Options: ${ex.answer}</div>` : ""}</li>`).join("")}</ol>`
+            : `<p style="color:var(--admin-muted);margin-top:10px;">No exercises attached.</p>`;
+          bodyEl.innerHTML = `
+            <div><strong>Learner:</strong> ${d.learner} · <strong>Level:</strong> ${d.level || "B1"} · <strong>Due:</strong> ${d.dueDate || "—"}</div>
+            ${d.format ? `<div style="color:var(--admin-muted);margin-top:4px;">Format: ${d.format}</div>` : ""}
+            ${d.description ? `<p style="margin-top:8px;">${d.description}</p>` : ""}
+            ${d.notes ? `<p style="margin-top:8px;">${d.notes}</p>` : ""}
+            ${lessonsHtml}
+            ${exHtml}
+          `;
+        }
+        openModal("modalDispatchPreview");
+      }
+      return;
+    }
+
+    const btnDeleteDispatch = e.target.closest('[data-action="delete-dispatch"]');
+    if (btnDeleteDispatch) {
+      const id = btnDeleteDispatch.dataset.id;
+      APP_STATE.learner_dispatches = (APP_STATE.learner_dispatches || []).filter(x => x.id !== id);
+      saveWorkspaceState();
+      renderGeniusDispatches();
+      showToast("Dispatched item removed.", "success");
+      return;
+    }
+  });
+
+  // Live preview when typing lesson name or due date
+  const pushNameInput = document.getElementById("geniusPushLessonName");
+  const pushDueInput = document.getElementById("geniusDueDate");
+  if (pushNameInput) pushNameInput.addEventListener("input", () => updateGeniusSelection(false));
+  if (pushDueInput) pushDueInput.addEventListener("input", () => updateGeniusSelection(false));
+
   // Lesson actions
   const btnPushLesson = document.getElementById("btnPushLesson");
   if (btnPushLesson) {
     btnPushLesson.addEventListener("click", () => {
-      if (!selectedGeniusLesson) return;
-      const student = document.getElementById("geniusStudentSelect")?.value || "Sara B.";
-      showToast(`Lesson "${selectedGeniusLesson.title}" pushed to ${student}!`, "success");
+      const customName = document.getElementById("geniusPushLessonName")?.value.trim();
+      const lessonTitle = customName || (selectedGeniusLesson ? selectedGeniusLesson.title : "");
+      if (!lessonTitle) {
+        showToast("Please enter or select a lesson name first.", "error");
+        return;
+      }
+      const student = document.getElementById("geniusStudentSelect")?.value || "All Learners";
+      const dueDate = document.getElementById("geniusDueDate")?.value.trim() || "Fri 20 Nov";
+
+      APP_STATE.learner_dispatches = APP_STATE.learner_dispatches || [];
+      APP_STATE.learner_dispatches.unshift({
+        id: `disp-${Date.now()}`,
+        kind: "lesson",
+        learner: student,
+        title: lessonTitle,
+        level: selectedGeniusLesson?.level || "B1",
+        program: selectedGeniusLesson?.program || "English Course",
+        duration: selectedGeniusLesson?.duration || "45 min",
+        format: selectedGeniusLesson?.format || "Structured Lesson",
+        notes: selectedGeniusLesson?.notes || "",
+        exercises: selectedGeniusLesson?.exercises ? JSON.parse(JSON.stringify(selectedGeniusLesson.exercises)) : [],
+        dueDate: dueDate,
+        sentAt: new Date().toLocaleDateString("fr-FR")
+      });
+
+      APP_STATE.notifications = APP_STATE.notifications || [];
+      APP_STATE.notifications.unshift({
+        target: student,
+        channel: "Genius Lesson",
+        topic: `Pushed Lesson: ${lessonTitle} (due ${dueDate})`,
+        scheduled: "Immediate",
+        attempts: 1,
+        status: "Delivered"
+      });
+
+      saveWorkspaceState();
+      renderCurrentView();
+      showToast(`Lesson "${lessonTitle}" pushed to ${student}!`, "success");
+    });
+  }
+
+  // Course Designer handlers
+  function createNewCourseDraft() {
+    const newCourse = {
+      id: `crs-${Date.now()}`,
+      title: "New Custom Course",
+      level: "B1",
+      program: "General English",
+      description: "",
+      lessons: [],
+      exercises: []
+    };
+    APP_STATE.genius_courses = APP_STATE.genius_courses || [];
+    APP_STATE.genius_courses.unshift(newCourse);
+    selectedGeniusCourse = newCourse;
+    saveWorkspaceState();
+    switchGeniusTab("courses");
+    renderGeniusCourses();
+    document.getElementById("courseTitleInput")?.focus();
+  }
+
+  const btnGeniusNewCourse = document.getElementById("btnGeniusNewCourse");
+  if (btnGeniusNewCourse) btnGeniusNewCourse.addEventListener("click", createNewCourseDraft);
+  const btnCourseCreateQuick = document.getElementById("btnCourseCreateQuick");
+  if (btnCourseCreateQuick) btnCourseCreateQuick.addEventListener("click", createNewCourseDraft);
+
+  const btnSaveCourse = document.getElementById("btnSaveCourse");
+  if (btnSaveCourse) {
+    btnSaveCourse.addEventListener("click", () => {
+      if (!selectedGeniusCourse) {
+        createNewCourseDraft();
+      }
+      selectedGeniusCourse.title = document.getElementById("courseTitleInput")?.value.trim() || "Untitled Course";
+      selectedGeniusCourse.level = document.getElementById("courseLevelSelect")?.value || "B1";
+      selectedGeniusCourse.program = document.getElementById("courseProgramInput")?.value.trim() || "English";
+      selectedGeniusCourse.description = document.getElementById("courseDescInput")?.value.trim() || "";
+      saveWorkspaceState();
+      renderGeniusCourses();
+      showToast(`Course "${selectedGeniusCourse.title}" saved!`, "success");
+    });
+  }
+
+  const btnDeleteCourse = document.getElementById("btnDeleteCourse");
+  if (btnDeleteCourse) {
+    btnDeleteCourse.addEventListener("click", () => {
+      if (!selectedGeniusCourse) return;
+      const title = selectedGeniusCourse.title;
+      APP_STATE.genius_courses = (APP_STATE.genius_courses || []).filter(c => c.id !== selectedGeniusCourse.id);
+      selectedGeniusCourse = APP_STATE.genius_courses[0] || null;
+      saveWorkspaceState();
+      renderGeniusCourses();
+      showToast(`Course "${title}" deleted.`, "success");
+    });
+  }
+
+  const btnAddLessonToCourse = document.getElementById("btnAddLessonToCourse");
+  if (btnAddLessonToCourse) {
+    btnAddLessonToCourse.addEventListener("click", () => {
+      if (!selectedGeniusCourse) {
+        showToast("Create or select a course first.", "error");
+        return;
+      }
+      const titleInput = document.getElementById("courseAddLessonTitle");
+      const durInput = document.getElementById("courseAddLessonDuration");
+      const notesInput = document.getElementById("courseAddLessonNotes");
+      const title = titleInput?.value.trim();
+      if (!title) {
+        showToast("Enter a lesson title to add to this course.", "error");
+        return;
+      }
+      selectedGeniusCourse.lessons = selectedGeniusCourse.lessons || [];
+      selectedGeniusCourse.lessons.push({
+        id: `cl-${Date.now()}`,
+        title,
+        duration: durInput?.value.trim() || "45 min",
+        notes: notesInput?.value.trim() || ""
+      });
+      if (titleInput) titleInput.value = "";
+      if (notesInput) notesInput.value = "";
+      saveWorkspaceState();
+      renderGeniusCourses();
+      showToast(`Lesson "${title}" added to course.`, "success");
+    });
+  }
+
+  const btnAddExToCourse = document.getElementById("btnAddExToCourse");
+  if (btnAddExToCourse) {
+    btnAddExToCourse.addEventListener("click", () => {
+      if (!selectedGeniusCourse) {
+        showToast("Create or select a course first.", "error");
+        return;
+      }
+      const type = document.getElementById("courseAddExType")?.value || "Multiple Choice";
+      const promptInput = document.getElementById("courseAddExPrompt");
+      const answerInput = document.getElementById("courseAddExAnswer");
+      const prompt = promptInput?.value.trim();
+      if (!prompt) {
+        showToast("Enter an exercise question or prompt.", "error");
+        return;
+      }
+      selectedGeniusCourse.exercises = selectedGeniusCourse.exercises || [];
+      selectedGeniusCourse.exercises.push({
+        id: `ce-${Date.now()}`,
+        type,
+        prompt,
+        answer: answerInput?.value.trim() || ""
+      });
+      if (promptInput) promptInput.value = "";
+      if (answerInput) answerInput.value = "";
+      saveWorkspaceState();
+      renderGeniusCourses();
+      showToast("Exercise added to course!", "success");
+    });
+  }
+
+  const btnSendWholeCourse = document.getElementById("btnSendWholeCourse");
+  if (btnSendWholeCourse) {
+    btnSendWholeCourse.addEventListener("click", () => {
+      if (!selectedGeniusCourse) {
+        showToast("Select or create a course first.", "error");
+        return;
+      }
+      // Sync latest header fields before dispatching
+      selectedGeniusCourse.title = document.getElementById("courseTitleInput")?.value.trim() || selectedGeniusCourse.title;
+      selectedGeniusCourse.level = document.getElementById("courseLevelSelect")?.value || selectedGeniusCourse.level;
+      selectedGeniusCourse.program = document.getElementById("courseProgramInput")?.value.trim() || selectedGeniusCourse.program;
+      selectedGeniusCourse.description = document.getElementById("courseDescInput")?.value.trim() || selectedGeniusCourse.description;
+
+      const learner = document.getElementById("courseSendStudentSelect")?.value || "All Learners";
+      const dueDate = document.getElementById("courseSendDueDate")?.value.trim() || "Fri 20 Nov";
+
+      APP_STATE.learner_dispatches = APP_STATE.learner_dispatches || [];
+      APP_STATE.learner_dispatches.unshift({
+        id: `disp-${Date.now()}`,
+        kind: "course",
+        learner,
+        title: selectedGeniusCourse.title,
+        level: selectedGeniusCourse.level,
+        program: selectedGeniusCourse.program,
+        description: selectedGeniusCourse.description,
+        lessons: JSON.parse(JSON.stringify(selectedGeniusCourse.lessons || [])),
+        exercises: JSON.parse(JSON.stringify(selectedGeniusCourse.exercises || [])),
+        dueDate,
+        sentAt: new Date().toLocaleDateString("fr-FR")
+      });
+
+      APP_STATE.notifications = APP_STATE.notifications || [];
+      APP_STATE.notifications.unshift({
+        target: learner,
+        channel: "Genius Course",
+        topic: `Sent Full Course: ${selectedGeniusCourse.title} (${(selectedGeniusCourse.lessons || []).length} lessons, ${(selectedGeniusCourse.exercises || []).length} exercises)`,
+        scheduled: "Immediate",
+        attempts: 1,
+        status: "Delivered"
+      });
+
+      saveWorkspaceState();
+      renderCurrentView();
+      showToast(`Full course "${selectedGeniusCourse.title}" sent to ${learner}!`, "success");
+    });
+  }
+
+  // Create Lesson modal: add exercise to draft
+  const btnAddLessonEx = document.getElementById("btnAddLessonEx");
+  if (btnAddLessonEx) {
+    btnAddLessonEx.addEventListener("click", () => {
+      const type = document.getElementById("lessonExType")?.value || "Multiple Choice";
+      const promptEl = document.getElementById("lessonExPrompt");
+      const answerEl = document.getElementById("lessonExAnswer");
+      const prompt = promptEl?.value.trim();
+      if (!prompt) {
+        showToast("Enter an exercise question/prompt first.", "error");
+        return;
+      }
+      draftLessonExercises.push({
+        id: `lex-${Date.now()}`,
+        type,
+        prompt,
+        answer: answerEl?.value.trim() || ""
+      });
+      if (promptEl) promptEl.value = "";
+      if (answerEl) answerEl.value = "";
+      renderNewLessonExercisesDraft();
     });
   }
 
@@ -1850,31 +2382,38 @@ function setupEvents() {
     });
   }
 
-  // Submit New Lesson
+  // Submit New Lesson (with Format, Notes & Exercises)
   const formNewLesson = document.getElementById("formNewLesson");
   if (formNewLesson) {
     formNewLesson.addEventListener("submit", (e) => {
       e.preventDefault();
+      const format = document.getElementById("newLessonFormat")?.value || "Structured Lesson + Exercises";
       const title = document.getElementById("newLessonTitle").value.trim();
       const level = document.getElementById("newLessonLevel").value;
       const prog = document.getElementById("newLessonProgram").value.trim();
       const duration = document.getElementById("newLessonDuration").value.trim();
+      const notes = document.getElementById("newLessonNotes")?.value.trim() || "";
 
       const newLesson = {
         id: `les-${Date.now()}`,
+        format,
         title,
         level,
         program: prog,
-        duration
+        duration,
+        notes,
+        exercises: JSON.parse(JSON.stringify(draftLessonExercises))
       };
 
       APP_STATE.genius_lessons.unshift(newLesson);
       selectedGeniusLesson = newLesson;
+      draftLessonExercises = [];
       saveWorkspaceState();
       renderCurrentView();
       closeModal("modalNewLesson");
       formNewLesson.reset();
-      showToast(`Lesson "${title}" added to library.`, "success");
+      renderNewLessonExercisesDraft();
+      showToast(`Lesson "${title}" (${newLesson.exercises.length} exercise(s)) added to library!`, "success");
     });
   }
 
